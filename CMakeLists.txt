@@ -13,6 +13,12 @@ add_library(fk_mc STATIC src/lattice_traits.cpp src/fk_mc.cpp)
 target_link_libraries (fk_mc ${TRIQS_LIBRARY_ALL})
 install(TARGETS fk_mc DESTINATION lib)
 
+# build executable
+option(Execs "Enable executables" ON)
+if (Execs)
+    add_subdirectory(prog)
+endif (Execs)
+
 #build tests
 option(Testing "Enable testing" OFF)
 if (Testing)
