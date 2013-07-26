@@ -26,8 +26,9 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.get_spectrum();
 
-    mc.add_move(move_flip<lattice_t>(p["beta"], config, mc.rng()), "flip");
-    mc.add_measure(dummy_measure(),"dummy");
+    double beta = p["beta"];
+    mc.add_move(move_flip<lattice_t>(beta, config, mc.rng()), "flip");
+    mc.add_measure(measure_energy<lattice_t>(beta,config), "energy");
 
       // run and collect results
     mc.start(1.0, triqs::utility::clock_callback(p["max_time"]));

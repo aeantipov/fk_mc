@@ -6,9 +6,8 @@
 #include <triqs/mc_tools/random_generator.hpp>
 
 namespace fk {
- /*
-  * This is the insertion move
-  */
+
+// flip move
 template <class lattice>
 struct move_flip {
     typedef configuration<lattice> config_t;
@@ -37,20 +36,17 @@ struct move_flip {
         new_config.f_config(to) = 1;
 
         auto evals_old = config.cached_spectrum;
-        double ground_energy_old = evals_old(0);
-        evals_old-=ground_energy_old;
-
         auto evals_new = new_config.get_spectrum();
-        double ground_energy_new = evals_new(0);
-        evals_new-=ground_energy_new;
 
-        auto F = triqs::arrays::map(std::function<double(double)>( [this](double E){return 1.0+exp(-beta*E);} ));
-        evals_old = F(evals_old);
-        evals_new = F(evals_new);
+        double e_min = std::min(evals_new(0),evals_old(0)); 
+        double exp_emin = exp(beta*e_min);
 
-        mc_weight_type out = std::accumulate(evals_new.begin(), evals_new.end(), 1.0, std::multiplies<double>()); 
-        out /= std::accumulate(evals_old.begin(), evals_old.end(), 1.0, std::multiplies<double>());
-        out *= exp(-beta*(ground_energy_new - ground_energy_old));
+        // calculate ( \prod exp(beta*E_0) + \exp(-beta*(E-E_0). The factor exp(beta*E_0) is multiplied on both sides of a fraction P_{n+1}/P_{n}.
+        auto dm_function = triqs::arrays::map(std::function<double(double)>( [this,exp_emin,e_min](double E){return exp_emin+exp(-beta*(E-e_min));} ));
+        evals_old = dm_function(evals_old);
+        evals_new = dm_function(evals_new);
+
+        mc_weight_type out = __prod(evals_new) / __prod(evals_old);
         return out;
     }
 

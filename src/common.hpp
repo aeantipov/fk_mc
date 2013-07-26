@@ -7,11 +7,16 @@
 #include <tuple>
 #include <array>
 #include <boost/math/special_functions/pow.hpp>
+#include <numeric>
 
 namespace fk {
 
 #define MSG_PREFIX            __FILE__ << ":" << __LINE__ << ": "
-#define DEBUG(MSG)            std::cout << std::boolalpha << MSG_PREFIX << MSG << std::endl;
+#ifdef FK_MC_DEBUG
+#define DEBUG(MSG)            std::cout << std::boolalpha << MSG_PREFIX << MSG << std::endl; 
+#else 
+#define DEBUG(MSG)
+#endif
 #define INFO(MSG)             std::cout << std::boolalpha << MSG << std::endl;
 #define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;
 #define ERROR(MSG)            std::cerr << MSG_PREFIX << MSG << std::endl;
@@ -30,6 +35,11 @@ inline std::ostream& operator<< (std::ostream& in, const std::array<size_t, D> a
     in << "{";  std::copy(arr.begin(), arr.end()-1, std::ostream_iterator<size_t>(in, ",")); in << *(arr.end()-1) << "}";
     return in;
 };
+
+template <class arr_t>
+inline double __prod(const arr_t& in){double out=1.0; out = std::accumulate(in.begin(), in.end(), 1.0, std::multiplies<double>()); return out; };
+template <class arr_t>
+inline double __sum(const arr_t& in){double out=0.0; out = std::accumulate(in.begin(), in.end(), 0.0, std::plus<double>()); return out; };
 
 }; // end of namespace FK
 
