@@ -2,27 +2,27 @@
 #define __FK_MC_HPP
 
 #include "common.hpp"
-//#include "parameters.hpp"
+#include "lattice_traits.hpp"
+#include "configuration.hpp"
 #include <boost/mpi/communicator.hpp>
-
-using namespace triqs;
 
 namespace fk {
 
- class fk_mc {
 
-  // define the communicator, here MPI_COMM_WORLD
-  boost::mpi::communicator world;
+template <class lattice_t>
+class fk_mc 
+{
+    typedef configuration<lattice_t> config_t;
+    boost::mpi::communicator world;
+    lattice_t lattice;
 
-  utility::parameter_defaults constructor_defaults() const;
-  utility::parameter_defaults solve_defaults() const;
+    triqs::utility::parameter_defaults solve_defaults() const;
 
-  public:
+    public:
 
-  fk_mc(utility::parameters p);
-  void solve(utility::parameters p);
-
- };
+    fk_mc(lattice_t l);
+    void solve(utility::parameters p);
+};
 
 }; // end of namespace FK
 

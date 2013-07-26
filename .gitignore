@@ -1,0 +1,7 @@
+*.o
+*.a
+*.so
+*.swp
+*~
+Makefile
+*.DS_Store
