@@ -11,12 +11,9 @@
 namespace fk {
 
 #define MSG_PREFIX            __FILE__ << ":" << __LINE__ << ": "
-#define DEBUG(MSG)            std::cout << MSG_PREFIX << MSG << std::endl;
-#define INFO(MSG)             std::cout << MSG << std::endl;
+#define DEBUG(MSG)            std::cout << std::boolalpha << MSG_PREFIX << MSG << std::endl;
+#define INFO(MSG)             std::cout << std::boolalpha << MSG << std::endl;
 #define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;
-#define INFO2(MSG)            std::cout << "\t"     << MSG << std::endl;
-#define INFO3(MSG)            std::cout << "\t\t"   << MSG << std::endl;
-#define INFO4(MSG)            std::cout << "\t\t\t" << MSG << std::endl;
 #define ERROR(MSG)            std::cerr << MSG_PREFIX << MSG << std::endl;
 
 typedef triqs::arrays::array<int,1> int_array_t;
