@@ -20,14 +20,13 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     p.update(solve_defaults());
 
     mc_tools::mc_generic<double> mc(p);
-    size_t nf_start = p["Nf_start"];
 
+    // Generate the configuration and cache the spectrum
     config_t config(lattice,p["U"],p["mu_c"],p["mu_f"]);
     config.randomize_f(mc.rng(),p["Nf_start"]);
-    DEBUG(config.f_config);
+    config.get_spectrum();
 
-    DEBUG("!");
-    mc.add_move(move_flip<lattice_t>(config, mc.rng()), "insertion");
+    mc.add_move(move_flip<lattice_t>(p["beta"], config, mc.rng()), "flip");
     mc.add_measure(dummy_measure(),"dummy");
 
       // run and collect results

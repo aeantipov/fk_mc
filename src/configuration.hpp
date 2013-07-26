@@ -27,6 +27,9 @@ struct configuration {
         {
         f_config()=0;
         }
+
+    configuration(const configuration&) = default;
+    configuration& operator= (const configuration& rhs) {U = rhs.U, mu_c = rhs.mu_c; mu_f = rhs.mu_f; f_config = rhs.f_config; return (*this);};
     size_t get_nf() const;
     void randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf = 0);
     real_array_t get_spectrum() const;
@@ -46,7 +49,6 @@ void configuration<lattice_t>::randomize_f(triqs::mc_tools::random_generator &rn
     while (f_config(ind)==1) ind = rnd(lattice.m_size);
     f_config(ind) = 1; 
     };
-    DEBUG(f_config);
 }
 
 
@@ -56,7 +58,6 @@ real_array_t configuration<lattice_t>::get_spectrum() const
     real_matrix_t T1(lattice.get_hopping_matrix());
     triqs::clef::placeholder<0> i_;
     for (size_t i=0; i<lattice.m_size; ++i) T1(i,i)+= -mu_c + U*f_config(i); // unoptimized
-    DEBUG(T1);
     auto evals = triqs::arrays::linalg::eigenvalues(real_matrix_view_t(T1)); 
     cached_spectrum = evals;
     return evals;
