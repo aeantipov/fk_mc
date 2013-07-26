@@ -14,18 +14,9 @@ target_link_libraries (fk_mc ${TRIQS_LIBRARY_ALL})
 install(TARGETS fk_mc DESTINATION lib)
 
 #build tests
-enable_testing()
-link_libraries(fk_mc ${TRIQS_LIBRARY_ALL})
-set (tests 
-lattice_traits_test
-config_test
-mc_test01
-)
-include_directories(./src)
-foreach (test ${tests})
-    set(test_src test/${test}.cpp)
-    add_executable(test/${test} ${test_src})
-    
-    add_test(${test} test/${test})
-endforeach(test)
-
+option(Testing "Enable testing" OFF)
+if (Testing)
+    message(STATUS "Enabled test building and running")
+    add_subdirectory(test)
+    enable_testing()
+endif (Testing)

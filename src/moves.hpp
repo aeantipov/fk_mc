@@ -55,10 +55,10 @@ struct move_flip {
     }
 
     mc_weight_type accept() {
+    #ifdef FK_MC_DEBUG
         DEBUG(config.f_config << "->" << new_config.f_config);
+    #endif
         config = new_config;
-    //#ifdef FK_MC_DEBUG
-    //#endif
         return 1.0; 
     }
 
