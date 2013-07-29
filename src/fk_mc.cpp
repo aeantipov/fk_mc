@@ -28,9 +28,9 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     double e_0 = -4.0;
 
     double beta = p["beta"];
-    mc.add_move(move_flip<lattice_t>(beta, config, mc.rng()), "flip", 1.0);
-    mc.add_move(move_randomize<lattice_t>(beta, config, mc.rng()), "randomize", 0.1);
-    mc.add_measure(measure_energy<lattice_t>(beta,config,e_0), "energy");
+    mc.add_move(move_flip<config_t>(beta, config, mc.rng()), "flip", 1.0);
+    mc.add_move(move_randomize<config_t>(beta, config, mc.rng()), "randomize", 0.1);
+    mc.add_measure(measure_energy<config_t>(beta,config,e_0), "energy");
 
       // run and collect results
     mc.start(1.0, triqs::utility::clock_callback(p["max_time"]));

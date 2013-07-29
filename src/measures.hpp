@@ -13,10 +13,8 @@ struct all_measures {
 }*/
 
 // a measurement: the magnetization
-template <class lattice>
+template <class config_t>
 struct measure_energy {
-
-    typedef configuration<lattice> config_t;
     double beta;
     const config_t& config;
 
@@ -34,8 +32,8 @@ struct measure_energy {
 
 };
 
-template <class lattice>
-void measure_energy<lattice>::accumulate (double sign) 
+template <class config_t>
+void measure_energy<config_t>::accumulate (double sign) 
 {
     auto evals = config.cached_spectrum;
     auto dm = density_matrix_c(beta,evals,offset_energy);
@@ -50,8 +48,8 @@ void measure_energy<lattice>::accumulate (double sign)
     MY_DEBUG(energy);
 }
 
-template <class lattice>
-void measure_energy<lattice>::collect_results(boost::mpi::communicator const &c)
+template <class config_t>
+void measure_energy<config_t>::collect_results(boost::mpi::communicator const &c)
 {
     double sum_Z, sum_E;
     boost::mpi::reduce(c, Z, sum_Z, std::plus<double>(), 0);

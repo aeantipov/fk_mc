@@ -47,6 +47,7 @@ inline size_t configuration<lattice_t>::get_nf() const
 template <class lattice_t>
 void configuration<lattice_t>::randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf){
     if (!nf) nf = get_nf();
+    f_config()=0;
     for (size_t i=0; i<nf; ++i) {  
     size_t ind = rnd(lattice.m_size);
     while (f_config(ind)==1) ind = rnd(lattice.m_size);

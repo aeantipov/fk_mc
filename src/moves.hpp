@@ -8,10 +8,8 @@
 namespace fk {
 
 // flip move
-template <class lattice>
+template <class config_t>
 struct move_flip {
-    typedef configuration<lattice> config_t;
-
     typedef double mc_weight_type;
 
     double beta;
@@ -21,8 +19,8 @@ struct move_flip {
      
     triqs::mc_tools::random_generator &RND;
 
-    move_flip<config_t>(double beta, config_t& current_config, triqs::mc_tools::random_generator &RND_): 
-    beta(beta), config(current_config), new_config(current_config), RND(RND_) {}
+    move_flip(double beta, config_t& current_config, triqs::mc_tools::random_generator &RND_): 
+        beta(beta), config(current_config), new_config(current_config), RND(RND_) {}
 
     mc_weight_type attempt(){
         new_config = config;
@@ -49,15 +47,14 @@ struct move_flip {
 
  //************************************************************************************
 
-template <class lattice>
-struct move_randomize : move_flip<lattice> {
-    using typename move_flip<lattice>::config_t;
-    using typename move_flip<lattice>::mc_weight_type;
-    using move_flip<lattice>::beta;
-    using move_flip<lattice>::config;
-    using move_flip<lattice>::new_config;
-    using move_flip<lattice>::RND;
-    using move_flip<lattice>::__calc_weight_ratio;
+template <class config_t>
+struct move_randomize : move_flip<config_t> {
+    using typename move_flip<config_t>::mc_weight_type;
+    using move_flip<config_t>::beta;
+    using move_flip<config_t>::config;
+    using move_flip<config_t>::new_config;
+    using move_flip<config_t>::RND;
+    using move_flip<config_t>::__calc_weight_ratio;
     move_randomize<config_t>(double beta, config_t& current_config, triqs::mc_tools::random_generator &RND_): 
         move_flip<config_t>::move_flip(beta, current_config, RND_) {}
 
@@ -72,8 +69,8 @@ struct move_randomize : move_flip<lattice> {
 };
 
  //************************************************************************************
-template <class lattice>
-inline double move_flip<lattice>::__calc_weight_ratio(double beta, const real_array_t &evals_old, real_array_t &evals_new)
+template <class config_t>
+inline double move_flip<config_t>::__calc_weight_ratio(double beta, const real_array_t &evals_old, real_array_t &evals_new)
 {
     double e_min = std::min(evals_new(0),evals_old(0)); 
     double exp_emin = exp(beta*e_min);
