@@ -31,8 +31,8 @@ int main(int argc, char* argv[])
             my_config(lattice.pos_to_index({x,y+x%2}))=1;
         }
     config.f_config = my_config;
-    DEBUG(config.f_config);
-    DEBUG(config.get_spectrum());
+    MY_DEBUG(config.f_config);
+    MY_DEBUG(config.get_spectrum());
 
    }
   catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}

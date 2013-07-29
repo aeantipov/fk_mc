@@ -12,6 +12,7 @@ namespace fk {
 template <size_t D>
 struct square_lattice_traits 
 {
+    static constexpr size_t Ndim = D;
     std::array<size_t, D> dims;
     size_t m_size;
     real_matrix_t hopping_m;

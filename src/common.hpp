@@ -13,11 +13,12 @@ namespace fk {
 
 #define MSG_PREFIX            __FILE__ << ":" << __LINE__ << ": "
 #ifdef FK_MC_DEBUG
-#define DEBUG(MSG)            std::cout << std::boolalpha << MSG_PREFIX << MSG << std::endl; 
+#define MY_DEBUG(MSG)            std::cout << std::boolalpha << MSG_PREFIX << MSG << std::endl; 
 #else 
-#define DEBUG(MSG)
+#define MY_DEBUG(MSG)
 #endif
 #define INFO(MSG)             std::cout << std::boolalpha << MSG << std::endl;
+#define INFO2(MSG)            std::cout << "    " << std::boolalpha << MSG << std::endl;
 #define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;
 #define ERROR(MSG)            std::cerr << MSG_PREFIX << MSG << std::endl;
 

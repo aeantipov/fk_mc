@@ -29,7 +29,8 @@ struct configuration {
         }
 
     configuration(const configuration&) = default;
-    configuration& operator= (const configuration& rhs) {U = rhs.U, mu_c = rhs.mu_c; mu_f = rhs.mu_f; f_config = rhs.f_config; return (*this);};
+    configuration& operator= (const configuration& rhs) {U = rhs.U, mu_c = rhs.mu_c; mu_f = rhs.mu_f; 
+                                                         f_config = rhs.f_config; cached_spectrum = rhs.cached_spectrum; return (*this);};
     size_t get_nf() const;
     void randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf = 0);
 
@@ -72,7 +73,8 @@ real_array_t configuration<lattice_t>::get_spectrum() const
 // Free functions
 inline real_array_t density_matrix_c(double beta, real_array_t spectrum, double offset_energy)
 {
-    auto F = triqs::arrays::map(std::function<double(double)>( [beta,offset_energy](double E){return 1.0+exp(-beta*(E-offset_energy));} ));
+    double exp_offset = exp(beta*offset_energy);
+    auto F = triqs::arrays::map(std::function<double(double)>( [beta,offset_energy,exp_offset](double E){return 1.0+exp(-beta*(E-offset_energy))/exp_offset;} ));
     return F(spectrum);
 }
 

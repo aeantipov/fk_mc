@@ -6,15 +6,15 @@ int main()
 {
     square_lattice_traits<2> l1(4);
 
-    DEBUG(l1.pos_to_index({0,0}));
-    DEBUG(l1.pos_to_index({0,2}));
-    DEBUG(l1.pos_to_index({1,0}));
-    DEBUG(l1.pos_to_index({2,1}));
+    MY_DEBUG(l1.pos_to_index({0,0}));
+    MY_DEBUG(l1.pos_to_index({0,2}));
+    MY_DEBUG(l1.pos_to_index({1,0}));
+    MY_DEBUG(l1.pos_to_index({2,1}));
 
-    DEBUG(l1.index_to_pos(0));
-    DEBUG(l1.index_to_pos(2));
-    DEBUG(l1.index_to_pos(4));
-    DEBUG(l1.index_to_pos(9));
+    MY_DEBUG(l1.index_to_pos(0));
+    MY_DEBUG(l1.index_to_pos(2));
+    MY_DEBUG(l1.index_to_pos(4));
+    MY_DEBUG(l1.index_to_pos(9));
 
     bool success;
     std::array<size_t, 2> pos1 = { 2, 3};
