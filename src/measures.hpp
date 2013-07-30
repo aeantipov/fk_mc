@@ -47,10 +47,13 @@ void measure_energy<config_t>::accumulate (double sign)
     triqs::clef::placeholder<0> i_;
     e_nf(i_) << evals(i_) / (1.0+exp(beta*(evals(i_))));
 
-    double e_val = __sum(e_nf) - config.mu_f*config.get_nf();
+    double e_val = __sum(e_nf) - double(config.mu_f)*config.get_nf();
     energy += e_val;
+    /*MY_DEBUG(__sum(e_nf));
+    MY_DEBUG(e_val);
     MY_DEBUG(Z);
     MY_DEBUG(energy);
+    */
 }
 
 template <class config_t>
