@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     square_lattice_traits<2> lattice(L);
     lattice.fill(-1.0);
 
-    DEBUG(lattice.get_hopping_matrix());
+    MY_DEBUG(lattice.get_hopping_matrix());
 
     configuration<square_lattice_traits<2>> config(lattice, U, mu, mu+e_f);
 

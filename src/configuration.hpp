@@ -46,7 +46,7 @@ inline size_t configuration<lattice_t>::get_nf() const
 
 template <class lattice_t>
 void configuration<lattice_t>::randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf){
-    if (!nf) nf = get_nf();
+    if (!nf) nf = rnd(lattice.m_size);
     f_config()=0;
     for (size_t i=0; i<nf; ++i) {  
     size_t ind = rnd(lattice.m_size);
@@ -56,7 +56,7 @@ void configuration<lattice_t>::randomize_f(triqs::mc_tools::random_generator &rn
 }
 
 template <class lattice_t>
-real_matrix_t configuration<lattice_t>::get_hamiltonian() const
+inline real_matrix_t configuration<lattice_t>::get_hamiltonian() const
 {
     real_matrix_t T1(lattice.get_hopping_matrix());
     for (size_t i=0; i<lattice.m_size; ++i) T1(i,i)+= -mu_c + U*f_config(i); // unoptimized
@@ -64,19 +64,11 @@ real_matrix_t configuration<lattice_t>::get_hamiltonian() const
 }
 
 template <class lattice_t>
-real_array_t configuration<lattice_t>::get_spectrum() const
+inline real_array_t configuration<lattice_t>::get_spectrum() const
 {
     auto evals = triqs::arrays::linalg::eigenvalues(real_matrix_view_t(get_hamiltonian())); 
     cached_spectrum = evals;
     return evals;
-}
-
-// Free functions
-inline real_array_t density_matrix_c(double beta, real_array_t spectrum, double offset_energy)
-{
-    double exp_offset = exp(beta*offset_energy);
-    auto F = triqs::arrays::map(std::function<double(double)>( [beta,offset_energy,exp_offset](double E){return 1.0+exp(-beta*(E-offset_energy))/exp_offset;} ));
-    return F(spectrum);
 }
 
 

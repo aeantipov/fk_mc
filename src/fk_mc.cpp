@@ -16,7 +16,7 @@ fk_mc<lattice_t>::fk_mc(lattice_t l):
 template <class lattice_t>
 void fk_mc<lattice_t>::solve(utility::parameters p)
 {
-    if (world.rank() == 0) std::cout << "Falicov-Kimball lattice Monte Carlo" << std::endl << std::endl;
+    if (world.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
     p.update(solve_defaults());
 
     mc_tools::mc_generic<double> mc(p);
@@ -25,12 +25,16 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     config_t config(lattice,p["U"],p["mu_c"],p["mu_f"]);
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.get_spectrum();
-    double e_0 = -4.0;
 
     double beta = p["beta"];
-    mc.add_move(move_flip<config_t>(beta, config, mc.rng()), "flip", 1.0);
-    mc.add_move(move_randomize<config_t>(beta, config, mc.rng()), "randomize", 0.1);
-    mc.add_measure(measure_energy<config_t>(beta,config,e_0), "energy");
+    if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) 
+        mc.add_move(move_flip<config_t>(beta, config, mc.rng()), "flip", p["mc_flip"]);
+    if (double(p["mc_add_remove"])>std::numeric_limits<double>::epsilon()) 
+        mc.add_move(move_addremove<config_t>(beta, config, mc.rng()), "add_remove", p["mc_add_remove"]);
+    if (double(p["mc_reshuffle"])>std::numeric_limits<double>::epsilon()) 
+        mc.add_move(move_randomize<config_t>(beta, config, mc.rng()), "reshuffle", p["mc_reshuffle"]);
+
+    mc.add_measure(measure_energy<config_t>(beta,config), "energy");
 
       // run and collect results
     mc.start(1.0, triqs::utility::clock_callback(p["max_time"]));
@@ -46,11 +50,14 @@ template <class lattice_t>
    ("beta", double(), "Inverse temperature")
    ("U", double(1.0), "FK U")
    ("N_Cycles", int(), "Number of QMC cycles")
+   ("mu_c", double(0.5), "Chemical potential of c electrons")
+   ("mu_f", double(0.5), "Chemical potential of f electrons")
    ;
 
   pdef.optional
-   ("mu_c", double(0.5), "Chemical potential of c electrons")
-   ("mu_f", double(0.5), "Chemical potential of f electrons")
+   ("mc_flip", double(1.0), "Make flip moves")
+   ("mc_add_remove", double(1.0), "Make add/remove moves")
+   ("mc_reshuffle", double(1.0), "Make reshuffle moves")
    ("Nf_start", size_t(5), "Starting number of f-electrons")
    ("Length_Cycle", int(50), "Length of a single QMC cycle")
    ("N_Warmup_Cycles", int(5000), "Number of cycles for thermalization")
@@ -63,6 +70,7 @@ template <class lattice_t>
  }
 
 /* Explicit instantiation */
-template class fk_mc<square_lattice_traits<2>>; // Square lattice, 2d
+//template class fk_mc<square_lattice_traits<2>>; // Square lattice, 2d
+template class fk_mc<triangular_lattice_traits>; // Triangular lattice, 2d
 
 } // end of namespace FK

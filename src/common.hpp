@@ -9,6 +9,8 @@
 #include <boost/math/special_functions/pow.hpp>
 #include <numeric>
 
+#include "triqs_extra.hpp"
+
 namespace fk {
 
 #define MSG_PREFIX            __FILE__ << ":" << __LINE__ << ": "
