@@ -18,6 +18,7 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
 {
     if (world.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
     p.update(solve_defaults());
+    p["Random_Seed"]=int(p["Random_Seed"])+928374*world.rank();
 
     mc_tools::mc_generic<double> mc(p);
 
@@ -34,7 +35,9 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     if (double(p["mc_reshuffle"])>std::numeric_limits<double>::epsilon()) 
         mc.add_move(move_randomize<config_t>(beta, config, mc.rng()), "reshuffle", p["mc_reshuffle"]);
 
-    mc.add_measure(measure_energy<config_t>(beta,config), "energy");
+    size_t max_bins = p["N_Cycles"];
+    observables.energies.reserve(max_bins);
+    mc.add_measure(measure_energy<config_t>(beta,config,observables.energies), "energy");
 
       // run and collect results
     mc.start(1.0, triqs::utility::clock_callback(p["max_time"]));
@@ -61,7 +64,7 @@ template <class lattice_t>
    ("Nf_start", size_t(5), "Starting number of f-electrons")
    ("Length_Cycle", int(50), "Length of a single QMC cycle")
    ("N_Warmup_Cycles", int(5000), "Number of cycles for thermalization")
-   ("Random_Seed", int(34788+928374*world.rank()), "Seed for random number generator")
+   ("Random_Seed", int(34788), "Seed for random number generator")
    ("Random_Generator_Name", std::string(""), "Name of random number generator")
    ("max_time",int(600), "Maximum running time")
    ;

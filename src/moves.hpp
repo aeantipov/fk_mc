@@ -122,7 +122,7 @@ inline double move_flip<config_t>::__calc_weight_ratio(double beta, const real_a
     //MY_DEBUG("Evals ratio: " << evals_rate);
 //    evals_rate(i_) << (1.0+exp(-beta*(evals_new(i_)))) / (1.0+exp(-beta*(evals_old(i_))));
 
-    return __prod(evals_rate);
+    return prod(evals_rate);
 };
 
 

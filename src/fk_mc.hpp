@@ -8,17 +8,21 @@
 
 namespace fk {
 
+// obsevables as a function of MC step - for error estimation
+struct observables_t {
+    std::vector<double> energies;
+};
 
 template <class lattice_t>
 class fk_mc 
 {
     typedef configuration<lattice_t> config_t;
     boost::mpi::communicator world;
+public:
     lattice_t lattice;
+    observables_t observables;
 
     triqs::utility::parameter_defaults solve_defaults() const;
-
-    public:
 
     fk_mc(lattice_t l);
     void solve(utility::parameters p);

@@ -2,6 +2,7 @@
 #define __FK_MC_COMMON_H
 
 #include <triqs/arrays.hpp>
+#include <triqs/arrays/algorithms.hpp>
 #include <triqs/parameters/parameters.hpp>
 
 #include <tuple>
@@ -12,6 +13,9 @@
 #include "triqs_extra.hpp"
 
 namespace fk {
+
+using triqs::arrays::prod;
+using triqs::arrays::sum;
 
 #define MSG_PREFIX            __FILE__ << ":" << __LINE__ << ": "
 #ifdef FK_MC_DEBUG
@@ -39,10 +43,12 @@ inline std::ostream& operator<< (std::ostream& in, const std::array<size_t, D> a
     return in;
 };
 
+/*
 template <class arr_t>
 inline double __prod(const arr_t& in){double out=1.0; out = std::accumulate(in.begin(), in.end(), 1.0, std::multiplies<double>()); return out; };
 template <class arr_t>
 inline double __sum(const arr_t& in){double out=0.0; out = std::accumulate(in.begin(), in.end(), 0.0, std::plus<double>()); return out; };
+*/
 
 }; // end of namespace FK
 
