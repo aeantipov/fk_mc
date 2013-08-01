@@ -9,7 +9,7 @@ find_package(TRIQS REQUIRED)
 include_directories(${TRIQS_INCLUDE_ALL})
 
 # build fk mc library
-add_library(fk_mc STATIC src/lattice_traits.cpp src/fk_mc.cpp)
+add_library(fk_mc STATIC solver/lattice_traits.cpp solver/fk_mc.cpp)
 target_link_libraries (fk_mc ${TRIQS_LIBRARY_ALL})
 install(TARGETS fk_mc DESTINATION lib)
 
