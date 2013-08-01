@@ -49,13 +49,11 @@ void measure_energy<config_t>::collect_results(boost::mpi::communicator const &c
     double sum_E;
     boost::mpi::reduce(c, _Z, sum_Z, std::plus<int>(), 0);
     boost::mpi::reduce(c, _average_energy, sum_E, std::plus<double>(), 0);
-    std::vector<double> energies(_energies.size());
-    boost::mpi::reduce(c, _energies.data(), _energies.size(), energies.data(), std::plus<double>(), 0);
-    std::transform (energies.begin(), energies.end(), energies.begin(), [&](double x){return x/c.size();});
 
+    std::vector<double> energies(_energies.size()*c.size());
+    boost::mpi::gather(c, _energies.data(), _energies.size(), energies, 0);
     _energies.swap(energies);
 
-    MY_DEBUG(sum_Z<< " " << sum_E);
     if (c.rank() == 0) {
     INFO("Total energy: " << sum_E / sum_Z);
     }
