@@ -1,10 +1,11 @@
 link_libraries(fk_mc ${TRIQS_LIBRARY_ALL})
-include_directories(../src ${TRIQS_INCLUDE_ALL})
+include_directories(../solver ${TRIQS_INCLUDE_ALL})
 
 set (tests 
+triqs_extra_test
 lattice_traits_test
 config_test
-mc_test01
+#mc_test01
 )
 
 enable_testing()
