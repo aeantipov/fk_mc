@@ -13,6 +13,9 @@ add_library(fk_mc STATIC solver/lattice_traits.cpp solver/fk_mc.cpp)
 target_link_libraries (fk_mc ${TRIQS_LIBRARY_ALL})
 install(TARGETS fk_mc DESTINATION lib)
 
+# build statistics
+#add_subdirectory(statistics)
+
 # build executable
 option(Execs "Enable executables" ON)
 if (Execs)

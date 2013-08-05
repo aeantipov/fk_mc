@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "configuration.hpp"
+#include "triqs_extra.hpp"
 #include <triqs/mc_tools/random_generator.hpp>
 
 namespace fk {
@@ -41,7 +42,7 @@ struct move_flip {
     mc_weight_type accept() {
         #ifdef FK_MC_DEBUG
         //auto x=triqs::arrays::immutable_diagonal_matrix_view<int>(new_config.f_config);
-        auto x = reinterpret_array_view(new_config.f_config,new_config.lattice.dims[0],new_config.lattice.dims[1]);
+        auto x = triqs::arrays::extra::reinterpret_array_view(new_config.f_config,new_config.lattice.dims[0],new_config.lattice.dims[1]);
         MY_DEBUG(config.f_config << "->" << new_config.f_config);
         #endif
         config = new_config; 

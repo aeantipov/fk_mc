@@ -10,8 +10,6 @@
 #include <boost/math/special_functions/pow.hpp>
 #include <numeric>
 
-#include "triqs_extra.hpp"
-
 namespace fk {
 
 using triqs::arrays::prod;
@@ -35,6 +33,8 @@ typedef triqs::arrays::array<double,2> real_array2d_t;
 typedef triqs::arrays::array_view<double,2> real_array2d_view_t;
 typedef triqs::arrays::matrix<double>  real_matrix_t;
 typedef triqs::arrays::matrix_view<double>  real_matrix_view_t;
+
+
 typedef triqs::utility::parameters parameters;
 
 template <size_t D>
