@@ -32,4 +32,6 @@ int main()
     std::cout << e2 << std::endl;
     for (auto b: a) std::cout << b <<" " << std::flush;
     std::cout << std::endl;
+
+    std::cout << fk::make_weak_view(a) << std::endl;
 }
