@@ -12,6 +12,8 @@
 
 namespace fk {
 
+namespace tqa = triqs::arrays;
+
 using triqs::arrays::prod;
 using triqs::arrays::sum;
 

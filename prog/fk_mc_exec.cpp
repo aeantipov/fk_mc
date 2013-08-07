@@ -114,15 +114,7 @@ try {
         };
 
     if (world.rank() == 0) {
-        //const typename real_array_view_t::indexmap_type a(tqa::memory_layout_c);
-        //tqa::indexmaps::cuboid::domain_t<1> d(tqa::mini_vector<int, 1>({static_cast<int>(mc.observables.energies.size())})); // FIXME!!
-        tqa::indexmaps::cuboid::domain_t<1> d1({10}); // FIXME!!
-        tqa::indexmaps::cuboid::domain_t<1> d2(tqa::mini_vector<int, 1>({10})); // FIXME!!
-        //real_array_view_t::indexmap_type b(d);
-        //MY_DEBUG(d);
-        //MY_DEBUG(b);
-        //real_array_view_t energies(b, &mc.observables.energies[0]);
-        //binning(energies, 15); 
+            binning(make_weak_view(mc.observables.energies), 15); 
         };
     }
     // Any exceptions related with command line parsing.

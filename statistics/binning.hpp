@@ -14,24 +14,24 @@ namespace fk {
 
 /** Binned iterator takes bin as an input parameter. If bin = 0 -> normal iterator, if bin>0 dereference returns averaged over (2^bin) values. */
 template <typename iter_t, size_t D>
-struct binned_const_iterator : 
-    public boost::iterator_facade<binned_const_iterator<iter_t,D>, const double, boost::forward_traversal_tag, double>
+struct binned_iterator : 
+    public boost::iterator_facade<binned_iterator<iter_t,D>, const double, boost::forward_traversal_tag, double>
 {
-    constexpr static size_t step = binned_const_iterator<iter_t,D-1>::step*2;
+    constexpr static size_t step = binned_iterator<iter_t,D-1>::step*2;
     iter_t p;
-    binned_const_iterator(iter_t start):p(start){};
-    constexpr double dereference() const { return (*binned_const_iterator<iter_t,D-1>(p) + *binned_const_iterator<iter_t,D-1>(p+binned_const_iterator<iter_t,D-1>::step))/2.; };
-    bool equal(binned_const_iterator const &rhs) const { return (p == rhs.p); };
+    binned_iterator(iter_t start):p(start){};
+    constexpr double dereference() const { return (*binned_iterator<iter_t,D-1>(p) + *binned_iterator<iter_t,D-1>(p+binned_iterator<iter_t,D-1>::step))/2.; };
+    bool equal(binned_iterator const &rhs) const { return (p == rhs.p); };
     void increment() { std::advance(p,step); };
 };
 
 template <typename iter_t>
-struct binned_const_iterator<iter_t,0>: public boost::iterator_facade<binned_const_iterator<iter_t,0>, double, boost::forward_traversal_tag, double>
+struct binned_iterator<iter_t,0>: public boost::iterator_facade<binned_iterator<iter_t,0>, double, boost::forward_traversal_tag, double>
 {
     constexpr static size_t step = 1;
     iter_t p;
-    binned_const_iterator(iter_t start):p(start){};
-    bool equal(binned_const_iterator const &rhs) const { return (p == rhs.p); };
+    binned_iterator(iter_t start):p(start){};
+    bool equal(binned_iterator const &rhs) const { return (p == rhs.p); };
     constexpr double dereference() const { return *p; };
     void increment() { p++; };
 };
@@ -42,10 +42,10 @@ struct binning_adapter {
     template <size_t bin, typename iter_t> static std::tuple<double, double, double> binning(iter_t begin, iter_t end, std::random_access_iterator_tag) {
         if (bin > maxD) TRIQS_RUNTIME_ERROR << "Can't bin " << bin << " times, max = " << maxD;
         int size = std::distance(begin, end);
-        int step = binned_const_iterator<iter_t,bin>::step;
+        int step = binned_iterator<iter_t,bin>::step;
         if (step > size) TRIQS_RUNTIME_ERROR << "Can't bin with depth = " << bin << ", binning step(" << step << ")> container size (" << size << ")";
         int nsteps = size/step;
-        binned_const_iterator<iter_t,bin> binned_begin(begin), binned_end(begin); std::advance(binned_end,nsteps);
+        binned_iterator<iter_t,bin> binned_begin(begin), binned_end(begin); std::advance(binned_end,nsteps);
         return calc_stats(binned_begin, binned_end, nsteps);
         /*
         double mean, variance, stddev;
@@ -59,12 +59,12 @@ struct binning_adapter {
     #define RANGE ((0)(1)(2)(3)(4)(5)(6)(7)(8)(9)(10)(11)(12)(13))
     #define MACRO(r, p) \
     if (BOOST_PP_SEQ_ELEM(0, p) == bin) \
-        auto it = binned_const_iterator<BOOST_PP_SEQ_ELEM(0, p)>(in.begin());
+        auto it = binned_iterator<BOOST_PP_SEQ_ELEM(0, p)>(in.begin());
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(MACRO, RANGE)
     #undef MACRO
     #undef RANGE
 
-//       binned_const_iterator<1> begin(&*in.begin());
+//       binned_iterator<1> begin(&*in.begin());
 */
     template <typename iter_t>
     static std::tuple<double, double, double> calc_stats(const iter_t& begin, const iter_t& end, size_t size) {

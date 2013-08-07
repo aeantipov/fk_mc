@@ -129,6 +129,17 @@ private:
 namespace fk {
     typedef triqs::arrays::extra::weak_view<double, 1> real_array_weak_view_t;
     typedef triqs::arrays::extra::weak_view<double, 2> real_array2d_weak_view_t;
+
+template <typename T>
+triqs::arrays::extra::weak_view<T,1> make_weak_view(std::vector<T> in) {
+
+    triqs::arrays::indexmaps::cuboid::domain_t<1> d1({int(in.size())});
+    triqs::arrays::indexmaps::cuboid::map<1,0,0> ind(d1);
+    triqs::arrays::extra::weak_block<double> w(in.data(), in.size());
+    return triqs::arrays::extra::weak_view<double,1>(ind, w);
+};
+
+template<typename T> triqs::arrays::vector<T> make_vector_ones (size_t l)  { auto r = triqs::arrays::vector<T>(l); r()=1; return r;}
 }
 
 #endif // endif :: #ifndef __TRIQS_EXTRA_HPP
