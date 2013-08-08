@@ -69,11 +69,20 @@ catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() <
     };
     if (!success) return EXIT_FAILURE;
 
+    auto bin_stats2 = accumulate_binning(a.begin(),a.end(), 3); // call non-templated
+    for (size_t i=0; i<bin_stats2.size(); i++) {
+        INFO(i <<" : " << bin_stats2[i] << "==" << correct_v[i] << " = " << is_equal(bin_stats2[i],correct_v[i],1e-5));
+        success = success && is_equal(bin_stats2[i],correct_v[i],1e-5); 
+    };
+    if (!success) return EXIT_FAILURE;
+
+
     tqa::array<double,1> b(17); std::copy(a.begin(),a.end(),b.begin());
-    auto bin_stats2 = binning_accumulator<3>::accumulate_binning(b.begin(),b.end());
-    for (size_t i=0; i<bin_stats.size(); i++) {
-        INFO(i <<" : " << bin_stats2[i] << "==" << correct_v[i] << " = " << is_equal(bin_stats[i],correct_v[i],1e-5));
-        success = success && is_equal(bin_stats[i],correct_v[i],1e-5); 
+
+    auto bin_stats_tqa = binning_accumulator<3>::accumulate_binning(b.begin(),b.end());
+    for (size_t i=0; i<bin_stats_tqa.size(); i++) {
+        INFO(i <<" : " << bin_stats_tqa[i] << "==" << correct_v[i] << " = " << is_equal(bin_stats_tqa[i],correct_v[i],1e-5));
+        success = success && is_equal(bin_stats_tqa[i],correct_v[i],1e-5); 
     };
     if (!success) return EXIT_FAILURE;
 

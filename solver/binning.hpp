@@ -121,6 +121,12 @@ static std::vector<std::tuple<size_t,double,double,double,double>> accumulate_bi
     return {std::make_tuple(0, std::nan(""),std::nan(""),std::nan(""),std::nan(""))};
 }
 
+template <typename container_t>
+static std::vector<std::tuple<size_t,double,double,double,double>> accumulate_binning(const container_t& in, size_t bin_depth) {
+    return accumulate_binning(in.begin(),in.end(),bin_depth);
+}
+
+
 #undef BINNING_RANGE
 
 } // end of namespace fk
