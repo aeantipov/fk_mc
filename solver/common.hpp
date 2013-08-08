@@ -51,6 +51,30 @@ inline double __prod(const arr_t& in){double out=1.0; out = std::accumulate(in.b
 template <class arr_t>
 inline double __sum(const arr_t& in){double out=0.0; out = std::accumulate(in.begin(), in.end(), 0.0, std::plus<double>()); return out; };
 */
+/** A tool to split a tuple from http://stackoverflow.com/questions/10626856/how-to-split-a-tuple. */
+template <typename Target, typename Tuple, int N, bool end >
+struct __split_tuple_struct
+{
+    template < typename ... Args >
+    static Target create(Tuple const& t, Args && ... args)
+    {
+        return __split_tuple_struct<Target,Tuple, N+1, std::tuple_size<Tuple>::value == N+1>::create(t, std::forward<Args>(args)..., std::get<N>(t));
+    }
+};
+
+template < typename Target, typename Tuple, int N >
+struct __split_tuple_struct<Target,Tuple,N,true>
+{
+    template < typename ... Args >
+    static Target create(Tuple const& t, Args && ... args) { return Target(std::forward<Args>(args)...); }
+};
+
+template < typename Head, typename ... Tail >
+inline std::tuple<Tail...> tuple_tail(std::tuple<Head,Tail...> const& tpl)
+{
+    return __split_tuple_struct<std::tuple<Tail...>, std::tuple<Head,Tail...>, 1, std::tuple_size<std::tuple<Head,Tail...>>::value == 1>::create(tpl);
+}
+
 
 }; // end of namespace FK
 

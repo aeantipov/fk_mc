@@ -6,6 +6,23 @@
 
 using namespace fk;
 
+template <typename T1> struct float_comparator {
+static bool is_equal(T1 a, T1 b, double tol){return (std::abs(double(a)-double(b))<tol);};
+};
+
+template <typename Arg1> struct float_comparator<std::tuple<Arg1>> {
+static bool is_equal(std::tuple<Arg1> a, std::tuple<Arg1> b, double tol){return float_comparator<Arg1>::is_equal(std::get<0>(a), std::get<0>(b), tol);};
+};
+
+
+template <typename Arg1, typename ... Args> struct float_comparator<std::tuple<Arg1, Args...>> {
+static bool is_equal (std::tuple<Arg1, Args...> a, std::tuple<Arg1, Args...> b, double tol)
+{ 
+return (float_comparator<Arg1>::is_equal(std::get<0>(a),std::get<0>(b),tol) && float_comparator<std::tuple<Args...>>::is_equal(tuple_tail(a),tuple_tail(b), tol));};
+};
+
+template <typename T1> bool is_equal(T1 a, T1 b, double tol = std::numeric_limits<double>::epsilon()){return float_comparator<T1>::is_equal(a,b,tol);};
+
 int main()
 {
     triqs::mc_tools::random_generator RNG("mt19937", 23432);
@@ -31,8 +48,8 @@ try{
     }
 catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() << std::endl;}
    
-    MY_DEBUG("--0 :" << binning_adapter::stats(a.begin(), a.end(), a.size()));
-    MY_DEBUG("--0 :" << binning_adapter::stats(a.crbegin(), a.crend(), a.size()));
+    MY_DEBUG("--0 :" << binning_adapter::stats(a.begin(), a.end()));
+    MY_DEBUG("--0 :" << binning_adapter::stats(a.crbegin(), a.crend()));
     MY_DEBUG(binning_adapter::binning<0>(a.begin(), a.end()));
     MY_DEBUG(binning_adapter::binning<0>(a.rbegin(), a.rend()));
     MY_DEBUG(binning_adapter::binning<1>(a.begin(), a.end()));
@@ -41,7 +58,27 @@ catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() <
     MY_DEBUG(binning(a.begin(), a.end(),2));
     MY_DEBUG(binning(a,2));
 
-    auto bin_stats = accumulate_binning<3>::errors(a.begin(),a.end());
-    MY_DEBUG(bin_stats.size());
-    for (auto x : bin_stats) MY_DEBUG(x);
+    auto bin_stats = binning_accumulator<3>::accumulate_binning(a.begin(),a.end());
+    std::vector<std::tuple<size_t,double,double,double,double>> correct_v = // taken from Mathematica
+    { std::make_tuple(17, 0.484035, 0.0872001, 0.07162, 0), std::make_tuple(8, 0.467231, 0.0422793, 0.0726974, -0.0151463), 
+      std::make_tuple(4, 0.467231, 0.0269458, 0.0820759, 0.118023), std::make_tuple(2, 0.467231,0.00162846,  0.0285348, -0.4253)};
+    bool success = true;
+    for (size_t i=0; i<bin_stats.size(); i++) {
+        INFO(i <<" : " << bin_stats[i] << "==" << correct_v[i] << " = " << is_equal(bin_stats[i],correct_v[i],1e-5));
+        success = success && is_equal(bin_stats[i],correct_v[i],1e-5); 
+    };
+    if (!success) return EXIT_FAILURE;
+
+    tqa::array<double,1> b(17); std::copy(a.begin(),a.end(),b.begin());
+    auto bin_stats2 = binning_accumulator<3>::accumulate_binning(b.begin(),b.end());
+    for (size_t i=0; i<bin_stats.size(); i++) {
+        INFO(i <<" : " << bin_stats2[i] << "==" << correct_v[i] << " = " << is_equal(bin_stats[i],correct_v[i],1e-5));
+        success = success && is_equal(bin_stats[i],correct_v[i],1e-5); 
+    };
+    if (!success) return EXIT_FAILURE;
+
+
+
+
+    return EXIT_SUCCESS;
 }
