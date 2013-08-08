@@ -1,6 +1,7 @@
 #include "fk_mc.hpp"
 #include "moves.hpp"
-#include "measures.hpp"
+#include "measure_energy.hpp"
+#include "measure_d2energy.hpp"
 
 #include <triqs/mc_tools/mc_generic.hpp>
 #include <triqs/utility/callbacks.hpp>
@@ -38,6 +39,7 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     size_t max_bins = p["N_Cycles"];
     observables.energies.reserve(max_bins);
     mc.add_measure(measure_energy<config_t>(beta,config,observables.energies), "energy");
+    mc.add_measure(measure_d2energy<config_t>(beta,config,observables.d2energies), "d2energy");
 
       // run and collect results
     mc.start(1.0, triqs::utility::clock_callback(p["max_time"]));

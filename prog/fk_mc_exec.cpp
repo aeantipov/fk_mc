@@ -123,9 +123,25 @@ void print_section (const std::string& str)
   std::cout << std::string(str.size(),'=') << std::endl;
 }
 
+void save_binning(const binning::bin_data& binning_data, triqs::h5::group& h5_group, std::string name, bool save_plaintext = false)
+{
+    auto cor_lens = binning::calc_cor_length(binning_data);
+    tqa::array<double, 2> data_arr(binning_data.size(),5);
+    std::ofstream out; out.setf(std::ios::scientific); //out << std::setw(9);
+    if (save_plaintext) out.open(name+"_binning.dat",std::ios::out);
+    for (size_t i=0; i<binning_data.size(); i++){
+        auto e = binning_data[i]; double c = cor_lens[i];
+        std::array<double, 5> t ({double(std::get<binning::_SIZE>(e)), std::get<binning::_MEAN>(e), std::get<binning::_DISP>(e), std::get<binning::_SQERROR>(e), c });
+        std::copy(t.begin(),t.end(),data_arr(i,tqa::range()).begin());
+        if (save_plaintext) out << i << " " << std::get<binning::_SIZE>(e) << "  " << std::get<binning::_MEAN>(e) 
+            << "  " << std::get<binning::_DISP>(e) << "  " << std::get<binning::_SQERROR>(e) << "  " << c << "\n";
+       };
+    h5_write(h5_group,name, data_arr);
+    out.close();
+}
+
 void save_data(const mc_t& mc, std::string output_file)
 {
-    #define io_prefs std::scientific << std::setw(9)
     print_section("Statistics");
     H5::H5File output(output_file,H5F_ACC_TRUNC);
     triqs::h5::group top(output);
@@ -138,22 +154,11 @@ void save_data(const mc_t& mc, std::string output_file)
     auto h5_stats = top.open_group("stats");
     INFO("Energy binning");
     size_t size = mc.observables.energies.size();
-    int maxbin = std::min(15,std::max(int(std::log(size/4)/std::log(2.)-1),1));
-
+    int maxbin = std::min(15,std::max(int(std::log(size/16)/std::log(2.)-1),1));
     INFO("\tBinning " << maxbin <<" times.");
-    auto energy_binning_data = binning::accumulate_binning(mc.observables.energies, maxbin); 
-    auto energy_cor_lens = binning::calc_cor_length(energy_binning_data);
-    tqa::array<double, 2> edata(energy_binning_data.size(),5);
-    std::ofstream out; out.setf(std::ios::scientific); //out << std::setw(9);
-    out.open("energy_binning.dat",std::ios::out);
-    for (size_t i=0; i<energy_binning_data.size(); i++){
-        auto e = energy_binning_data[i]; double c = energy_cor_lens[i];
-        std::array<double, 5> t ({double(std::get<binning::_SIZE>(e)), std::get<binning::_MEAN>(e), std::get<binning::_DISP>(e), std::get<binning::_SQERROR>(e), c });
-        std::copy(t.begin(),t.end(),edata(i,tqa::range()).begin());
-        out << i << " " << std::get<binning::_SIZE>(e) << "  " << std::get<binning::_MEAN>(e) 
-            << "  " << std::get<binning::_DISP>(e) << "  " << std::get<binning::_SQERROR>(e) << "  " << c << "\n";
-       };
-    h5_write(h5_stats,"energies", edata);
-    out.close();
+    auto energy_binning_data = binning::accumulate_binning(mc.observables.energies.rbegin(), mc.observables.energies.rend(), maxbin); 
+    save_binning(energy_binning_data,h5_stats,"energies",true);
+    auto d2energy_binning_data = binning::accumulate_binning(mc.observables.d2energies.rbegin(),mc.observables.d2energies.rend(), maxbin); 
+    save_binning(d2energy_binning_data,h5_stats,"d2energies",true);
 }
 

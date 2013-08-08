@@ -11,6 +11,7 @@ namespace fk {
 // obsevables as a function of MC step - for error estimation
 struct observables_t {
     std::vector<double> energies;
+    std::vector<double> d2energies;
 };
 
 template <class lattice_t>

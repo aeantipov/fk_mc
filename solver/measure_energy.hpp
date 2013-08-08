@@ -1,5 +1,5 @@
-#ifndef __FK_MC_MEASURES_HPP_
-#define __FK_MC_MEASURES_HPP_
+#ifndef __FK_MC_MEASURE_ENERGY_HPP_
+#define __FK_MC_MEASURE_ENERGY_HPP_
 
 #include "common.hpp"
 #include <boost/mpi/collectives.hpp>
@@ -35,11 +35,6 @@ void measure_energy<config_t>::accumulate (double sign)
     double e_val = sum(e_nf) - double(config.mu_f)*config.get_nf();
     _average_energy += e_val;
     _energies.push_back(e_val);
-    /*MY_DEBUG(__sum(e_nf));
-    MY_DEBUG(e_val);
-    MY_DEBUG(Z);
-    MY_DEBUG(energy);
-    */
 }
 
 template <class config_t>
@@ -61,4 +56,4 @@ void measure_energy<config_t>::collect_results(boost::mpi::communicator const &c
 
 } // end of namespace fk
 
-#endif // endif :: #ifndef __FK_MC_MEASURES_HPP_
+#endif // endif :: #ifndef __FK_MC_MEASURE_ENERGY_HPP_
