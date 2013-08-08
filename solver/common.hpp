@@ -75,6 +75,50 @@ inline std::tuple<Tail...> tuple_tail(std::tuple<Head,Tail...> const& tpl)
     return __split_tuple_struct<std::tuple<Tail...>, std::tuple<Head,Tail...>, 1, std::tuple_size<std::tuple<Head,Tail...>>::value == 1>::create(tpl);
 }
 
+namespace to_arr { 
+
+template<int... Indices>
+struct indices {
+    using next = indices<Indices..., sizeof...(Indices)>;
+};
+
+template<int Size>
+struct build_indices {
+    using type = typename build_indices<Size - 1>::type::next;
+};
+
+template<>
+struct build_indices<0> {
+    using type = indices<>;
+};
+
+template<typename T>
+using Bare = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+
+template<typename Tuple>
+constexpr
+typename build_indices<std::tuple_size<Bare<Tuple>>::value>::type
+make_indices()
+{ return {}; }
+
+template<typename Tuple, int... Indices>
+std::array<
+  typename std::tuple_element<0, Bare<Tuple>>::type,
+    std::tuple_size<Bare<Tuple>>::value
+>
+to_array(Tuple&& tuple, indices<Indices...>)
+{
+    using std::get;
+    return {{ get<Indices>(std::forward<Tuple>(tuple))... }};
+}
+} // end of namespace to_arr
+
+template<typename Tuple>
+auto to_array(Tuple&& tuple)
+-> decltype( to_arr::to_array(std::declval<Tuple>(), to_arr::make_indices<Tuple>()) )
+{
+    return to_arr::to_array(std::forward<Tuple>(tuple), to_arr::make_indices<Tuple>());
+}
 
 }; // end of namespace FK
 

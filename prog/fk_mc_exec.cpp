@@ -14,11 +14,11 @@
 
 using namespace fk;
 
+
 typedef fk_mc<triangular_lattice_traits> mc_t;
 
 void print_section (const std::string& str); // fancy screen output
-void calculate_statistics(const mc_t &in);
-namespace tqa = triqs::arrays;
+void save_data(const mc_t& mc, std::string output_file);
 
 int main(int argc, char* argv[])
 {
@@ -45,9 +45,9 @@ try {
 
     
 
-    TCLAP::ValueArg<int> ncycles_arg("","ncycles","total number of cycles",false,100,"int",cmd);
-    TCLAP::ValueArg<int> nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,0,"int",cmd);
-    TCLAP::ValueArg<int> cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,100,"int",cmd);
+    TCLAP::ValueArg<int> ncycles_arg("","ncycles","total number of cycles",false,50000,"int",cmd);
+    TCLAP::ValueArg<int> nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,10000,"int",cmd);
+    TCLAP::ValueArg<int> cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,1,"int",cmd);
     TCLAP::SwitchArg     time_seed_switch("s","seed","Make a time seed flag", cmd, false);
 
     TCLAP::ValueArg<double>     move_flips_switch("","flip","Make flip (conserving)", false, 0.0, "double", cmd);
@@ -105,17 +105,10 @@ try {
 
     mc.solve(p);
 
+    world.barrier();
     if (world.rank() == 0) {
-        H5::H5File output("output.h5",H5F_ACC_TRUNC);
-        triqs::h5::group top(output);
-        top.create_group("mc_data");
-        auto h5_mc_data = top.open_group("mc_data");
-        h5_write(h5_mc_data,"energies", mc.observables.energies);
-        };
-
-    if (world.rank() == 0) {
-            binning(make_weak_view(mc.observables.energies), 15); 
-        };
+        save_data(mc,"output.h5");
+        }
     }
     // Any exceptions related with command line parsing.
     catch (TCLAP::ArgException &e) {std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; } 
@@ -130,4 +123,37 @@ void print_section (const std::string& str)
   std::cout << std::string(str.size(),'=') << std::endl;
 }
 
+void save_data(const mc_t& mc, std::string output_file)
+{
+    #define io_prefs std::scientific << std::setw(9)
+    print_section("Statistics");
+    H5::H5File output(output_file,H5F_ACC_TRUNC);
+    triqs::h5::group top(output);
+    top.create_group("mc_data");
+    top.create_group("stats");
+
+    auto h5_mc_data = top.open_group("mc_data");
+    h5_write(h5_mc_data,"energies", mc.observables.energies);
+
+    auto h5_stats = top.open_group("stats");
+    INFO("Energy binning");
+    size_t size = mc.observables.energies.size();
+    int maxbin = std::min(15,std::max(int(std::log(size/4)/std::log(2.)-1),1));
+
+    INFO("\tBinning " << maxbin <<" times.");
+    auto energy_binning_data = binning::accumulate_binning(mc.observables.energies, maxbin); 
+    auto energy_cor_lens = binning::calc_cor_length(energy_binning_data);
+    tqa::array<double, 2> edata(energy_binning_data.size(),5);
+    std::ofstream out; out.setf(std::ios::scientific); //out << std::setw(9);
+    out.open("energy_binning.dat",std::ios::out);
+    for (size_t i=0; i<energy_binning_data.size(); i++){
+        auto e = energy_binning_data[i]; double c = energy_cor_lens[i];
+        std::array<double, 5> t ({double(std::get<binning::_SIZE>(e)), std::get<binning::_MEAN>(e), std::get<binning::_DISP>(e), std::get<binning::_SQERROR>(e), c });
+        std::copy(t.begin(),t.end(),edata(i,tqa::range()).begin());
+        out << i << " " << std::get<binning::_SIZE>(e) << "  " << std::get<binning::_MEAN>(e) 
+            << "  " << std::get<binning::_DISP>(e) << "  " << std::get<binning::_SQERROR>(e) << "  " << c << "\n";
+       };
+    h5_write(h5_stats,"energies", edata);
+    out.close();
+}
 
