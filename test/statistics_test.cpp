@@ -26,17 +26,22 @@ int main()
     binned_iterator<std::vector<double>::iterator,2> it2(a.begin());
     MY_DEBUG(it2.step); MY_DEBUG(*it2); it2++; MY_DEBUG(*it2);
 
-/*
 try{ 
-    binning_adapter<decltype(arr1())>::binning<6>(arr1());
+    binning_adapter::binning<6>(a.begin(), a.end());
     }
 catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() << std::endl;}
-*/
    
-    MY_DEBUG("--0 :" << binning_adapter<std::vector<double>>::calc_stats(a.begin(), a.end(), a.size()));
-    MY_DEBUG("--0 :" << binning_adapter<std::vector<double>>::calc_stats(a.crbegin(), a.crend(), a.size()));
-    MY_DEBUG(binning_adapter<std::vector<double>>::binning<0>(a.begin(), a.end(), std::random_access_iterator_tag()));
-    MY_DEBUG(binning_adapter<std::vector<double>>::binning<0>(a.rbegin(), a.rend(), std::random_access_iterator_tag()));
-    MY_DEBUG(binning_adapter<std::vector<double>>::binning<1>(a.begin(), a.end(), std::random_access_iterator_tag()));
-    MY_DEBUG(binning_adapter<std::vector<double>>::binning<2>(a.begin(), a.end(), std::random_access_iterator_tag()));
+    MY_DEBUG("--0 :" << binning_adapter::stats(a.begin(), a.end(), a.size()));
+    MY_DEBUG("--0 :" << binning_adapter::stats(a.crbegin(), a.crend(), a.size()));
+    MY_DEBUG(binning_adapter::binning<0>(a.begin(), a.end()));
+    MY_DEBUG(binning_adapter::binning<0>(a.rbegin(), a.rend()));
+    MY_DEBUG(binning_adapter::binning<1>(a.begin(), a.end()));
+    MY_DEBUG(binning_adapter::binning<2>(a.begin(), a.end()));
+
+    MY_DEBUG(binning(a.begin(), a.end(),2));
+    MY_DEBUG(binning(a,2));
+
+    auto bin_stats = accumulate_binning<3>::errors(a.begin(),a.end());
+    MY_DEBUG(bin_stats.size());
+    for (auto x : bin_stats) MY_DEBUG(x);
 }
