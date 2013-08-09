@@ -18,7 +18,7 @@ namespace binning {
 
 enum bin_m : size_t { _SIZE, _MEAN, _DISP, _SQERROR };
 typedef std::tuple<size_t, double, double, double> bin_stats_t;
-typedef std::vector<bin_stats_t> bin_data;
+typedef std::vector<bin_stats_t> bin_data_t;
 
 
 /** Binned iterator takes bin as an input parameter. If bin = 0 -> normal iterator, if bin>0 dereference returns averaged over (2^bin) values. */
@@ -75,7 +75,7 @@ struct binning_adapter {
 template <size_t total_bins_left, size_t current_bin = 0>
 struct binning_accumulator {
     template <typename iter_t>
-    static bin_data accumulate_binning(iter_t begin, iter_t end) {
+    static bin_data_t accumulate_binning(iter_t begin, iter_t end) {
         auto stats = binning_adapter::bin<current_bin>(begin,end); 
         auto next  = binning_accumulator<total_bins_left - 1, current_bin + 1>::accumulate_binning(begin,end);
         next.insert(next.begin(),stats);
@@ -86,8 +86,8 @@ struct binning_accumulator {
 template <size_t current_bin>
 struct binning_accumulator<0,current_bin> {
     template <typename iter_t>
-    static bin_data accumulate_binning(iter_t begin, iter_t end) {
-        bin_data out;
+    static bin_data_t accumulate_binning(iter_t begin, iter_t end) {
+        bin_data_t out;
         out.reserve(current_bin);
         auto stats = binning_adapter::bin<current_bin>(begin,end);
         out.push_back(stats);
@@ -113,7 +113,7 @@ static bin_stats_t bin(const container_t& in, int bin_depth) {
     return bin(in.begin(),in.end(),bin_depth);};
 
 template <typename iter_t>
-static bin_data accumulate_binning(iter_t begin, iter_t end, size_t bin_depth) {
+static bin_data_t accumulate_binning(iter_t begin, iter_t end, size_t bin_depth) {
     #define MACRO(r, p) \
     if (BOOST_PP_SEQ_ELEM(0, p) == bin_depth) \
         return binning_accumulator<BOOST_PP_SEQ_ELEM(0, p)>::accumulate_binning(begin,end);
@@ -124,11 +124,11 @@ static bin_data accumulate_binning(iter_t begin, iter_t end, size_t bin_depth) {
 }
 
 template <typename container_t>
-static bin_data accumulate_binning(const container_t& in, size_t bin_depth) {
+static bin_data_t accumulate_binning(const container_t& in, size_t bin_depth) {
     return accumulate_binning(in.begin(),in.end(),bin_depth);
 }
 
-std::vector<double> calc_cor_length(const bin_data& in)
+std::vector<double> calc_cor_length(const bin_data_t& in)
 {
     double sigma = std::get<_DISP>(in[0]);
     std::vector<double> out; out.reserve(in.size());

@@ -5,7 +5,7 @@ set (tests
 triqs_extra_test
 lattice_traits_test
 config_test
-statistics_test
+binning_test
 #ietl_inverse01
 #mc_test01
 )

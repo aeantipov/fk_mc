@@ -34,7 +34,8 @@ struct move_flip {
         new_config.f_config(to) = 1;
 
         auto evals_old = config.cached_spectrum;
-        auto evals_new = new_config.get_spectrum();
+        new_config.calc_hamiltonian();
+        auto evals_new = new_config.calc_spectrum();
 
         return __calc_weight_ratio(beta, evals_new, evals_old);
     }
@@ -70,7 +71,8 @@ struct move_randomize : move_flip<config_t> {
         //new_config.randomize_f(RND, config.get_nf());
         new_config.randomize_f(RND);
         auto evals_old = config.cached_spectrum;
-        auto evals_new = new_config.get_spectrum();
+        new_config.calc_hamiltonian();
+        auto evals_new = new_config.calc_spectrum();
         auto ratio = __calc_weight_ratio(beta, evals_new, evals_old);
         //MY_DEBUG(ratio << "*" << exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())) << "=" << exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())));
         if (beta*config.mu_f*(new_config.get_nf()-config.get_nf()) > 2.7182818 - log(ratio)) { return 1;}
@@ -99,7 +101,8 @@ struct move_addremove : move_flip<config_t> {
         size_t to = RND(m_size);
         new_config.f_config(to) = 1 - config.f_config(to);
         auto evals_old = config.cached_spectrum;
-        auto evals_new = new_config.get_spectrum();
+        new_config.calc_hamiltonian();
+        auto evals_new = new_config.calc_spectrum();
         auto t1 = __calc_weight_ratio(beta, evals_new, evals_old);
         //MY_DEBUG("Exp weight: " << t1);
         auto out = (new_config.f_config(to)?t1*exp_beta_mu_f:t1/exp_beta_mu_f);

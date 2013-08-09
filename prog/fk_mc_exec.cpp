@@ -123,7 +123,7 @@ void print_section (const std::string& str)
   std::cout << std::string(str.size(),'=') << std::endl;
 }
 
-void save_binning(const binning::bin_data& binning_data, triqs::h5::group& h5_group, std::string name, bool save_plaintext = false)
+void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_group, std::string name, bool save_plaintext = false)
 {
     auto cor_lens = binning::calc_cor_length(binning_data);
     tqa::array<double, 2> data_arr(binning_data.size(),5);

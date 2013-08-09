@@ -6,7 +6,9 @@ set(CMAKE_BUILD_TYPE Release)
 # find triqs
 find_package(TRIQS REQUIRED)
 
-include_directories(${TRIQS_INCLUDE_ALL})
+find_package (Eigen3 3.1)
+message(STATUS "Eigen3 includes: " ${EIGEN3_INCLUDE_DIR} )
+include_directories(${TRIQS_INCLUDE_ALL} ${EIGEN3_INCLUDE_DIR})
 
 # build fk mc library
 add_library(fk_mc STATIC solver/lattice_traits.cpp solver/fk_mc.cpp)

@@ -26,7 +26,8 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     // Generate the configuration and cache the spectrum
     config_t config(lattice,p["U"],p["mu_c"],p["mu_f"]);
     config.randomize_f(mc.rng(),p["Nf_start"]);
-    config.get_spectrum();
+    config.calc_hamiltonian();
+    config.calc_spectrum();
 
     double beta = p["beta"];
     if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) 

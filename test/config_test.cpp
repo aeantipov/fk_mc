@@ -32,7 +32,8 @@ int main(int argc, char* argv[])
         }
     config.f_config = my_config;
     MY_DEBUG(config.f_config);
-    MY_DEBUG(config.get_spectrum());
+    config.calc_hamiltonian();
+    MY_DEBUG(config.calc_spectrum());
 
    }
   catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}
