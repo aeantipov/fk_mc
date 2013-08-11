@@ -27,9 +27,9 @@ template <typename T1> bool is_equal(T1 a, T1 b, double tol = std::numeric_limit
 int main()
 {
     triqs::mc_tools::random_generator RNG("mt19937", 23432);
-    std::vector<double> a(17,1.5);
-    for (auto &b: a) { b= RNG() ;std::cout << b <<" " << std::flush; }; INFO("");
-    //auto view1 = fk::make_weak_view(a);
+    std::vector<double> a = {0.0711992, 0.344949, 0.940913, 0.166604, 0.811305, 0.617859, 
+0.462844, 0.550449, 0.28126, 0.0560575, 0.0673806, 0.710085, 
+0.459742, 0.977218, 0.500193, 0.45763, 0.752903};
     tqa::vector<double> arr1(a.size());
     std::copy(a.begin(),a.end(),arr1.begin());
     
@@ -45,16 +45,16 @@ int main()
     MY_DEBUG(it2.step); MY_DEBUG(*it2); it2++; MY_DEBUG(*it2);
 
 try{ 
-    binning_adapter::bin<6>(a.begin(), a.end());
+    bin<6>(a.begin(), a.end());
     }
 catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() << std::endl;}
    
-    MY_DEBUG("--0 :" << binning_adapter::calc_stats(a.begin(), a.end()));
-    MY_DEBUG("--0 :" << binning_adapter::calc_stats(a.crbegin(), a.crend()));
-    MY_DEBUG(binning_adapter::bin<0>(a.begin(), a.end()));
-    MY_DEBUG(binning_adapter::bin<0>(a.rbegin(), a.rend()));
-    MY_DEBUG(binning_adapter::bin<1>(a.begin(), a.end()));
-    MY_DEBUG(binning_adapter::bin<2>(a.begin(), a.end()));
+    MY_DEBUG("--0 :" << calc_stats(a.begin(), a.end()));
+    MY_DEBUG("--0 :" << calc_stats(a.crbegin(), a.crend()));
+    MY_DEBUG(bin<0>(a.begin(), a.end()));
+    MY_DEBUG(bin<0>(a.rbegin(), a.rend()));
+    MY_DEBUG(bin<1>(a.begin(), a.end()));
+    MY_DEBUG(bin<2>(a.begin(), a.end()));
 
     MY_DEBUG(bin(a.begin(), a.end(),2));
     MY_DEBUG(bin(a,2));

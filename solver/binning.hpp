@@ -26,8 +26,11 @@ template <typename iter_t, size_t D>
 struct binned_iterator : 
     public boost::iterator_facade<binned_iterator<iter_t,D>, const double, boost::random_access_traversal_tag, double>
 {
+    typedef iter_t iterator_type;
+    constexpr static size_t D_ = D;
     constexpr static size_t step = binned_iterator<iter_t,D-1>::step*2;
     iter_t p;
+    binned_iterator(){};
     binned_iterator(iter_t start):p(start){};
     template <typename it2 = iter_t, typename std::enable_if<std::is_convertible<typename std::iterator_traits<it2>::iterator_category,std::random_access_iterator_tag>::value,bool>::type=0> 
     constexpr double dereference() const { return (*binned_iterator<iter_t,D-1>(p) + *binned_iterator<iter_t,D-1>(p+binned_iterator<iter_t,D-1>::step))/2.; };
@@ -40,8 +43,11 @@ struct binned_iterator :
 template <typename iter_t>
 struct binned_iterator<iter_t,0>: public boost::iterator_facade<binned_iterator<iter_t,0>, double, boost::random_access_traversal_tag, double>
 {
+    typedef iter_t iterator_type;
+    constexpr static size_t D_ = 0;
     constexpr static size_t step = 1;
     iter_t p;
+    binned_iterator(){};
     binned_iterator(iter_t start):p(start){};
     bool equal(binned_iterator const &rhs) const { return (p == rhs.p); };
     //template <typename std::enable_if<std::is_same<typename std::iterator_traits<iter_t>::iterator_category,std::random_access_iterator_tag>::value,bool>::type=0> 
@@ -49,34 +55,43 @@ struct binned_iterator<iter_t,0>: public boost::iterator_facade<binned_iterator<
     void increment() { p++; };
 };
 
-struct binning_adapter {
-    template <size_t bin, typename iter_t> static bin_stats_t bin(iter_t begin, iter_t end) {
-        int size = std::distance(begin, end);
-        int step = binned_iterator<iter_t,bin>::step;
-        if (step > size) TRIQS_RUNTIME_ERROR << "Can't bin with depth = " << bin << ", binning step(" << step << ")> container size (" << size << ")";
-        int nsteps = size/step;
-        binned_iterator<iter_t,bin> binned_begin(begin), binned_end(begin); std::advance(binned_end,nsteps);
-        return calc_stats(binned_begin, binned_end);
+template <typename bin_it, typename iter_t>
+bin_it find_bin_end(iter_t begin, iter_t end, bin_it)
+{    
+    int size = std::distance(begin, end);
+    int step = bin_it::step;
+    if (step > size) {
+        int D = bin_it::D_;
+        TRIQS_RUNTIME_ERROR << "Can't bin with depth = " << D << ", binning step(" << step << ")> container size (" << size << ")";
         };
+    int nsteps = size/step;
+    bin_it binned_end(begin); std::advance(binned_end,nsteps);
+    return binned_end;
+}
 
-    template <typename iter_t>
-    static bin_stats_t calc_stats(const iter_t& begin, const iter_t& end) {
-        int size = std::distance(begin, end);
-        double mean = std::accumulate(begin,end,0.0, std::plus<double>())/size; 
-        double variance = std::accumulate(begin,end,0.0, [mean](double x, double y){return x + (y-mean)*(y-mean);})/(size-1);
-        //INFO_NONEWLINE(size << ": "); for (auto it=begin;it!=end;it++) INFO_NONEWLINE(*it << " "); INFO("");
-        return std::make_tuple(size, mean, variance, std::sqrt(variance/size));
-        } 
-    //template <typename iter_t>
-    //static std::
+//////
+
+template <typename iter_t>
+static bin_stats_t calc_stats(const iter_t& begin, const iter_t& end) 
+{
+    int size = std::distance(begin, end);
+    double mean = std::accumulate(begin,end,0.0, std::plus<double>())/size; 
+    double variance = std::accumulate(begin,end,0.0, [mean](double x, double y){return x + (y-mean)*(y-mean);})/(size-1);
+    return std::make_tuple(size, mean, variance, std::sqrt(variance/size));
+} 
+
+
+template <size_t D, typename iter_t> static bin_stats_t bin(iter_t begin, iter_t end) 
+{
+    binned_iterator<iter_t,D> binned_begin(begin), binned_end(find_bin_end(begin,end,binned_begin));
+    return calc_stats(binned_begin, binned_end);
 };
-
 
 template <size_t total_bins_left, size_t current_bin = 0>
 struct binning_accumulator {
     template <typename iter_t>
     static bin_data_t accumulate_binning(iter_t begin, iter_t end) {
-        auto stats = binning_adapter::bin<current_bin>(begin,end); 
+        auto stats = bin<current_bin>(begin,end); 
         auto next  = binning_accumulator<total_bins_left - 1, current_bin + 1>::accumulate_binning(begin,end);
         next.insert(next.begin(),stats);
         return next;
@@ -89,7 +104,7 @@ struct binning_accumulator<0,current_bin> {
     static bin_data_t accumulate_binning(iter_t begin, iter_t end) {
         bin_data_t out;
         out.reserve(current_bin);
-        auto stats = binning_adapter::bin<current_bin>(begin,end);
+        auto stats = bin<current_bin>(begin,end);
         out.push_back(stats);
         return out;
     };
@@ -101,7 +116,7 @@ template <typename iter_t>
 static bin_stats_t bin(iter_t begin, iter_t end, int bin_depth) {
     #define MACRO(r, p) \
     if (BOOST_PP_SEQ_ELEM(0, p) == bin_depth) \
-        return binning_adapter::bin<BOOST_PP_SEQ_ELEM(0, p), iter_t>(begin,end);
+        return bin<BOOST_PP_SEQ_ELEM(0, p), iter_t>(begin,end);
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(MACRO, BINNING_RANGE)
     #undef MACRO
     TRIQS_RUNTIME_ERROR << "bin_depth =" << bin_depth << "> compiled bin size";
@@ -127,6 +142,7 @@ template <typename container_t>
 static bin_data_t accumulate_binning(const container_t& in, size_t bin_depth) {
     return accumulate_binning(in.begin(),in.end(),bin_depth);
 }
+
 
 std::vector<double> calc_cor_length(const bin_data_t& in)
 {

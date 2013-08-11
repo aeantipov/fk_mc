@@ -6,6 +6,7 @@ triqs_extra_test
 lattice_traits_test
 config_test
 binning_test
+jackknife_test
 #ietl_inverse01
 #mc_test01
 )
