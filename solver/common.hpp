@@ -37,9 +37,6 @@ typedef triqs::arrays::array_view<double,2> real_array2d_view_t;
 typedef triqs::arrays::matrix<double>  real_matrix_t;
 typedef triqs::arrays::matrix_view<double>  real_matrix_view_t;
 
-template <typename T>
-using EMatrixType = Eigen::Matrix<T,Eigen::Dynamic, Eigen::Dynamic, Eigen::AutoAlign|Eigen::RowMajor>;
-
 typedef triqs::utility::parameters parameters;
 
 template <size_t D>
