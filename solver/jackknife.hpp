@@ -28,9 +28,9 @@ struct jackknife_adapter
         typedef std::pair<iter_t,iter_t> iter_pair_t;
 
         size_t size = std::distance(std::get<0>(data).first,std::get<0>(data).second);
-        std::array<double, L> x_mean;
-        for (size_t i=0; i<L; ++i) x_mean[i] = std::get<_MEAN>(calc_stats(data[i].first, data[i].second));
-        double U_0 = triqs::tuple::apply(F,x_mean); 
+        std::array<double, L> x_means;
+        for (size_t i=0; i<L; ++i) x_means[i] = std::get<_MEAN>(calc_stats(data[i].first, data[i].second));
+        double U_0 = triqs::tuple::apply(F,x_means); 
         //MY_DEBUG("U0: " << U_0);
 
         std::vector<double> U(size);
@@ -40,15 +40,13 @@ struct jackknife_adapter
         std::array<double, L> xy_means;
         for (size_t j=0; j<size; ++j) { 
         xy_means.fill(0.0);
-        for (size_t i=0; i<L; ++i) { 
-            xy_means[i] = std::accumulate(data[i].first, iters[i], 0.0, std::plus<double>());
-            iters[i]++;
-            xy_means[i]+= std::accumulate(iters[i], data[i].second, 0.0, std::plus<double>());
-            xy_means[i]/=(size-1);
-        }
-        double U_j = triqs::tuple::apply(F,xy_means);
-        U[j] = U_j;
-        }
+            for (size_t i=0; i<L; ++i) { 
+                xy_means[i] = (double(size)*x_means[i]-*iters[i])/(double(size-1));
+                iters[i]++;
+                }
+            double U_j = triqs::tuple::apply(F,xy_means);
+            U[j] = U_j;
+            };
         auto U_stats = calc_stats(U.begin(),U.end());
         double U_bar = std::get<_MEAN>(U_stats);
         double U_average = U_0 - (size-1)*(U_bar - U_0);

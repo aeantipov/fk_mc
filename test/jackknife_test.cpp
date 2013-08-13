@@ -86,6 +86,14 @@ int main()
     for (auto x:stats){MY_DEBUG(x);}; 
     stats = accumulate_jackknife(f1,std::array<std::vector<double>, 1>({a}),3);
     for (auto x:stats){MY_DEBUG(x);}; 
+
+    std::vector<double> d(30000);
+    for (auto &x : d) x = RNG();
+    auto d_range = std::make_pair(d.begin(), d.end());
+    //accumulate_jackknife(f1,std::array<std::pair<it_t,it_t>, 1>({std::make_pair(d.begin(), d.end())}),10);
+    res = jackknife_adapter::jack<xf_t, it_t, 1> (f1,{d_range});
+    MY_DEBUG(res);
+
     
     bool success = true;
     if (!success) return EXIT_FAILURE;

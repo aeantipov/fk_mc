@@ -7,6 +7,7 @@
 #include <triqs/arrays/indexmaps/cuboid/domain.hpp>
 
 #include "binning.hpp"
+#include "jackknife.hpp"
 
 #ifndef FK_MC_DEBUG
 #undef DEBUG
@@ -153,12 +154,31 @@ void save_data(const mc_t& mc, std::string output_file)
 
     auto h5_stats = top.open_group("stats");
     INFO("Energy binning");
-    size_t size = mc.observables.energies.size();
+    const std::vector<double>& energies = mc.observables.energies;
+    const std::vector<double>& d2energies = mc.observables.d2energies;
+    size_t size = energies.size();
     int maxbin = std::min(15,std::max(int(std::log(size/16)/std::log(2.)-1),1));
     INFO("\tBinning " << maxbin <<" times.");
-    auto energy_binning_data = binning::accumulate_binning(mc.observables.energies.rbegin(), mc.observables.energies.rend(), maxbin); 
+    auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), maxbin); 
+    for (auto x:energy_binning_data){INFO(x);}; 
     save_binning(energy_binning_data,h5_stats,"energies",true);
-    auto d2energy_binning_data = binning::accumulate_binning(mc.observables.d2energies.rbegin(),mc.observables.d2energies.rend(), maxbin); 
+    auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), maxbin); 
     save_binning(d2energy_binning_data,h5_stats,"d2energies",true);
+
+    INFO("Jackknife analysis");
+    std::vector<double> energies_square(energies.size());
+    std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
+    typedef std::function<double(double, double, double)> cf_t;
+    cf_t cv_function = [](double e, double e2, double de2){return e2 - de2 - e*e;}; 
+
+    typedef decltype(energies.rbegin()) it_t;
+    std::array<std::pair<it_t,it_t>, 3> c_data = {
+        std::make_pair(energies.rbegin(), energies.rend()), 
+        std::make_pair(energies_square.rbegin(), energies_square.rend()), 
+        std::make_pair(d2energies.rbegin(), d2energies.rend())
+        }; 
+    auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,maxbin);
+    for (auto x:cv_stats){INFO(x);}; 
+    save_binning(cv_stats,h5_stats,"cv",true);
 }
 

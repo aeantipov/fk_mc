@@ -98,7 +98,8 @@ static bin_stats_t calc_stats(const iter_t& begin, const iter_t& end, size_t siz
 
 template <size_t D, typename iter_t> static bin_stats_t bin(iter_t begin, iter_t end) 
 {
-    return calc_stats(find_bin_range(begin,end,binned_iterator<iter_t, D>()));
+    auto t1 = find_bin_range(begin,end,binned_iterator<iter_t, D>());
+    return calc_stats(t1.first, t1.second);
 };
 
 template <size_t total_bins_left, size_t current_bin = 0>
