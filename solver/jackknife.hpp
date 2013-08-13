@@ -63,7 +63,7 @@ struct jackknife_adapter
 template <class Functor, size_t L, size_t total_bins_left, size_t current_bin = 0>
 struct jackknife_accumulator {
     template <typename iter_t>
-    static bin_data_t accumulate_jackknife(Functor && f, const std::array<std::pair<iter_t,iter_t>, L> &data) {
+    static bin_data_t accumulate_jackknife(Functor f, const std::array<std::pair<iter_t,iter_t>, L> &data) {
         typedef binning::binned_iterator<iter_t,current_bin> bin_it;
         std::array<std::pair<bin_it, bin_it>, L> range;
         for (size_t i=0; i<L; i++) range[i]=find_bin_range(data[i].first, data[i].second, bin_it());
@@ -77,7 +77,7 @@ struct jackknife_accumulator {
 template <class Functor, size_t L, size_t current_bin>
 struct jackknife_accumulator<Functor,L,0,current_bin> {
     template <typename iter_t>
-    static bin_data_t accumulate_jackknife(Functor &&f, const std::array<std::pair<iter_t,iter_t>, L> &data) {
+    static bin_data_t accumulate_jackknife(Functor f, const std::array<std::pair<iter_t,iter_t>, L> &data) {
         bin_data_t out;
         out.reserve(current_bin);
         typedef binning::binned_iterator<iter_t,current_bin> bin_it;
@@ -90,7 +90,7 @@ struct jackknife_accumulator<Functor,L,0,current_bin> {
 };
 
 template <typename Functor, size_t L, typename iter_t>
-bin_data_t accumulate_jackknife(Functor &&F, const std::array<std::pair<iter_t,iter_t>, L>& in, size_t bin_depth) {
+bin_data_t accumulate_jackknife(Functor F, const std::array<std::pair<iter_t,iter_t>, L>& in, size_t bin_depth) {
     #define MACRO(r, p) \
     if (BOOST_PP_SEQ_ELEM(0, p) == bin_depth) \
         return jackknife_accumulator<Functor,L,BOOST_PP_SEQ_ELEM(0, p)>::template accumulate_jackknife<iter_t>(F,in);
@@ -100,11 +100,34 @@ bin_data_t accumulate_jackknife(Functor &&F, const std::array<std::pair<iter_t,i
     return {std::make_tuple(0, std::nan(""),std::nan(""),std::nan(""))};
 }
 
+/*
+template <typename iter_t, typename Ret, typename ... Args>
+bin_data_t accumulate_jackknife(std::function<Ret(Args...)> F, const std::array<std::pair<iter_t,iter_t>, sizeof...(Args)>& in, size_t bin_depth) {
+    typedef std::function<Ret(Args...)> Functor;
+    constexpr size_t L = sizeof...(Args);
+    return accumulate_jackknife<Functor, L, iter_t>(std::forward<Functor>(F),in,bin_depth);
+    }
+*/
+
+template <typename iter_t, typename Ret, typename ... Args>
+bin_data_t accumulate_jackknife(std::function<Ret(Args...)> F, std::initializer_list<std::pair<iter_t,iter_t>> in, size_t bin_depth) {
+    typedef std::function<Ret(Args...)> Functor;
+    constexpr size_t L = sizeof...(Args);
+    std::array<std::pair<iter_t,iter_t>, L> d1(in);
+
+    return accumulate_jackknife<Functor, L, iter_t>(std::forward<Functor>(F),d1,bin_depth);
+    }
+
+
+
+
+
+
 template <typename Functor, size_t L, typename container_t>
 bin_data_t accumulate_jackknife(Functor &&F, const std::array<container_t, L>& in, size_t bin_depth) {
-    typedef typename container_t::iterator_type iter_t;
-    std::array<iter_t, L> ranges;
-    for (size_t i=0; i<L; ++i) ranges[i]=std::make_pair(in.begin(),in.end());
+    typedef typename std::add_const<container_t>::type::const_iterator iter_t;
+    std::array<std::pair<iter_t,iter_t>, L> ranges;
+    for (size_t i=0; i<L; ++i) ranges[i]=std::make_pair(in[i].begin(),in[i].end());
     return accumulate_jackknife(F,ranges,bin_depth);
 }
 

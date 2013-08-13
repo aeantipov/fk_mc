@@ -84,7 +84,8 @@ int main()
 
     auto stats = accumulate_jackknife(f1,std::array<std::pair<it_t,it_t>, 1>({orig_range}),3);
     for (auto x:stats){MY_DEBUG(x);}; 
-
+    stats = accumulate_jackknife(f1,std::array<std::vector<double>, 1>({a}),3);
+    for (auto x:stats){MY_DEBUG(x);}; 
     
     bool success = true;
     if (!success) return EXIT_FAILURE;
