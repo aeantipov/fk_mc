@@ -38,6 +38,9 @@ struct binned_iterator :
     double dereference() const { iter_t d(p); std::advance(d, binned_iterator<iter_t,D-1>::step); return (*binned_iterator<iter_t,D-1>(p) + *binned_iterator<iter_t,D-1>(d))/2.;};
     bool equal(binned_iterator const &rhs) const { return (p == rhs.p); };
     void increment() { std::advance(p,step); };
+    void decrement() { std::advance(p,-int(step)); };
+    void advance(int n) { std::advance(p,n*int(step)); };
+    int distance_to(binned_iterator r){return std::distance(p,r.p)/step;};
 };
 
 template <typename iter_t>
@@ -53,38 +56,49 @@ struct binned_iterator<iter_t,0>: public boost::iterator_facade<binned_iterator<
     //template <typename std::enable_if<std::is_same<typename std::iterator_traits<iter_t>::iterator_category,std::random_access_iterator_tag>::value,bool>::type=0> 
     constexpr double dereference() const { return *p; };
     void increment() { p++; };
+    void decrement() { p--; };
+    void advance(int n) { std::advance(p,n); };
+    int distance_to(binned_iterator r){return std::distance(p,r.p);};
 };
 
+template <size_t bin>
+inline constexpr size_t bin_size(){return binned_iterator<std::vector<double>::iterator,bin>::size;};
+
+inline size_t calc_bin_size(size_t size, size_t bin_step)
+{
+    if (bin_step > size) {
+        TRIQS_RUNTIME_ERROR << "Can't bin with binning step(" << bin_step << ")> container size (" << size << ")";
+        };
+    int nsteps = size/bin_step;
+    return nsteps;
+}
+
 template <typename bin_it, typename iter_t>
-bin_it find_bin_end(iter_t begin, iter_t end, bin_it)
+std::pair<bin_it,bin_it> find_bin_range(iter_t begin, iter_t end, bin_it)
 {    
     int size = std::distance(begin, end);
     int step = bin_it::step;
-    if (step > size) {
-        int D = bin_it::D_;
-        TRIQS_RUNTIME_ERROR << "Can't bin with depth = " << D << ", binning step(" << step << ")> container size (" << size << ")";
-        };
-    int nsteps = size/step;
+    int nsteps = calc_bin_size(size,step);
     bin_it binned_end(begin); std::advance(binned_end,nsteps);
-    return binned_end;
+    return std::make_pair(bin_it(begin),binned_end);
 }
 
 //////
 
 template <typename iter_t>
-static bin_stats_t calc_stats(const iter_t& begin, const iter_t& end) 
+static bin_stats_t calc_stats(const iter_t& begin, const iter_t& end, size_t size = 0) 
 {
-    int size = std::distance(begin, end);
+    if(!size) size = std::distance(begin, end);
     double mean = std::accumulate(begin,end,0.0, std::plus<double>())/size; 
     double variance = std::accumulate(begin,end,0.0, [mean](double x, double y){return x + (y-mean)*(y-mean);})/(size-1);
     return std::make_tuple(size, mean, variance, std::sqrt(variance/size));
 } 
 
 
+
 template <size_t D, typename iter_t> static bin_stats_t bin(iter_t begin, iter_t end) 
 {
-    binned_iterator<iter_t,D> binned_begin(begin), binned_end(find_bin_end(begin,end,binned_begin));
-    return calc_stats(binned_begin, binned_end);
+    return calc_stats(find_bin_range(begin,end,binned_iterator<iter_t, D>()));
 };
 
 template <size_t total_bins_left, size_t current_bin = 0>
