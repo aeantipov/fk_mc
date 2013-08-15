@@ -19,7 +19,7 @@ using namespace fk;
 typedef fk_mc<triangular_lattice_traits> mc_t;
 
 void print_section (const std::string& str); // fancy screen output
-void save_data(const mc_t& mc, std::string output_file);
+void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file);
 
 int main(int argc, char* argv[])
 {
@@ -108,7 +108,7 @@ try {
 
     world.barrier();
     if (world.rank() == 0) {
-        save_data(mc,"output.h5");
+        save_data(mc,p,"output.h5");
         }
     }
     // Any exceptions related with command line parsing.
@@ -141,7 +141,7 @@ void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_
     out.close();
 }
 
-void save_data(const mc_t& mc, std::string output_file)
+void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file)
 {
     print_section("Statistics");
     H5::H5File output(output_file,H5F_ACC_TRUNC);
@@ -169,7 +169,8 @@ void save_data(const mc_t& mc, std::string output_file)
     std::vector<double> energies_square(energies.size());
     std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
     typedef std::function<double(double, double, double)> cf_t;
-    cf_t cv_function = [](double e, double e2, double de2){return e2 - de2 - e*e;}; 
+    double beta = p["beta"];
+    cf_t cv_function = [beta](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e);}; 
 
     typedef decltype(energies.rbegin()) it_t;
     std::array<std::pair<it_t,it_t>, 3> c_data = {
