@@ -25,6 +25,7 @@ install(TARGETS fk_mc DESTINATION lib)
 # build executable
 option(Execs "Enable executables" ON)
 if (Execs)
+    set (lattices ${LATTICES} CACHE STRING "Lattices for FK MC calculation" FORCE)
     add_subdirectory(prog)
 endif (Execs)
 

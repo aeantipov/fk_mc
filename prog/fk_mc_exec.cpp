@@ -9,14 +9,18 @@
 #include "binning.hpp"
 #include "jackknife.hpp"
 
-#ifndef FK_MC_DEBUG
-#undef DEBUG
-#endif
+//#ifndef FK_MC_DEBUG
+//#undef DEBUG
+//#endif
 
 using namespace fk;
 
+#ifdef LATTICE_triangular
+    typedef triangular_lattice_traits lattice_t;
+    static constexpr size_t D=1;
+#endif
 
-typedef fk_mc<triangular_lattice_traits> mc_t;
+typedef fk_mc<lattice_t> mc_t;
 
 void print_section (const std::string& str); // fancy screen output
 void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file);
@@ -82,7 +86,7 @@ try {
     INFO2("MC add/remove moves weight   : " << move_add_remove_switch.getValue());
     INFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
     if (exit_switch.getValue()) exit(0);
-    triangular_lattice_traits lattice(L);
+    lattice_t lattice(L);
     lattice.fill(t,tp);
 
     mc_t mc(lattice);
