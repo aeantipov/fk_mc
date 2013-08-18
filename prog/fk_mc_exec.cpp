@@ -5,6 +5,7 @@
 #include <fstream>
 #include <triqs/h5.hpp>
 #include <triqs/arrays/indexmaps/cuboid/domain.hpp>
+#include <random>
 
 #include "binning.hpp"
 #include "jackknife.hpp"
@@ -20,6 +21,11 @@ using namespace fk;
     static constexpr size_t D=1;
 #endif
 
+size_t _myrank;
+
+#define MINFO(MSG)            if (_myrank==0) std::cout << std::boolalpha << MSG << std::endl;
+#define MINFO2(MSG)            if (_myrank==0) std::cout << "    " << std::boolalpha << MSG << std::endl;
+
 typedef fk_mc<lattice_t> mc_t;
 
 void print_section (const std::string& str); // fancy screen output
@@ -29,6 +35,7 @@ int main(int argc, char* argv[])
 {
 boost::mpi::environment env(argc, argv);
 boost::mpi::communicator world;
+_myrank = world.rank();
 
 try {
     TCLAP::CmdLine cmd("Falicov-Kimball Monte Carlo - parameters from command line", ' ', "");
@@ -53,7 +60,7 @@ try {
     TCLAP::ValueArg<int> ncycles_arg("","ncycles","total number of cycles",false,50000,"int",cmd);
     TCLAP::ValueArg<int> nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,10000,"int",cmd);
     TCLAP::ValueArg<int> cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,1,"int",cmd);
-    TCLAP::SwitchArg     time_seed_switch("s","seed","Make a time seed flag", cmd, false);
+    TCLAP::SwitchArg     random_seed_switch("s","seed","Make a random or fixed seed?", cmd, false);
 
     TCLAP::ValueArg<double>     move_flips_switch("","flip","Make flip (conserving)", false, 0.0, "double", cmd);
     TCLAP::ValueArg<double>     move_add_remove_switch("","addremove","Make add/remove step (non conserving)", false, 1.0, "double", cmd);
@@ -62,29 +69,29 @@ try {
     TCLAP::SwitchArg exit_switch("","exit","Dry run", cmd, false);
     cmd.parse( argc, argv );
 
-    INFO("Falicov-Kimball Monte Carlo");
+    MINFO("Falicov-Kimball Monte Carlo");
     print_section("Model parameters:");
-    size_t L = L_arg.getValue();     INFO2("System size                  : " << L);
-    double U = U_arg.getValue();     INFO2("U                            : " << U);
-    double t = t_arg.getValue();     INFO2("t                            : " << t);
-    double tp = tp_arg.getValue();   INFO2("tp                           : " << tp);
-    double T = T_arg.getValue();     INFO2("Temperature                  : " << T);
+    size_t L = L_arg.getValue();     MINFO2("System size                  : " << L);
+    double U = U_arg.getValue();     MINFO2("U                            : " << U);
+    double t = t_arg.getValue();     MINFO2("t                            : " << t);
+    double tp = tp_arg.getValue();   MINFO2("tp                           : " << tp);
+    double T = T_arg.getValue();     MINFO2("Temperature                  : " << T);
 
     double mu_c = (U_arg.isSet() && (!mu_arg.isSet())?U/2.:mu_arg.getValue()); 
-                                     INFO2("Chemical potential (mu_c)    : " << mu_c);
+                                     MINFO2("Chemical potential (mu_c)    : " << mu_c);
     double mu_f = (U_arg.isSet() && (!eps_f_arg.isSet())?mu_c:mu_c + eps_f_arg.getValue()); 
-                                     INFO2("e_f                          : " << eps_f_arg.getValue());
-                                     INFO2("mu_f (mu_c + e_f)            : " << mu_f);
-    double beta = 1.0/T;             INFO2("beta                         : " << beta);
+                                     MINFO2("e_f                          : " << eps_f_arg.getValue());
+                                     MINFO2("mu_f (mu_c + e_f)            : " << mu_f);
+    double beta = 1.0/T;             MINFO2("beta                         : " << beta);
 
     print_section("Monte Carlo parameters:");
-    INFO2("Total number of cycles       : " << ncycles_arg.getValue()); 
-    INFO2("MC steps in a cycle          : " << cycle_len_arg.getValue()); 
-    INFO2("Warmup cycles                : " << nwarmup_arg.getValue()); 
-    INFO2("Time-based seed              : " << time_seed_switch.getValue()); 
-    INFO2("MC flip moves weight         : " << move_flips_switch.getValue());
-    INFO2("MC add/remove moves weight   : " << move_add_remove_switch.getValue());
-    INFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
+    MINFO2("Total number of cycles       : " << ncycles_arg.getValue()); 
+    MINFO2("MC steps in a cycle          : " << cycle_len_arg.getValue()); 
+    MINFO2("Warmup cycles                : " << nwarmup_arg.getValue()); 
+    MINFO2("Pure random (entropic) seed  : " << random_seed_switch.getValue()); 
+    MINFO2("MC flip moves weight         : " << move_flips_switch.getValue());
+    MINFO2("MC add/remove moves weight   : " << move_add_remove_switch.getValue());
+    MINFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
     if (exit_switch.getValue()) exit(0);
     lattice_t lattice(L);
     lattice.fill(t,tp);
@@ -97,7 +104,7 @@ try {
     p["beta"] = beta;
     p["Nf_start"] = L*L/2;
     p["Random_Generator_Name"] = ""; 
-    p["Random_Seed"] = (34788+std::chrono::system_clock::now().time_since_epoch().count()*time_seed_switch.getValue());
+    p["Random_Seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
     p["Verbosity"] = 3;
     p["Length_Cycle"] = cycle_len_arg.getValue(); 
     p["N_Warmup_Cycles"] = nwarmup_arg.getValue();
@@ -123,9 +130,9 @@ return 0;
 
 void print_section (const std::string& str)
 {
-  std::cout << std::string(str.size(),'=') << std::endl;
-  std::cout << str << std::endl;
-  std::cout << std::string(str.size(),'=') << std::endl;
+  MINFO(std::string(str.size(),'='));
+  MINFO(str)
+  MINFO(std::string(str.size(),'='));
 }
 
 void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_group, std::string name, bool save_plaintext = false)

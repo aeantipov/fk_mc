@@ -19,7 +19,6 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
 {
     if (world.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
     p.update(solve_defaults());
-    p["Random_Seed"]=int(p["Random_Seed"])*(world.rank()+1);
     INFO("\tRandom seed for proc " << world.rank() << " : " << p["Random_Seed"]);
 
     mc_tools::mc_generic<double> mc(p);
