@@ -13,6 +13,7 @@ fk_mc_exec
 foreach (prog ${progs})
     set(prog_src ${prog}.cpp)
     add_executable(${prog} ${prog_src})
+    install ( TARGETS ${prog} DESTINATION bin )
 endforeach(prog)
 
 
