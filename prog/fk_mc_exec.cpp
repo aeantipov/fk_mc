@@ -29,7 +29,7 @@ size_t _myrank;
 typedef fk_mc<lattice_t> mc_t;
 
 void print_section (const std::string& str); // fancy screen output
-void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file);
+void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext = false);
 
 int main(int argc, char* argv[])
 {
@@ -65,6 +65,8 @@ try {
     TCLAP::ValueArg<double>     move_flips_switch("","flip","Make flip (conserving)", false, 0.0, "double", cmd);
     TCLAP::ValueArg<double>     move_add_remove_switch("","addremove","Make add/remove step (non conserving)", false, 1.0, "double", cmd);
     TCLAP::ValueArg<double>     move_reshuffle_switch("","reshuffle","Make reshuffle step (non conserving)", false, 0.0, "double", cmd);
+
+    TCLAP::SwitchArg     plaintext_switch("p","plaintext","Save data to plaintext format?", cmd, false);
 
     TCLAP::SwitchArg exit_switch("","exit","Dry run", cmd, false);
     cmd.parse( argc, argv );
@@ -119,7 +121,7 @@ try {
 
     world.barrier();
     if (world.rank() == 0) {
-        save_data(mc,p,"output.h5");
+        save_data(mc,p,"output.h5",plaintext_switch.getValue());
         }
     }
     // Any exceptions related with command line parsing.
@@ -152,7 +154,7 @@ void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_
     out.close();
 }
 
-void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file)
+void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext)
 {
     print_section("Statistics");
     H5::H5File output(output_file,H5F_ACC_TRUNC);
@@ -172,9 +174,9 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
     INFO("\tBinning " << maxbin <<" times.");
     auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), maxbin); 
     for (auto x:energy_binning_data){INFO(x);}; 
-    save_binning(energy_binning_data,h5_stats,"energies",true);
+    save_binning(energy_binning_data,h5_stats,"energies",save_plaintext);
     auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), maxbin); 
-    save_binning(d2energy_binning_data,h5_stats,"d2energies",true);
+    save_binning(d2energy_binning_data,h5_stats,"d2energies",save_plaintext);
 
     INFO("Jackknife analysis");
     std::vector<double> energies_square(energies.size());
@@ -191,6 +193,6 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
         }; 
     auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,maxbin);
     for (auto x:cv_stats){INFO(x);}; 
-    save_binning(cv_stats,h5_stats,"cv",true);
+    save_binning(cv_stats,h5_stats,"cv",save_plaintext);
 }
 
