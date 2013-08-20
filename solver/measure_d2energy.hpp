@@ -8,6 +8,10 @@ namespace fk {
 
 template <class config_t>
 struct measure_d2energy {
+    typedef typename config_t::matrix_t  matrix_t;
+    typedef typename config_t::matrix_view_t  matrix_view_t;
+    typedef typename config_t::real_array_t  real_array_t;
+
     double beta;
     const config_t& config;
 

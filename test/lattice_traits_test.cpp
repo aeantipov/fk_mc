@@ -25,8 +25,14 @@ int main()
     INFO(11 << "==" << l1.pos_to_index(l1.index_to_pos(11)) << " = " << std::boolalpha << success);
     if (!success) return EXIT_FAILURE;
 
+    try {
     l1.fill(-1.0);
+        }
+    catch (std::exception &e){MY_DEBUG(e.what());};
     INFO(l1.get_hopping_matrix());
+    #ifdef FK_USE_EIGEN
+    INFO(l1.hopping_sparse);
+    #endif
 
     triangular_lattice_traits t1(4);
     t1.fill(-1.0,-0.5);

@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 
     configuration<square_lattice_traits<2>> config(lattice, U, mu, mu+e_f);
 
-    real_array_t my_config(lattice.m_size); my_config()=0;
+    triqs::arrays::array<double, 1> my_config(lattice.m_size); my_config()=0;
     for (size_t x=0; x<L; x+=1)
         for (size_t y=0; y<L; y+=2) {
             my_config(lattice.pos_to_index({x,y+x%2}))=1;

@@ -36,6 +36,9 @@ void square_lattice_traits<D>::fill(double t)
             pos_r[n]=(current_pos[n]<dims[n]-1?current_pos[n]+1:0);
             hopping_m(i,pos_to_index(pos_l)) = t;
             hopping_m(i,pos_to_index(pos_r)) = t;
+            hopping_sparse.coeffRef(i,pos_to_index(pos_l)) = t;
+            hopping_sparse.coeffRef(i,pos_to_index(pos_r)) = t;
+            nonzero_elems+=2;
         }; 
     };
 }
@@ -54,7 +57,9 @@ void triangular_lattice_traits::fill(double t, double t_p)
 
         hopping_m(i,pos_to_index(pos_l)) = t_p;
         hopping_m(i,pos_to_index(pos_r)) = t_p;
-
+        hopping_sparse.insert(i,pos_to_index(pos_l)) = t_p;
+        hopping_sparse.insert(i,pos_to_index(pos_r)) = t_p;
+        nonzero_elems+=2;
         };
 }
 

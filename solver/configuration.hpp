@@ -6,20 +6,26 @@
 #include <numeric>
 #include <triqs/arrays/linalg/eigenelements.hpp>
 
-#include <Eigen/Eigenvalues> 
+#include <unsupported/Eigen/ArpackSupport>
 
 namespace fk {
 
 template <class lattice_t>
 struct configuration {
+
+    typedef typename lattice_t::matrix_t  matrix_t;
+    typedef typename lattice_t::matrix_view_t  matrix_view_t;
+    typedef triqs::arrays::array<int,1> int_array_t;
+    typedef triqs::arrays::array<double,1> real_array_t;
+
     const lattice_t& lattice;
     int_array_t f_config;
     double U, mu_c, mu_f;
 
-    mutable real_matrix_t hamilt;
+    mutable matrix_t hamilt;
     mutable real_array_t cached_spectrum;
     mutable real_array_t cached_weights;
-    mutable real_matrix_t cached_evecs;
+    mutable matrix_t cached_evecs;
 
     configuration(
         const lattice_t &lattice, double U, double mu_c, double mu_f):
@@ -38,9 +44,9 @@ struct configuration {
     size_t get_nf() const;
     void randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf = 0);
 
-    real_matrix_t calc_hamiltonian();
+    matrix_t calc_hamiltonian();
     real_array_t  calc_spectrum();
-    real_array_t  calc_spectrum_iter(real_array_t evals_guess, real_matrix_t evecs_guess, double beta);
+    real_array_t  calc_spectrum_arpack(size_t n);
 };
 
 template <class lattice_t>
@@ -61,7 +67,7 @@ void configuration<lattice_t>::randomize_f(triqs::mc_tools::random_generator &rn
 }
 
 template <class lattice_t>
-inline real_matrix_t configuration<lattice_t>::calc_hamiltonian()
+inline typename configuration<lattice_t>::matrix_t configuration<lattice_t>::calc_hamiltonian()
 {
     hamilt = lattice.get_hopping_matrix();
     for (size_t i=0; i<lattice.m_size; ++i) hamilt(i,i)+= -mu_c + U*f_config(i); // unoptimized
@@ -69,10 +75,10 @@ inline real_matrix_t configuration<lattice_t>::calc_hamiltonian()
 }
 
 template <class lattice_t>
-inline real_array_t configuration<lattice_t>::calc_spectrum()
+inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>::calc_spectrum()
 {
-    real_matrix_t h(hamilt);
-    real_matrix_view_t h2(h);
+    matrix_t h(hamilt);
+    matrix_view_t h2(h);
     size_t size = hamilt.shape()[0]; 
     real_array_t evals(size);
     //std::tie(cached_spectrum, cached_evecs) = triqs::arrays::linalg::eigenelements(hamilt(),true);
@@ -81,10 +87,14 @@ inline real_array_t configuration<lattice_t>::calc_spectrum()
 }
 
 template <class lattice_t>
-inline real_array_t configuration<lattice_t>::calc_spectrum_iter(real_array_t evals_guess, real_matrix_t evecs_guess, double beta)
+inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>::calc_spectrum_arpack(size_t n)
 {
+    size_t size = hamilt.shape()[0]; 
+    typedef Eigen::SparseMatrix<double> sparse_m;
+    typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> dense_m;
+    Eigen::Map<dense_m> map1 (&hamilt.storage()[0], size, size);
+    //sparse_m e1 = map1;
 /*
-    Eigen::Map<EMatrixType<double>> map1 (&h.storage()[0], size, size);
     Eigen::SelfAdjointEigenSolver<EMatrixType<double>> s(map1);
     auto evals_eigen = s.eigenvalues();
     std::copy(evals_eigen.data(),evals_eigen.data()+size,evals.begin());

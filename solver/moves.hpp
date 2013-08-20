@@ -12,6 +12,9 @@ namespace fk {
 template <class config_t>
 struct move_flip {
     typedef double mc_weight_type;
+    typedef typename config_t::matrix_t  matrix_t;
+    typedef typename config_t::matrix_view_t  matrix_view_t;
+    typedef typename config_t::real_array_t  real_array_t;
 
     double beta;
     static double __calc_weight_ratio(double beta, const real_array_t &evals_old, real_array_t &evals_new);
