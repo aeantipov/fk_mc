@@ -17,10 +17,15 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 # find triqs
 find_package(TRIQS REQUIRED)
 
-find_package (Arpack)
-message(STATUS "Arpack libs: " ${ARPACK_LIBRARIES})
-find_package (Eigen3 3.1)
-message(STATUS "Eigen3 includes: " ${EIGEN3_INCLUDE_DIR} )
+# find Eigen and Arpack
+option (USE_EIGEN "Use Eigen library?" ON) 
+if (USE_EIGEN)
+    find_package (Arpack)
+    message(STATUS "Arpack libs: " ${ARPACK_LIBRARIES})
+    find_package (Eigen3 3.1)
+    message(STATUS "Eigen3 includes: " ${EIGEN3_INCLUDE_DIR} )
+    add_definitions(-DFK_USE_EIGEN)
+endif (USE_EIGEN)
 
 set (LINK_ALL ${TRIQS_LIBRARY_ALL} ${ARPACK_LIBRARIES})
 include_directories(${TRIQS_INCLUDE_ALL} ${EIGEN3_INCLUDE_DIR})
