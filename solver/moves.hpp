@@ -12,13 +12,11 @@ namespace fk {
 template <class config_t>
 struct move_flip {
     typedef double mc_weight_type;
-    typedef typename config_t::matrix_t  matrix_t;
-    typedef typename config_t::matrix_view_t  matrix_view_t;
     typedef typename config_t::real_array_t  real_array_t;
 
     double beta;
-    static double __calc_weight_ratio(double beta, const real_array_t &evals_old, real_array_t &evals_new);
-     config_t& config;
+    static double __calc_weight_ratio(const config_t &old_config, const config_t &new_config);
+    config_t& config;
     config_t new_config;
      
     triqs::mc_tools::random_generator &RND;
@@ -29,26 +27,19 @@ struct move_flip {
     mc_weight_type attempt(){
         if (config.get_nf() == 0 || config.get_nf() == config.lattice.m_size) return 0; // this move won't work when the configuration is completely full or empty
         new_config = config;
-        size_t m_size = config.f_config.shape()[0];
+        size_t m_size = config.lattice.m_size;
         size_t from = RND(m_size); while (new_config.f_config(from)==0) from = RND(m_size);
         size_t to = RND(m_size); while (new_config.f_config(to)==1) to = RND(m_size);
 
         new_config.f_config(from) = 0;
         new_config.f_config(to) = 1;
 
-        auto evals_old = config.cached_spectrum;
         new_config.calc_hamiltonian();
-        auto evals_new = new_config.calc_spectrum();
-
-        return __calc_weight_ratio(beta, evals_new, evals_old);
+        new_config.calc_spectrum();
+        return __calc_weight_ratio(config, new_config);
     }
 
     mc_weight_type accept() {
-        #ifdef FK_MC_DEBUG
-        //auto x=triqs::arrays::immutable_diagonal_matrix_view<int>(new_config.f_config);
-        auto x = triqs::arrays::extra::reinterpret_array_view(new_config.f_config,new_config.lattice.dims[0],new_config.lattice.dims[1]);
-        MY_DEBUG(config.f_config << "->" << new_config.f_config);
-        #endif
         config = new_config; 
         return 1.0; 
     }
@@ -73,10 +64,9 @@ struct move_randomize : move_flip<config_t> {
         new_config = config;
         //new_config.randomize_f(RND, config.get_nf());
         new_config.randomize_f(RND);
-        auto evals_old = config.cached_spectrum;
         new_config.calc_hamiltonian();
-        auto evals_new = new_config.calc_spectrum();
-        auto ratio = __calc_weight_ratio(beta, evals_new, evals_old);
+        new_config.calc_spectrum();
+        auto ratio = __calc_weight_ratio(config, new_config);
         //MY_DEBUG(ratio << "*" << exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())) << "=" << exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())));
         if (beta*config.mu_f*(new_config.get_nf()-config.get_nf()) > 2.7182818 - log(ratio)) { return 1;}
         else return ratio*exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())); 
@@ -100,15 +90,15 @@ struct move_addremove : move_flip<config_t> {
 
     mc_weight_type attempt(){
         new_config = config;
-        size_t m_size = config.f_config.shape()[0];
+        size_t m_size = config.lattice.m_size;
         size_t to = RND(m_size);
         new_config.f_config(to) = 1 - config.f_config(to);
-        auto evals_old = config.cached_spectrum;
+
         new_config.calc_hamiltonian();
-        auto evals_new = new_config.calc_spectrum();
-        auto t1 = __calc_weight_ratio(beta, evals_new, evals_old);
+        new_config.calc_spectrum(config_t::calc_eval::arpack);
+        auto ratio = __calc_weight_ratio(config, new_config);
         //MY_DEBUG("Exp weight: " << t1);
-        auto out = (new_config.f_config(to)?t1*exp_beta_mu_f:t1/exp_beta_mu_f);
+        auto out = (new_config.f_config(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f);
         //MY_DEBUG("weight: " << out);
         return out;
     }
@@ -117,19 +107,30 @@ struct move_addremove : move_flip<config_t> {
 
  //************************************************************************************
 template <class config_t>
-inline double move_flip<config_t>::__calc_weight_ratio(double beta, const real_array_t &evals_new, real_array_t &evals_old)
+inline double move_flip<config_t>::__calc_weight_ratio(const config_t &old_config, const config_t &new_config)
 {
-    double e_min = std::min(evals_new(0),evals_old(0)); 
+    size_t size = std::max(old_config.cached_weights.size(), new_config.cached_weights.size());
+
+    real_array_t weights_old(size), weights_new(size);
+    weights_old.setZero(); weights_new.setZero();
+    weights_old.head(old_config.cached_weights.size()) = old_config.cached_weights;
+    weights_new.head(new_config.cached_weights.size()) = new_config.cached_weights;
+
+    double exp_e0_old = exp(old_config.beta*old_config.cached_spectrum[0]);
+    double exp_e0_new = exp(new_config.beta*new_config.cached_spectrum[0]);
+
+    real_array_t evals_rate = (exp_e0_new + weights_new) / (exp_e0_old + weights_old ) * (exp_e0_old / exp_e0_new);
+   /* 
+    double exp_e0_old  = std::min(evals_new(0),evals_old(0)); 
     double exp_emin = exp(beta*e_min);
 
     // calculate ( \prod exp(beta*E_0) + \exp(-beta*(E-E_0). The factor exp(beta*E_0) is multiplied on both sides of a fraction P_{n+1}/P_{n}.
-    real_array_t evals_rate(evals_new.shape()[0]);// = evals_new / evals_old;
-    triqs::clef::placeholder<0> i_;
-    evals_rate(i_) << (exp_emin+exp(-beta*(evals_new(i_)-e_min))) / (exp_emin+exp(-beta*(evals_old(i_)-e_min)));
-    //MY_DEBUG("Evals ratio: " << evals_rate);
-//    evals_rate(i_) << (1.0+exp(-beta*(evals_new(i_)))) / (1.0+exp(-beta*(evals_old(i_))));
+    real_array_t evals_rate(evals_new.size());// = evals_new / evals_old;
+    for (size_t i=0; i<evals_rate.size(); ++i) 
+        evals_rate(i) = (exp_emin+exp(-beta*(evals_new(i)-e_min))) / (exp_emin+exp(-beta*(evals_old(i)-e_min)));
+    */
 
-    return prod(evals_rate);
+    return evals_rate.prod();
 };
 
 

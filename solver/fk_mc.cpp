@@ -24,12 +24,13 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     mc_tools::mc_generic<double> mc(p);
 
     // Generate the configuration and cache the spectrum
-    config_t config(lattice,p["U"],p["mu_c"],p["mu_f"]);
+    double beta = p["beta"];
+    config_t config(lattice,beta,p["U"],p["mu_c"],p["mu_f"]);
+    config.eval_weight_tolerance = p["eval_tol"];
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.calc_hamiltonian();
-    config.calc_spectrum();
+    config.calc_spectrum(config_t::calc_eval::full);
 
-    double beta = p["beta"];
     if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) 
         mc.add_move(move_flip<config_t>(beta, config, mc.rng()), "flip", p["mc_flip"]);
     if (double(p["mc_add_remove"])>std::numeric_limits<double>::epsilon()) 
@@ -68,6 +69,7 @@ template <class lattice_t>
    ("Length_Cycle", int(50), "Length of a single QMC cycle")
    ("N_Warmup_Cycles", int(5000), "Number of cycles for thermalization")
    ("Random_Seed", int(34788), "Seed for random number generator")
+   ("eval_tol", double(std::numeric_limits<double>::epsilon()), "Tolerance for eigenvalue weights")
    ("Random_Generator_Name", std::string(""), "Name of random number generator")
    ("max_time",int(600), "Maximum running time")
    ;

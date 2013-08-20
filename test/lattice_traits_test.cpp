@@ -29,14 +29,11 @@ int main()
     l1.fill(-1.0);
         }
     catch (std::exception &e){MY_DEBUG(e.what());};
-    INFO(l1.get_hopping_matrix());
-    #ifdef FK_USE_EIGEN
-    INFO(l1.hopping_sparse);
-    #endif
+    INFO(l1.hopping_m);
 
     triangular_lattice_traits t1(4);
     t1.fill(-1.0,-0.5);
-    INFO(t1.get_hopping_matrix());
+    INFO(t1.hopping_m);
 
     return EXIT_SUCCESS;
 }

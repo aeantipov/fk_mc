@@ -8,8 +8,6 @@ namespace fk {
 
 template <class config_t>
 struct measure_d2energy {
-    typedef typename config_t::matrix_t  matrix_t;
-    typedef typename config_t::matrix_view_t  matrix_view_t;
     typedef typename config_t::real_array_t  real_array_t;
 
     double beta;
@@ -32,11 +30,11 @@ void measure_d2energy<config_t>::accumulate (double sign)
     auto spectrum = config.cached_spectrum;
     _Z++;
 
-    real_array_t d2e_nf(spectrum.shape()[0]);
-    triqs::clef::placeholder<0> i_;
-    d2e_nf(i_) << spectrum(i_)*spectrum(i_) / (1.0+0.5*(exp(beta*(spectrum(i_))) + exp(-beta*(spectrum(i_))) ));
+    real_array_t d2e_nf(spectrum.size());
+    for (size_t i=0; i<d2e_nf.size(); ++i)
+        d2e_nf(i) = spectrum(i)*spectrum(i) / (1.0+0.5*(exp(beta*(spectrum(i))) + exp(-beta*(spectrum(i))) ));
 
-    double d2e_val = sum(d2e_nf)/2.0;
+    double d2e_val = d2e_nf.sum()/2.0;
     _average_d2energy += d2e_val;
     _d2energies.push_back(d2e_val);
 }

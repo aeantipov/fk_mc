@@ -34,6 +34,10 @@ int main(int argc, char* argv[])
     //a = a.selfadjointView<Eigen::Upper>();
     INFO("");
     Eigen::ArpackGeneralizedSelfAdjointEigenSolver<sparse_m> solver(a,2,"SA",Eigen::EigenvaluesOnly,1e-5);
-    INFO(solver.eigenvalues());
+    INFO(solver.eigenvalues().reverse());
+    INFO("----------");
+
+    Eigen::ArpackGeneralizedSelfAdjointEigenSolver<sparse_m> solver2(a,size-2,"SA",Eigen::EigenvaluesOnly);
+    INFO(solver2.eigenvalues().reverse());
     return EXIT_SUCCESS;
 }

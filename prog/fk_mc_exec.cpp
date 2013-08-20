@@ -66,6 +66,7 @@ try {
     TCLAP::ValueArg<double>     move_add_remove_switch("","addremove","Make add/remove step (non conserving)", false, 1.0, "double", cmd);
     TCLAP::ValueArg<double>     move_reshuffle_switch("","reshuffle","Make reshuffle step (non conserving)", false, 0.0, "double", cmd);
 
+    TCLAP::ValueArg<double>     eval_tolerance_switch("","evaltol","Tolerance for eigenvalue weights", false, std::numeric_limits<double>::epsilon(), "double", cmd);
     TCLAP::SwitchArg     plaintext_switch("p","plaintext","Save data to plaintext format?", cmd, false);
 
     TCLAP::SwitchArg exit_switch("","exit","Dry run", cmd, false);
@@ -94,6 +95,7 @@ try {
     MINFO2("MC flip moves weight         : " << move_flips_switch.getValue());
     MINFO2("MC add/remove moves weight   : " << move_add_remove_switch.getValue());
     MINFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
+    MINFO2("Eigenvalue Boltzmann weight cutoff    : " << eval_tolerance_switch.getValue());
     if (exit_switch.getValue()) exit(0);
     lattice_t lattice(L);
     lattice.fill(t,tp);
@@ -106,6 +108,7 @@ try {
     p["beta"] = beta;
     p["Nf_start"] = L*L/2;
     p["Random_Generator_Name"] = ""; 
+    p["eval_tol"] = eval_tolerance_switch.getValue(); 
     p["Random_Seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
     p["Verbosity"] = 3;
     p["Length_Cycle"] = cycle_len_arg.getValue(); 
