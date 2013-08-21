@@ -16,13 +16,10 @@ SET(TRIAL_PATHS
  /sw/lib
  )
 
-find_library(ARPACK_LIBRARY NAMES arpack libarpack
+find_library(ARPACK_LIBRARIES NAMES arpack libarpack
              HINTS ${PC_ARPACK_LIBRARY_DIRS} ${TRIAL_PATHS})
 
-set(ARPACK_LIBRARIES ${ARPACK_LIBRARY} )
-
-
-find_package_handle_standard_args(ARPACK DEFAULT_MSG ARPACK_LIBRARY)
+find_package_handle_standard_args(ARPACK DEFAULT_MSG ARPACK_LIBRARIES)
 
 mark_as_advanced(ARPACK_LIBRARIES)
 
