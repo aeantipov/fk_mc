@@ -19,7 +19,12 @@ find_package(TRIQS REQUIRED)
 
 # find Eigen and Arpack
 option (USE_EIGEN "Use Eigen library?" ON) 
+# MKL
 if (USE_EIGEN)
+    if (DEFINED ENV{MKLROOT})
+        message (STATUS "Detected MKL")
+        add_definitions(-DEIGEN_USE_MKL_ALL)
+    endif()
     find_package (Arpack)
     message(STATUS "Arpack libs: " ${ARPACK_LIBRARIES})
     find_package (Eigen3 3.1)
