@@ -1,6 +1,8 @@
 #ifndef __FK_MC_COMMON_H
 #define __FK_MC_COMMON_H
 
+#include "definitions.hpp"
+
 #include <triqs/arrays.hpp>
 #include <triqs/arrays/algorithms.hpp>
 #include <triqs/parameters/parameters.hpp>

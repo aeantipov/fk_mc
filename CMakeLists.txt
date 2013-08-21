@@ -1,7 +1,18 @@
 cmake_minimum_required(VERSION 2.8)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-project(ctint CXX)
-set(CMAKE_BUILD_TYPE Release)
+project(fk_mc CXX)
+
+# Toggle debug mode on/off
+option (Debug "Debug mode" OFF)
+if (Debug)
+    message (STATUS "Debug mode")
+    set(CMAKE_BUILD_TYPE Debug)
+    set(FK_MC_DEBUG true)
+    set(Testing true)
+else (Debug)
+    message (STATUS "Release mode")
+    set(CMAKE_BUILD_TYPE Release)
+endif(Debug)
 
 # RPATH settings (see http://www.cmake.org/Wiki/CMake_RPATH_handling) 
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
@@ -19,21 +30,25 @@ find_package(TRIQS REQUIRED)
 
 # find Eigen and Arpack
 option (USE_EIGEN "Use Eigen library?" ON) 
-# MKL
 if (USE_EIGEN)
+    # MKL
     if (DEFINED ENV{MKLROOT})
         message (STATUS "Detected MKL")
-        add_definitions(-DEIGEN_USE_MKL_ALL)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${MKLROOT}/lib -lmkl_intel -lmkl_sequential -lmkl_core -lpthread -lm")
+        set(EIGEN_USE_MKL_ALL true)
     endif()
     find_package (Arpack)
     message(STATUS "Arpack libs: " ${ARPACK_LIBRARIES})
     find_package (Eigen3 3.1)
     message(STATUS "Eigen3 includes: " ${EIGEN3_INCLUDE_DIR} )
-    add_definitions(-DFK_USE_EIGEN)
 endif (USE_EIGEN)
 
 set (LINK_ALL ${TRIQS_LIBRARY_ALL} ${ARPACK_LIBRARIES})
-include_directories(${TRIQS_INCLUDE_ALL} ${EIGEN3_INCLUDE_DIR})
+include_directories(${TRIQS_INCLUDE_ALL} ${EIGEN3_INCLUDE_DIR} ${CMAKE_BINARY_DIR}/solver)
+
+
+#configure compile definitions file
+configure_file(${CMAKE_SOURCE_DIR}/solver/definitions.hpp.in ${CMAKE_BINARY_DIR}/solver/definitions.hpp)
 
 # build fk mc library
 add_library(fk_mc STATIC solver/lattice_traits.cpp solver/fk_mc.cpp)
