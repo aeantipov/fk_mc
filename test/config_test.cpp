@@ -21,11 +21,11 @@ int main(int argc, char* argv[])
     square_lattice_traits<2> lattice(L);
     lattice.fill(-1.0);
 
-    MY_DEBUG(lattice.get_hopping_matrix());
+    MY_DEBUG(lattice.hopping_m);
 
-    configuration<square_lattice_traits<2>> config(lattice, U, mu, mu+e_f);
+    configuration<square_lattice_traits<2>> config(lattice, 1.0, U, mu, mu+e_f);
 
-    triqs::arrays::array<double, 1> my_config(lattice.m_size); my_config()=0;
+    Eigen::ArrayXi my_config(lattice.m_size); my_config.setZero();
     for (size_t x=0; x<L; x+=1)
         for (size_t y=0; y<L; y+=2) {
             my_config(lattice.pos_to_index({x,y+x%2}))=1;
