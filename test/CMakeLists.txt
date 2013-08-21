@@ -1,9 +1,7 @@
-link_libraries(fk_mc ${LINK_ALL})
 include_directories(../solver .. ${TRIQS_INCLUDE_ALL})
 
-set (tests 
+set (tests_fk
 triqs_extra_test
-eigen_test
 lattice_traits_test
 config_test
 binning_test
@@ -12,11 +10,23 @@ jackknife_test
 #mc_test01
 )
 
+set (other_tests
+eigen_test
+)
+
 enable_testing()
 
-foreach (test ${tests})
+foreach (test ${tests_fk})
     set(test_src ${test}.cpp)
     add_executable(${test} ${test_src})
+    target_link_libraries(${test} fk_mc ${LINK_ALL})
+    add_test(${test} ${test})
+endforeach(test)
+
+foreach (test ${other_tests})
+    set(test_src ${test}.cpp)
+    add_executable(${test} ${test_src})
+    target_link_libraries(${test} ${LINK_ALL})
     add_test(${test} ${test})
 endforeach(test)
 

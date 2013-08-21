@@ -1,6 +1,7 @@
 #include "common.hpp"
+#include "../eigen/eigen_iterative_solver.hpp"
+#include "../eigen/ArpackSupport"
 #include <chrono>
-#include <unsupported/Eigen/ArpackSupport>
 #include <triqs/mc_tools/random_generator.hpp>
 
 
@@ -39,5 +40,8 @@ int main(int argc, char* argv[])
 
     Eigen::ArpackGeneralizedSelfAdjointEigenSolver<sparse_m> solver2(a,size-2,"SA",Eigen::EigenvaluesOnly);
     INFO(solver2.eigenvalues().reverse());
+
+    auto t_in = solver.eigenvalues().reverse();
+    Eigen::IterativeInverseEigenSolver<sparse_m, dense_m> solver_inv_1(a,2,t_in);
     return EXIT_SUCCESS;
 }
