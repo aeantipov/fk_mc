@@ -111,10 +111,12 @@ inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>:
     cached_weights.resize(cached_spectrum.size());
     n_calc_evals = 0;
     double e0 = cached_spectrum[0]; // unsafe - .minCoeff() is safer but slower;
+    double weight0 = exp(-beta*e0);
+    MY_DEBUG("w0 : " << weight0);
     for (size_t i=0; i<cached_spectrum.size(); ++i) { 
         cached_weights(i) = exp(-beta*(cached_spectrum(i)-e0)); 
-        if (cached_weights(i) >= eval_weight_tolerance) n_calc_evals++; 
-    //    MY_DEBUG(cached_weights(i) << " " << eval_weight_tolerance << " " << n_calc_evals);
+        if (cached_weights(i)*weight0 >= eval_weight_tolerance) n_calc_evals++; 
+        //MY_DEBUG(cached_weights(i) << " " << exp(-beta*(cached_spectrum(i))) <<  " " << eval_weight_tolerance << " " << n_calc_evals);
         };
     n_calc_evals++; // calculate extra eigenvalue below the tolerance for future checks
     if (n_calc_evals > lattice.m_size) 
