@@ -95,7 +95,7 @@ struct move_addremove : move_flip<config_t> {
         new_config.f_config(to) = 1 - config.f_config(to);
 
         new_config.calc_hamiltonian();
-        new_config.calc_spectrum(config_t::calc_eval::arpack);
+        new_config.calc_spectrum();//config_t::calc_eval::arpack);
         auto ratio = __calc_weight_ratio(config, new_config);
         //MY_DEBUG("Exp weight: " << t1);
         auto out = (new_config.f_config(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f);

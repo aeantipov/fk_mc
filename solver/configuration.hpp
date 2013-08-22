@@ -4,9 +4,9 @@
 #include "common.hpp"
 #include <triqs/mc_tools/random_generator.hpp>
 #include <numeric>
-#include <triqs/arrays/linalg/eigenelements.hpp>
+//#include <triqs/arrays/linalg/eigenelements.hpp>
 
-#include <unsupported/Eigen/ArpackSupport>
+#include "../eigen/ArpackSupport"
 
 namespace fk {
 
