@@ -167,6 +167,7 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
 
     auto h5_mc_data = top.open_group("mc_data");
     h5_write(h5_mc_data,"energies", mc.observables.energies);
+    h5_write(h5_mc_data,"d2energies", mc.observables.d2energies);
 
     auto h5_stats = top.open_group("stats");
     INFO("Energy binning");
@@ -186,7 +187,8 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
     std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
     typedef std::function<double(double, double, double)> cf_t;
     double beta = p["beta"];
-    cf_t cv_function = [beta](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e);}; 
+    double Volume = mc.lattice.m_size;
+    cf_t cv_function = [beta, Volume](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/Volume;}; 
 
     typedef decltype(energies.rbegin()) it_t;
     std::array<std::pair<it_t,it_t>, 3> c_data = {
