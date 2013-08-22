@@ -31,8 +31,8 @@ public:
                                 int options=ComputeEigenvectors, RealScalar tol=std::numeric_limits<RealScalar>::epsilon())
     {
         eigen_assert(nbrEigenvalues == Eivalues_guess.size());
-        DenseMatrixType Evecs_guess(nbrEigenvalues, A.cols());
-        Evecs_guess.setRandom(nbrEigenvalues, A.cols());
+        DenseMatrixType Evecs_guess;
+        Evecs_guess.setRandom(A.rows(), nbrEigenvalues);
         compute(A, nbrEigenvalues, Eivalues_guess, Evecs_guess, options, tol);
     }
 
@@ -41,8 +41,8 @@ public:
                                int options=ComputeEigenvectors, RealScalar tol=std::numeric_limits<RealScalar>::epsilon())
    {
         eigen_assert(nbrEigenvalues == Eivalues_guess.size());
-        eigen_assert(nbrEigenvalues == Evecs_guess.rows());
-        eigen_assert(A.cols() == Evecs_guess.cols());
+        eigen_assert(nbrEigenvalues == Evecs_guess.cols());
+        eigen_assert(A.rows() == Evecs_guess.rows());
         compute(A, nbrEigenvalues, Eivalues_guess, Evecs_guess, options, tol);
    };
 
@@ -50,10 +50,17 @@ public:
                 const RealVectorType &Eivalues_guess, const DenseMatrixType& Evecs_guess, int options, 
                 RealScalar tol = std::numeric_limits<RealScalar>::epsilon(), size_t max_n_iter = 1e8)
    {
+        MatrixSolver OP;
         RealScalar diff = 1.0;
-        for (size_t i=0; i<max_n_iter && diff > tol; ++i) {
-        diff = 0.0;
-        MY_DEBUG("!");
+        size_t n_evals = Eivalues_guess.size();
+        for (size_t n=0; n < n_evals; ++n) { 
+            RealVectorType ev_guess = Evecs_guess.col(n);
+            RealVectorType v(ev_guess.size());
+            MY_DEBUG(ev_guess);
+            for (size_t i=0; i<max_n_iter && diff > tol; ++i) {
+                Real
+                MY_DEBUG("!");
+                }
         }
    }; 
 
