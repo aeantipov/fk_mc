@@ -59,25 +59,27 @@ public:
         size_t n_evals = Eivalues_guess.size();
         for (size_t n=0; n < n_evals; ++n) { 
             RealScalar sigma = Eivalues_guess(n);
+
             RealScalar theta;
-            MY_DEBUG(sigma);
             MatrixType A2(A);
             for (size_t j=0; j<A2.rows(); j++) A2.coeffRef(j,j) -= sigma;
             OP.compute(A2);
-            RealVectorType y = Evecs_guess.col(n);
+            //MY_DEBUG(OP.determinant());
+            RealVectorType y = Evecs_guess.col(n); y/=y.norm();
             RealVectorType v(y);
+
             RealScalar diff = 1.0;
             for (size_t i=0; i<max_n_iter && diff > tol; ++i) {
                 v = y/y.norm();
-                y = OP.solve(v);
+                y = A2.ldlt().solve(v); //OP.solve(v);
                 theta = v.transpose()*y;
                 diff = (y - theta*v).norm();
                 MY_DEBUG("theta = " << theta << ";diff = " << diff);
                 }
             MY_DEBUG("sigma = " << sigma << " theta = " << theta);
-            MY_DEBUG(sigma + 1.0/theta);
-            MY_DEBUG(Evecs_guess.col(n).transpose());
-            MY_DEBUG(y.transpose()/theta);
+            MY_DEBUG("Eval: " << sigma + 1.0/theta);
+            MY_DEBUG("Input guess: " << Evecs_guess.col(n).transpose());
+            MY_DEBUG("Output evec: " << y.transpose()/theta);
             MY_DEBUG((A*Evecs_guess.col(n)/sigma).transpose());
             MY_DEBUG((A*Evecs_guess.col(n)/(sigma + 1.0/theta)).transpose());
         }

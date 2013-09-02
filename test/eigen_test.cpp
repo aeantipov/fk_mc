@@ -43,12 +43,13 @@ int main(int argc, char* argv[])
 
     auto t_in = s.eigenvalues();
     t_in(0) = 1.;
+    //t_in(1) = -1.29;
     //Eigen::IterativeInverseEigenSolver<sparse_m> solver_inv_1(a,2,t_in);
     //Eigen::IterativeInverseEigenSolver<dense_m, Eigen::LDLT<dense_m>> solver_inv_1(b,2,t_in, Eigen::EigenvaluesOnly, 1e-8, 1000);
-    MY_DEBUG(s.eigenvectors());
     dense_m ev_in(b.rows(),2);
     ev_in.col(0) = s.eigenvectors().col(0);
     ev_in.col(1) = s.eigenvectors().col(1);
+    ev_in.col(1).setRandom();
     Eigen::IterativeInverseEigenSolver<dense_m, Eigen::LDLT<dense_m>> solver_inv_1(b,2,t_in.head(2), ev_in, Eigen::EigenvaluesOnly, 1e-8, 1000);
     return EXIT_SUCCESS;
 }
