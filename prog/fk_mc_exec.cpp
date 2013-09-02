@@ -160,7 +160,7 @@ void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_
 void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext)
 {
     print_section("Statistics");
-    H5::H5File output(output_file,H5F_ACC_TRUNC);
+    H5::H5File output(output_file.c_str(),H5F_ACC_TRUNC);
     triqs::h5::group top(output);
     top.create_group("mc_data");
     top.create_group("stats");

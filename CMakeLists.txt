@@ -27,6 +27,8 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 # find triqs
 find_package(TRIQS REQUIRED)
+message(STATUS ${TRIQS_CXX_DEFINITIONS})
+add_definitions ( ${TRIQS_CXX_DEFINITIONS})
 
 # find Eigen and Arpack
 option (USE_EIGEN "Use Eigen library?" ON) 
