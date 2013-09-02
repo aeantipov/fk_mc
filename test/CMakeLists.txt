@@ -1,7 +1,7 @@
 include_directories(../solver .. ${TRIQS_INCLUDE_ALL})
 
 set (tests_fk
-triqs_extra_test
+#triqs_extra_test
 lattice_traits_test
 config_test
 binning_test
@@ -12,6 +12,7 @@ jackknife_test
 
 set (other_tests
 eigen_test
+hdf5
 )
 
 enable_testing()

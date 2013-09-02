@@ -10,7 +10,7 @@ int main()
     std::vector<double> a(10,1.5);
     for (auto b: a) std::cout << b <<" " << std::flush;
     std::cout << std::endl;
-    tqa::indexmaps::cuboid::domain_t<1> d1({int(a.size())});
+    tqa::indexmaps::cuboid::domain_t<1> d1({size_t(a.size())});
     //tqa::indexmaps::cuboid::domain_t<1> d2(tqa::mini_vector<int, 1>({int(a.size())})); // FIXME!!
     tqa::indexmaps::cuboid::map<1,0,0> ind(d1);
     tqa::extra::weak_block<double> w(a.data(), a.size());
