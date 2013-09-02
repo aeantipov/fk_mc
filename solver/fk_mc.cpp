@@ -71,7 +71,7 @@ template <class lattice_t>
    ("Random_Seed", int(34788), "Seed for random number generator")
    ("eval_tol", double(std::numeric_limits<double>::epsilon()), "Tolerance for eigenvalue weights")
    ("Random_Generator_Name", std::string(""), "Name of random number generator")
-   ("max_time",int(600), "Maximum running time")
+   ("max_time",int(600000), "Maximum running time")
    ;
 
   return pdef;
