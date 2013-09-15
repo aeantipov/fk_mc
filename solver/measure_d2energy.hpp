@@ -30,10 +30,6 @@ void measure_d2energy<config_t>::accumulate (double sign)
     auto spectrum = config.cached_spectrum;
     _Z++;
 
-    real_array_t d2e_nf(spectrum.size());
-    for (size_t i=0; i<d2e_nf.size(); ++i)
-        d2e_nf(i) = spectrum(i)*spectrum(i) / (1.0+0.5*(exp(beta*(spectrum(i))) + exp(-beta*(spectrum(i))) ));
-
     double d2e_val = d2e_nf.sum()/2.0;
     _average_d2energy += d2e_val;
     _d2energies.push_back(d2e_val);

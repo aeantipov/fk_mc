@@ -10,31 +10,33 @@ int main(int argc, char* argv[])
   try {
     size_t L = 4;
 
-    double U = 6.0;
+    double U = 1.0;
     double t = -1.0;
-    double T = 0.15;
+    double T = 0.1;
     double beta = 1.0/T;
 
-    square_lattice_traits<2> lattice(L);
-    lattice.fill(-1.0);
+    triangular_lattice_traits lattice(L);
+    lattice.fill(-1.0,0);
 
-    MY_DEBUG(lattice.get_hopping_matrix());
+    MY_DEBUG(lattice.hopping_m);
 
-    fk_mc<square_lattice_traits<2>> mc(lattice);
+    fk_mc<triangular_lattice_traits > mc(lattice);
 
     triqs::utility::parameters p;
     p["U"] = U;
+    p["mu_c"] = U/2; p["mu_f"] = U/2;
     p["beta"] = beta;
     p["Nf_start"] = L*L/2;
-    p["Random_Generator_Name"] = ""; 
-    p["Random_Seed"] = 34788+std::chrono::system_clock::now().time_since_epoch().count();
+    p["Random_Seed"] = 34788;
     p["Verbosity"] = 3;
-    p["Length_Cycle"] = 15; 
+    p["Length_Cycle"] = 1; 
     p["N_Warmup_Cycles"] = 1;
-    p["N_Cycles"] = 1;
+    p["N_Cycles"] = 400;
     p["max_time"]=5;
+    p["measure_spectrum_history"] = true;
 
     mc.solve(p);
+
   }
   catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}
   return 0;

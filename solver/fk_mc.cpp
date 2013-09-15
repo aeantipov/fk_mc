@@ -1,7 +1,8 @@
 #include "fk_mc.hpp"
 #include "moves.hpp"
 #include "measure_energy.hpp"
-#include "measure_d2energy.hpp"
+#include "measure_spectrum.hpp"
+#include "measure_spectrum_history.hpp"
 
 #include <triqs/mc_tools/mc_generic.hpp>
 #include <triqs/utility/callbacks.hpp>
@@ -40,8 +41,10 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
 
     size_t max_bins = p["N_Cycles"];
     observables.energies.reserve(max_bins);
-    mc.add_measure(measure_energy<config_t>(beta,config,observables.energies), "energy");
-    mc.add_measure(measure_d2energy<config_t>(beta,config,observables.d2energies), "d2energy");
+    mc.add_measure(measure_energy<config_t>(beta,config,observables.energies, observables.d2energies), "energy");
+    mc.add_measure(measure_spectrum<config_t>(config,observables.spectrum), "spectrum");
+    if (p["measure_spectrum_history"])
+        mc.add_measure(measure_spectrum_history<config_t>(config,observables.spectrum_measures), "spectrum_history");
 
       // run and collect results
     mc.start(1.0, triqs::utility::clock_callback(p["max_time"]));
@@ -65,6 +68,7 @@ template <class lattice_t>
    ("mc_flip", double(1.0), "Make flip moves")
    ("mc_add_remove", double(1.0), "Make add/remove moves")
    ("mc_reshuffle", double(1.0), "Make reshuffle moves")
+   ("measure_spectrum_history", bool(true), "Measure the spectrum history")
    ("Nf_start", size_t(5), "Starting number of f-electrons")
    ("Length_Cycle", int(50), "Length of a single QMC cycle")
    ("N_Warmup_Cycles", int(5000), "Number of cycles for thermalization")

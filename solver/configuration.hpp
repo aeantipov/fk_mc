@@ -64,6 +64,7 @@ struct configuration {
 
     size_t get_nf() const;
     void randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf = 0);
+    size_t get_m_size() const { return lattice.m_size; };
 
     sparse_m calc_hamiltonian();
 

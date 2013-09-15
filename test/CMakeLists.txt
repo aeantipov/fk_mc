@@ -7,7 +7,7 @@ config_test
 binning_test
 jackknife_test
 #ietl_inverse01
-#mc_test01
+mc_test01
 )
 
 set (other_tests
