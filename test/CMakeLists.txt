@@ -11,7 +11,7 @@ mc_test01
 )
 
 set (other_tests
-eigen_test
+#eigen_test
 hdf5
 )
 

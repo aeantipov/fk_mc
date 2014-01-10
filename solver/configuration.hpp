@@ -6,7 +6,7 @@
 #include <numeric>
 //#include <triqs/arrays/linalg/eigenelements.hpp>
 
-#include "../eigen/ArpackSupport"
+#include <Eigen/Eigenvalues>
 
 namespace fk {
 
@@ -70,7 +70,7 @@ struct configuration {
 
     real_array_t  calc_spectrum(calc_eval flag = calc_eval::full);
     real_array_t  calc_spectrum_full();
-    real_array_t  calc_spectrum_arpack();
+    //real_array_t  calc_spectrum_arpack();
 };
 
 template <class lattice_t>
@@ -105,7 +105,7 @@ inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>:
 {
     if (n_calc_evals == lattice.m_size) flag = calc_eval::full; 
     switch (flag) {
-        case calc_eval::arpack: calc_spectrum_arpack(); break;
+        //case calc_eval::arpack: calc_spectrum_arpack(); break;
         case calc_eval::full: calc_spectrum_full(); break;
     }
 
@@ -113,7 +113,7 @@ inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>:
     n_calc_evals = 0;
     double e0 = cached_spectrum[0]; // unsafe - .minCoeff() is safer but slower;
     double weight0 = exp(-beta*e0);
-    MY_DEBUG("w0 : " << weight0);
+    //MY_DEBUG("w0 : " << weight0);
     for (size_t i=0; i<cached_spectrum.size(); ++i) { 
         cached_weights(i) = exp(-beta*(cached_spectrum(i)-e0)); 
         if (cached_weights(i)*weight0 >= eval_weight_tolerance) n_calc_evals++; 
@@ -124,7 +124,7 @@ inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>:
         n_calc_evals = lattice.m_size;
         else if (n_calc_evals == cached_spectrum.size()+1) 
             n_calc_evals++;
-    MY_DEBUG(n_calc_evals << " " << cached_spectrum.size() << "|" << eval_weight_tolerance);
+    //MY_DEBUG(n_calc_evals << " " << cached_spectrum.size() << "|" << eval_weight_tolerance);
     return cached_spectrum;
 }
 
@@ -137,6 +137,7 @@ inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>:
     return cached_spectrum;
 }
 
+/* Obsolete, clean 
 template <class lattice_t>
 inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>::calc_spectrum_arpack()
 {
@@ -145,7 +146,7 @@ inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>:
     cached_spectrum = s.eigenvalues().reverse();
     return cached_spectrum;
 }
-
+*/
 
 
 

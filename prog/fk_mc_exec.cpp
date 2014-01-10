@@ -10,10 +10,6 @@
 #include "binning.hpp"
 #include "jackknife.hpp"
 
-//#ifndef FK_MC_DEBUG
-//#undef DEBUG
-//#endif
-
 using namespace fk;
 
 #ifdef LATTICE_triangular
@@ -107,13 +103,13 @@ try {
     p["mu_c"] = mu_c; p["mu_f"] = mu_f;
     p["beta"] = beta;
     p["Nf_start"] = L*L/2;
-    p["Random_Generator_Name"] = ""; 
+    p["random_name"] = ""; 
     p["eval_tol"] = eval_tolerance_switch.getValue(); 
-    p["Random_Seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
-    p["Verbosity"] = 3;
-    p["Length_Cycle"] = cycle_len_arg.getValue(); 
-    p["N_Warmup_Cycles"] = nwarmup_arg.getValue();
-    p["N_Cycles"] = ncycles_arg.getValue();
+    p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
+    p["verbosity"] = 3;
+    p["length_cycle"] = cycle_len_arg.getValue(); 
+    p["n_warmup_Cycles"] = nwarmup_arg.getValue();
+    p["n_cycles"] = ncycles_arg.getValue();
     p["max_time"]=3600*5;
     
     p["mc_flip"] = move_flips_switch.getValue();

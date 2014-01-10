@@ -16,7 +16,8 @@ struct measure_energy {
     int _Z = 0.0;
     double _average_energy = 0.0;
     double _average_d2energy = 0.0;
-    std::vector<double>& _energies, _d2energies;
+    std::vector<double>& _energies;
+    std::vector<double>& _d2energies;
 
     measure_energy(double beta,const config_t& in, std::vector<double>& energies, std::vector<double>& d2energies):
         beta(beta),config(in), _energies(energies),_d2energies(d2energies){};
@@ -58,6 +59,7 @@ void measure_energy<config_t>::collect_results(boost::mpi::communicator const &c
     boost::mpi::gather(c, _energies.data(), _energies.size(), energies, 0);
     _energies.swap(energies);
 
+    c.barrier();
     std::vector<double> d2energies(_d2energies.size()*c.size());
     boost::mpi::gather(c, _d2energies.data(), _d2energies.size(), d2energies, 0);
     _d2energies.swap(d2energies);
