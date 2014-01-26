@@ -62,6 +62,23 @@ inline std::tuple<Tail...> tuple_tail(std::tuple<Head,Tail...> const& tpl)
     return __split_tuple_struct<std::tuple<Tail...>, std::tuple<Head,Tail...>, 1, std::tuple_size<std::tuple<Head,Tail...>>::value == 1>::create(tpl);
 }
 
+// function_traits from http://stackoverflow.com/questions/9044866/how-to-get-the-number-of-arguments-of-stdfunction
+
+template<typename T> struct function_traits;
+template<typename R, typename ...Args> 
+struct function_traits<std::function<R(Args...)>>
+{
+    static constexpr size_t nargs = sizeof...(Args);
+    typedef R result_type;
+    template <size_t i>
+    struct arg { typedef typename std::tuple_element<i, std::tuple<Args...>>::type type; };
+};
+
+// repeat function as a sum
+
+//template <typename R, typename Arg, size_t L>
+
+
 }; // end of namespace FK
 
 #endif // endif :: #ifndef __FK_MC_COMMON_H
