@@ -103,13 +103,9 @@ inline typename configuration<lattice_t>::sparse_m configuration<lattice_t>::cal
 template <class lattice_t>
 inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>::calc_spectrum(calc_eval flag)
 {
-    if (n_calc_evals == lattice.m_size) flag = calc_eval::full; 
-    switch (flag) {
-        //case calc_eval::arpack: calc_spectrum_arpack(); break;
-        case calc_eval::full: calc_spectrum_full(); break;
-    }
-
+    calc_spectrum_full(); 
     cached_weights.resize(cached_spectrum.size());
+
     n_calc_evals = 0;
     double e0 = cached_spectrum[0]; // unsafe - .minCoeff() is safer but slower;
     double weight0 = exp(-beta*e0);
@@ -134,6 +130,7 @@ inline typename configuration<lattice_t>::real_array_t configuration<lattice_t>:
     dense_m h(hamilt);
     Eigen::SelfAdjointEigenSolver<dense_m> s(h,Eigen::EigenvaluesOnly);
     cached_spectrum = s.eigenvalues();
+    std::sort (cached_spectrum.data(), cached_spectrum.data()+cached_spectrum.size());  
     return cached_spectrum;
 }
 

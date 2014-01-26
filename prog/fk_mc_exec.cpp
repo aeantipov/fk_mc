@@ -93,7 +93,7 @@ try {
     MINFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
     MINFO2("Eigenvalue Boltzmann weight cutoff    : " << eval_tolerance_switch.getValue());
     if (exit_switch.getValue()) exit(0);
-    lattice_t lattice(L);
+    lattice_t lattice(L); // create a lattice
     lattice.fill(t,tp);
 
     mc_t mc(lattice);
@@ -108,7 +108,7 @@ try {
     p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
     p["verbosity"] = 3;
     p["length_cycle"] = cycle_len_arg.getValue(); 
-    p["n_warmup_Cycles"] = nwarmup_arg.getValue();
+    p["n_warmup_cycles"] = nwarmup_arg.getValue();
     p["n_cycles"] = ncycles_arg.getValue();
     p["max_time"]=3600*5;
     
@@ -187,7 +187,7 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
     cf_t cv_function = [beta, Volume](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/Volume;}; 
 
     typedef decltype(energies.rbegin()) it_t;
-    std::array<std::pair<it_t,it_t>, 3> c_data = {
+    std::vector<std::pair<it_t,it_t>> c_data = {
         std::make_pair(energies.rbegin(), energies.rend()), 
         std::make_pair(energies_square.rbegin(), energies_square.rend()), 
         std::make_pair(d2energies.rbegin(), d2energies.rend())

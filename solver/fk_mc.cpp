@@ -45,7 +45,7 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     mc.add_measure(measure_energy<config_t>(beta,config,observables.energies, observables.d2energies), "energy");
     mc.add_measure(measure_spectrum<config_t>(config,observables.spectrum), "spectrum");
     if (p["measure_spectrum_history"])
-        mc.add_measure(measure_spectrum_history<config_t>(config,observables.spectrum_measures), "spectrum_history");
+        mc.add_measure(measure_spectrum_history<config_t>(config,observables.spectrum_history), "spectrum_history");
 
       // run and collect results
     mc.start(1.0, triqs::utility::clock_callback(p["max_time"]));
@@ -66,9 +66,9 @@ template <class lattice_t>
    ;
 
   pdef
-   .optional("mc_flip", double(1.0), "Make flip moves")
+   .optional("mc_flip", double(0.0), "Make flip moves")
    .optional("mc_add_remove", double(1.0), "Make add/remove moves")
-   .optional("mc_reshuffle", double(1.0), "Make reshuffle moves")
+   .optional("mc_reshuffle", double(0.0), "Make reshuffle moves")
    .optional("measure_spectrum_history", bool(false), "Measure the spectrum history")
    .optional("random_name", std::string(""), "Name of random number generator")
    .optional("Nf_start", size_t(5), "Starting number of f-electrons")
