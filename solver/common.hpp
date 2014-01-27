@@ -6,6 +6,7 @@
 #include <triqs/arrays.hpp>
 #include <triqs/arrays/algorithms.hpp>
 #include <triqs/parameters/parameters.hpp>
+#include <complex>
 
 #include <tuple>
 #include <array>
@@ -31,6 +32,9 @@ using triqs::arrays::sum;
 #define ERROR(MSG)            std::cerr << MSG_PREFIX << MSG << std::endl;
 
 typedef triqs::utility::parameters parameters;
+typedef std::complex<double> complex_t;
+static const complex_t I (0.0,1.0); 
+static const double PI = atan(1)*4.;
 
 template <size_t D>
 inline std::ostream& operator<< (std::ostream& in, const std::array<size_t, D> arr){ 
@@ -73,11 +77,6 @@ struct function_traits<std::function<R(Args...)>>
     template <size_t i>
     struct arg { typedef typename std::tuple_element<i, std::tuple<Args...>>::type type; };
 };
-
-// repeat function as a sum
-
-//template <typename R, typename Arg, size_t L>
-
 
 }; // end of namespace FK
 

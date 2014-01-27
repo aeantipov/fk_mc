@@ -77,6 +77,9 @@ int main()
     res_correct = std::make_tuple(4,0.467231,0.0269458,0.0820759);
     MY_DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
+    auto xx = jack(f1, std::vector<std::vector<double>>({a}), 2);
+    MY_DEBUG(res << "==" << res_correct);
+    if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
 
     //==================== part 2  ======================/
 

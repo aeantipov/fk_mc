@@ -14,7 +14,6 @@ using namespace fk;
 
 #ifdef LATTICE_triangular
     typedef triangular_lattice_traits lattice_t;
-    static constexpr size_t D=1;
 #endif
 
 size_t _myrank;
@@ -25,6 +24,7 @@ size_t _myrank;
 typedef fk_mc<lattice_t> mc_t;
 
 void print_section (const std::string& str); // fancy screen output
+void savetxt (std::string fname, const triqs::arrays::array<double,2>& in);
 void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext = false);
 
 int main(int argc, char* argv[])
@@ -51,8 +51,6 @@ try {
     //TCLAP::ValueArg<int> nf_arg("","nf","total number of f-electrons",false,4,"int", cmd);
     
 
-    
-
     TCLAP::ValueArg<int> ncycles_arg("","ncycles","total number of cycles",false,50000,"int",cmd);
     TCLAP::ValueArg<int> nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,10000,"int",cmd);
     TCLAP::ValueArg<int> cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,1,"int",cmd);
@@ -64,6 +62,13 @@ try {
 
     TCLAP::ValueArg<double>     eval_tolerance_switch("","evaltol","Tolerance for eigenvalue weights", false, std::numeric_limits<double>::epsilon(), "double", cmd);
     TCLAP::SwitchArg     plaintext_switch("p","plaintext","Save data to plaintext format?", cmd, false);
+
+    TCLAP::SwitchArg     calc_spectrum_history_switch("","calc_spec_hist","Calculate spectrum history", cmd, true);
+    // dos-related args
+    TCLAP::SwitchArg     savedos_e_switch("","calc_dos_errors","Calculate DOS with error-bars", cmd, true);
+    TCLAP::ValueArg<double>     dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
+    TCLAP::ValueArg<int>        dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
+    TCLAP::ValueArg<double>     dos_offset_arg("","dos_offset","offset of dos from real axis", false, 0.05, "double", cmd);
 
     TCLAP::SwitchArg exit_switch("","exit","Dry run", cmd, false);
     cmd.parse( argc, argv );
@@ -111,6 +116,12 @@ try {
     p["n_warmup_cycles"] = nwarmup_arg.getValue();
     p["n_cycles"] = ncycles_arg.getValue();
     p["max_time"]=3600*5;
+
+    p["measure_spectrum_history"] = calc_spectrum_history_switch.getValue();
+    p["save_dos_errors"] = savedos_e_switch.getValue() && p["measure_spectrum_history"];
+    p["dos_width"] = dos_width_arg.getValue();
+    p["dos_npts"] = dos_npts_arg.getValue();
+    p["dos_offset"] = dos_offset_arg.getValue();
     
     p["mc_flip"] = move_flips_switch.getValue();
     p["mc_add_remove"] = move_add_remove_switch.getValue();
@@ -140,17 +151,34 @@ void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_
 {
     auto cor_lens = binning::calc_cor_length(binning_data);
     tqa::array<double, 2> data_arr(binning_data.size(),5);
-    std::ofstream out; out.setf(std::ios::scientific); //out << std::setw(9);
-    if (save_plaintext) out.open(name+"_binning.dat",std::ios::out);
+    //std::ofstream out; out.setf(std::ios::scientific); //out << std::setw(9);
+    //if (save_plaintext) out.open(name+"_binning.dat",std::ios::out);
     for (size_t i=0; i<binning_data.size(); i++){
         auto e = binning_data[i]; double c = cor_lens[i];
         std::array<double, 5> t ({double(std::get<binning::_SIZE>(e)), std::get<binning::_MEAN>(e), std::get<binning::_DISP>(e), std::get<binning::_SQERROR>(e), c });
         std::copy(t.begin(),t.end(),data_arr(i,tqa::range()).begin());
-        if (save_plaintext) out << i << " " << std::get<binning::_SIZE>(e) << "  " << std::get<binning::_MEAN>(e) 
-            << "  " << std::get<binning::_DISP>(e) << "  " << std::get<binning::_SQERROR>(e) << "  " << c << "\n";
+        //if (save_plaintext) out << i << " " << std::get<binning::_SIZE>(e) << "  " << std::get<binning::_MEAN>(e) 
+            //<< "  " << std::get<binning::_DISP>(e) << "  " << std::get<binning::_SQERROR>(e) << "  " << c << "\n";
        };
+    if (save_plaintext) savetxt(name+"_binning.dat",data_arr);
     h5_write(h5_group,name, data_arr);
-    out.close();
+}
+
+/** Estimate the bin, at which the error bar is saturated. */
+size_t estimate_bin(const fk::binning::bin_data_t& data)
+{
+    std::vector<double> errors(data.size());
+    for (size_t i=0; i<errors.size(); i++) errors[i] = std::get<binning::bin_m::_SQERROR>(data[i]);
+    double rel_error = 1.;
+    bool f = true; 
+    size_t ind = errors.size()-1;
+    while (f && ind>0){
+        double rel_error_current = std::abs(errors[ind-1]/errors[ind]-1.);
+        f = (rel_error_current < 0.05 && rel_error_current < rel_error);
+        rel_error = f?rel_error_current:rel_error;
+        if (f) ind--;
+    }
+    return ind;
 }
 
 void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext)
@@ -161,11 +189,27 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
     top.create_group("mc_data");
     top.create_group("stats");
 
+    //===== save direct measures ===== //
     auto h5_mc_data = top.open_group("mc_data");
     h5_write(h5_mc_data,"energies", mc.observables.energies);
     h5_write(h5_mc_data,"d2energies", mc.observables.d2energies);
 
+    std::vector<double> spectrum(mc.observables.spectrum.size());
+    std::copy(mc.observables.spectrum.data(), mc.observables.spectrum.data()+spectrum.size(), spectrum.begin());
+    for (auto x : spectrum) std::cout << (x) << " " << std::flush; std::cout << std::endl;
+    h5_write(h5_mc_data,"spectrum", spectrum);
+
+    triqs::arrays::array<double, 2> t_spectrum_history(mc.observables.spectrum_history.size(), mc.observables.spectrum_history[0].size());
+    if (p["measure_spectrum_history"]) { 
+        for (int i=0; i<mc.observables.spectrum_history.size(); i++)
+            for (int j=0; j< mc.observables.spectrum_history[0].size(); j++)
+                t_spectrum_history(i,j) =  mc.observables.spectrum_history[i][j];
+        h5_write(h5_mc_data,"spectrum_history", t_spectrum_history);
+        };
+
+    //===== save statistics ===== //
     auto h5_stats = top.open_group("stats");
+    INFO("=== Binning analysis ===");
     INFO("Energy binning");
     const std::vector<double>& energies = mc.observables.energies;
     const std::vector<double>& d2energies = mc.observables.d2energies;
@@ -178,12 +222,14 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
     auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), maxbin); 
     save_binning(d2energy_binning_data,h5_stats,"d2energies",save_plaintext);
 
-    INFO("Jackknife analysis");
+    INFO("=== Jackknife analysis ===");
     std::vector<double> energies_square(energies.size());
     std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
     typedef std::function<double(double, double, double)> cf_t;
     double beta = p["beta"];
     double Volume = mc.lattice.m_size;
+
+    INFO("\tSpecific heat");
     cf_t cv_function = [beta, Volume](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/Volume;}; 
 
     typedef decltype(energies.rbegin()) it_t;
@@ -195,5 +241,95 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
     auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,maxbin);
     for (auto x:cv_stats){INFO(x);}; 
     save_binning(cv_stats,h5_stats,"cv",save_plaintext);
+
+    // Local green's functions
+    std::complex<double> z = 0.0;
+    double offset = 0.0;
+    std::function<double(std::vector<double>)> gf_im_f = [&](const std::vector<double>& spec)->double {
+        std::complex<double> d = 0.0;
+        for (size_t i=0; i<spec.size(); i++) d+=1./(z - spec[i] + I*offset); 
+            return imag(d);
+        };
+
+    std::function<double(std::vector<double>)> gf_re_f = [&](const std::vector<double>& spec)->double {
+            std::complex<double> d = 0.0;
+            for (size_t i=0; i<spec.size(); i++) d+=1./(z - spec[i] + I*offset); 
+            return real(d);
+            };
+    std::function<double(std::vector<double>)> dos0_f = [&](const std::vector<double>& spec)->double { 
+        return -gf_im_f(spec)/PI; };
+
+    size_t dos_npts = p["dos_npts"];
+    double dos_width = p["dos_width"];
+    std::vector<double> grid_real(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real[i] = -dos_width+2.*dos_width*i/(1.*dos_npts);
+    std::vector<double> grid_imag(std::max(int(beta)*10,1024)); for (size_t i=0; i<grid_imag.size(); i++) grid_imag[i] = PI/beta*(2.*i + 1);
+
+    { // gf_matsubara - no errorbars
+        offset = 0.0;
+        triqs::arrays::array<double, 2> gf_im_v(grid_imag.size(),3);
+        for (size_t i=0; i<grid_imag.size(); i++) { 
+            z = I*grid_imag[i]; 
+            gf_im_v(i,0) = std::imag(z); 
+            gf_im_v(i,1) = gf_re_f(spectrum); 
+            gf_im_v(i,2) = gf_im_f(spectrum); 
+            };
+        h5_write(h5_stats,"gw_imfreq",gf_im_v);
+        if (save_plaintext) savetxt("gw_imfreq.dat",gf_im_v);
+    };
+
+    { // gf_refreq - no errorbars
+        offset = p["dos_offset"];
+        triqs::arrays::array<double, 2> dos_v(grid_real.size(),2), gf_re_v(grid_real.size(),3);
+        for (size_t i=0; i<grid_real.size(); i++) { 
+            z = grid_real[i]; 
+            dos_v(i,0) = std::real(z); gf_re_v(i,0) = std::real(z); 
+            gf_re_v(i,1) = gf_re_f(spectrum);
+            gf_re_v(i,2) = gf_im_f(spectrum);
+            dos_v(i,1) = dos0_f(spectrum); 
+            };
+        h5_write(h5_stats,"dos",dos_v);
+        h5_write(h5_stats,"gf_re",gf_re_v);
+        if (save_plaintext) { savetxt("dos.dat",dos_v); savetxt("gf_refreq.dat", gf_re_v); };
+    };
+
+    if (p["measure_spectrum_history"])
+    {
+        const auto &spectrum_history = mc.observables.spectrum_history;
+        
+        auto dos0_stats = jackknife::accumulate_jackknife(dos0_f,spectrum_history,maxbin);
+        save_binning(dos0_stats,h5_stats,"dos0",save_plaintext);
+
+        size_t dos_bin = estimate_bin(dos0_stats);
+        INFO("Using data from bin = " << dos_bin);
+        INFO("DOS(0) = " << std::get<binning::bin_m::_MEAN>(dos0_stats[dos_bin]) << " +/- " << std::get<binning::bin_m::_SQERROR>(dos0_stats[dos_bin]));
+
+        if (p["save_dos_errors"]) { 
+            INFO("\tLocal DOS w errorbars");
+            offset = p["dos_offset"];
+            triqs::arrays::array<double, 2> dos_ev(grid_real.size(),3);
+            for (size_t i=0; i<grid_real.size(); i++) {
+                z = grid_real[i];
+                auto dosz_data = jackknife::jack(dos0_f,spectrum_history,dos_bin);
+                dos_ev(i,0) = std::real(z); 
+                dos_ev(i,1) = std::get<binning::bin_m::_MEAN>(dosz_data);
+                dos_ev(i,2) = std::get<binning::bin_m::_SQERROR>(dosz_data); 
+                }
+            h5_write(h5_stats,"dos_err",dos_ev);
+            if (save_plaintext) savetxt("dos_err.dat",dos_ev);
+            }
+    }
+}
+
+void savetxt (std::string fname, const triqs::arrays::array<double,2>& in)
+{
+    std::ofstream out(fname);
+    out.setf(std::ios::scientific); //out << std::setw(9);
+    for (size_t i=0; i<in.shape()[0]; i++){
+        for (size_t j=0; j<in.shape()[1]; j++){
+            out << in(i,j) << " ";
+        };
+        out << std::endl;
+    };
+    out.close();
 }
 

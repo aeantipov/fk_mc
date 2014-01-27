@@ -29,13 +29,16 @@ struct jackknife_adapter
             std::array<Arg1, L> p; std::copy(in.begin(), in.end(), p.begin());
             return triqs::tuple::apply(F_in,p);
             };
-        MY_DEBUG("Converting f of " << L << " args to f(std::vector)");
+        //MY_DEBUG("Converting f of " << L << " args to f(std::vector)");
         return out_;
         };
 
     /** An overload for  _vectorize_f to pass a function of vector untouched. */
     template <typename R, typename Arg1>
-    static std::function<R(std::vector<Arg1>)> _vectorize_f(const std::function<R(std::vector<Arg1>)>& F_in) {MY_DEBUG("Passing f"); return F_in;};
+    static std::function<R(std::vector<Arg1>)> _vectorize_f(const std::function<R(std::vector<Arg1>)>& F_in) {
+        //MY_DEBUG("Passing f"); 
+        return F_in;
+    };
 
     /** Run a jackknife analysis for a given data.
      * \param[in] F - a function that gives the required expression, i.e. F(x_1, x_2 ... )
@@ -111,6 +114,34 @@ struct jackknife_accumulator<Functor,0,current_bin> {
 };
 
 //////// free functions ///////////
+
+template <typename Functor, typename iter_t>
+bin_stats_t jack(Functor F, const std::vector<std::pair<iter_t,iter_t>>& in, size_t bin)
+{
+    #define MACRO(r, p) \
+    if (BOOST_PP_SEQ_ELEM(0, p) == bin) \
+        { typedef binning::binned_iterator<iter_t,BOOST_PP_SEQ_ELEM(0, p)> bin_it; \
+          std::vector<std::pair<bin_it, bin_it>> data_proxy(in.size()); \
+          for (size_t i=0; i<in.size(); i++) data_proxy[i] = find_bin_range(in[i].first,in[i].second, bin_it()); \
+          return jackknife_adapter::jack<Functor,bin_it>(F,data_proxy); \
+        }; 
+    BOOST_PP_SEQ_FOR_EACH_PRODUCT(MACRO, BINNING_RANGE)
+    #undef MACRO
+    TRIQS_RUNTIME_ERROR << "bin =" << bin << "> compiled bin size";
+    return std::make_tuple(0, std::nan(""),std::nan(""),std::nan(""));
+}
+
+/** Accumulate jackknife data for a given data (vector of containers), function F and required maximum bin_depth. */
+template <typename Functor, typename Std_container_t>
+bin_stats_t jack(Functor &&F, const std::vector<Std_container_t>& in, size_t bin) {
+    typedef typename std::add_const<Std_container_t>::type::const_iterator iter_t;
+    size_t L = in.size();
+    std::vector<std::pair<iter_t,iter_t>> ranges(L);
+    for (size_t i=0; i<L; ++i) ranges[i]=std::make_pair(in[i].begin(),in[i].end());
+    return jack(F,ranges,bin);
+}
+
+
 
 /** Accumulate jackknife data for a given data (vector of ranges), function F and required maximum bin_depth. */
 template <typename Functor, typename iter_t>
