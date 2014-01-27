@@ -10,9 +10,9 @@
 
 namespace fk {
 
-template <class lattice_t>
+template <class Lattice_t>
 struct configuration {
-
+    typedef Lattice_t lattice_t;
     typedef typename lattice_t::sparse_m sparse_m;
     typedef Eigen::MatrixXd dense_m;
     typedef Eigen::ArrayXi int_array_t;

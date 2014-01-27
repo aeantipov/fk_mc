@@ -13,9 +13,9 @@ struct measure_spectrum {
     const config_t& config;
 
     int _Z = 0.0;
-    real_array_t _average_spectrum;
+    real_array_t& _average_spectrum;
 
-    measure_spectrum(const config_t& in, real_array_t average_spectrum):
+    measure_spectrum(const config_t& in, real_array_t& average_spectrum):
         config(in), _average_spectrum(average_spectrum)
         { _average_spectrum.resize(config.get_m_size()); _average_spectrum.setZero();};
  
