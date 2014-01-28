@@ -1,8 +1,9 @@
 #include "fk_mc.hpp"
 #include "moves.hpp"
-#include "measure_energy.hpp"
-#include "measure_spectrum.hpp"
-#include "measure_spectrum_history.hpp"
+#include "measures/energy.hpp"
+#include "measures/spectrum.hpp"
+#include "measures/spectrum_history.hpp"
+#include "measures/fsusc.hpp"
 
 #include <triqs/mc_tools/mc_generic.hpp>
 #include <triqs/utility/callbacks.hpp>

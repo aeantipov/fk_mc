@@ -53,12 +53,7 @@ include_directories(${TRIQS_INCLUDE_ALL} ${EIGEN3_INCLUDE_DIR} ${CMAKE_BINARY_DI
 configure_file(${CMAKE_SOURCE_DIR}/solver/definitions.hpp.in ${CMAKE_BINARY_DIR}/solver/definitions.hpp)
 
 # build fk mc library
-add_library(fk_mc STATIC solver/lattice_traits.cpp solver/fk_mc.cpp)
-target_link_libraries (fk_mc ${LINK_ALL})
-install(TARGETS fk_mc DESTINATION lib)
-
-# build statistics
-#add_subdirectory(statistics)
+add_subdirectory(solver)
 
 # build executable
 option(Execs "Enable executables" ON)

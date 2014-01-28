@@ -1,7 +1,7 @@
 #ifndef __FK_MC_MEASURE_ENERGY_HPP_
 #define __FK_MC_MEASURE_ENERGY_HPP_
 
-#include "common.hpp"
+#include "../common.hpp"
 #include <boost/mpi/collectives.hpp>
 
 namespace fk {
