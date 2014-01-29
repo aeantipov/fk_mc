@@ -60,12 +60,11 @@ try {
     TCLAP::ValueArg<double>     move_add_remove_switch("","addremove","Make add/remove step (non conserving)", false, 1.0, "double", cmd);
     TCLAP::ValueArg<double>     move_reshuffle_switch("","reshuffle","Make reshuffle step (non conserving)", false, 0.0, "double", cmd);
 
-    TCLAP::ValueArg<double>     eval_tolerance_switch("","evaltol","Tolerance for eigenvalue weights", false, std::numeric_limits<double>::epsilon(), "double", cmd);
+    //TCLAP::ValueArg<double>     eval_tolerance_switch("","evaltol","Tolerance for eigenvalue weights", false, std::numeric_limits<double>::epsilon(), "double", cmd);
     TCLAP::SwitchArg     plaintext_switch("p","plaintext","Save data to plaintext format?", cmd, false);
 
-    TCLAP::SwitchArg     calc_spectrum_history_switch("","calc_spec_hist","Calculate spectrum history", cmd, true);
+    TCLAP::ValueArg<bool>     calc_history_switch("","calc_history","Calculate data history (for errorbars)", false, true, "bool", cmd);
     // dos-related args
-    TCLAP::SwitchArg     savedos_e_switch("","calc_dos_errors","Calculate DOS with error-bars", cmd, true);
     TCLAP::ValueArg<double>     dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
     TCLAP::ValueArg<int>        dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
     TCLAP::ValueArg<double>     dos_offset_arg("","dos_offset","offset of dos from real axis", false, 0.05, "double", cmd);
@@ -96,7 +95,7 @@ try {
     MINFO2("MC flip moves weight         : " << move_flips_switch.getValue());
     MINFO2("MC add/remove moves weight   : " << move_add_remove_switch.getValue());
     MINFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
-    MINFO2("Eigenvalue Boltzmann weight cutoff    : " << eval_tolerance_switch.getValue());
+    //MINFO2("Eigenvalue Boltzmann weight cutoff    : " << eval_tolerance_switch.getValue());
     if (exit_switch.getValue()) exit(0);
     lattice_t lattice(L); // create a lattice
     lattice.fill(t,tp);
@@ -109,7 +108,7 @@ try {
     p["beta"] = beta;
     p["Nf_start"] = L*L/2;
     p["random_name"] = ""; 
-    p["eval_tol"] = eval_tolerance_switch.getValue(); 
+    //p["eval_tol"] = eval_tolerance_switch.getValue(); 
     p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
     p["verbosity"] = 3;
     p["length_cycle"] = cycle_len_arg.getValue(); 
@@ -117,8 +116,7 @@ try {
     p["n_cycles"] = ncycles_arg.getValue();
     p["max_time"]=3600*5;
 
-    p["measure_spectrum_history"] = calc_spectrum_history_switch.getValue();
-    p["save_dos_errors"] = savedos_e_switch.getValue() && p["measure_spectrum_history"];
+    p["measure_history"] = calc_history_switch.getValue();
     p["dos_width"] = dos_width_arg.getValue();
     p["dos_npts"] = dos_npts_arg.getValue();
     p["dos_offset"] = dos_offset_arg.getValue();
@@ -196,16 +194,25 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
 
     std::vector<double> spectrum(mc.observables.spectrum.size());
     std::copy(mc.observables.spectrum.data(), mc.observables.spectrum.data()+spectrum.size(), spectrum.begin());
-    for (auto x : spectrum) std::cout << (x) << " " << std::flush; std::cout << std::endl;
     h5_write(h5_mc_data,"spectrum", spectrum);
 
-    triqs::arrays::array<double, 2> t_spectrum_history(mc.observables.spectrum_history.size(), mc.observables.spectrum_history[0].size());
-    if (p["measure_spectrum_history"]) { 
+    if (p["measure_history"]) { 
+        triqs::arrays::array<double, 2> t_spectrum_history(mc.observables.spectrum_history.size(), mc.observables.spectrum_history[0].size());
         for (int i=0; i<mc.observables.spectrum_history.size(); i++)
             for (int j=0; j< mc.observables.spectrum_history[0].size(); j++)
                 t_spectrum_history(i,j) =  mc.observables.spectrum_history[i][j];
         h5_write(h5_mc_data,"spectrum_history", t_spectrum_history);
+    };
+
+    if (p["measure_history"]) { 
+        triqs::arrays::array<double, 2> focc_history(mc.observables.focc_history.size(), mc.observables.focc_history[0].size());
+        for (int i=0; i<mc.observables.focc_history.size(); i++)
+            for (int j=0; j< mc.observables.focc_history[0].size(); j++)
+                focc_history(i,j) =  mc.observables.focc_history[i][j];
+        h5_write(h5_mc_data,"focc_history", focc_history);
         };
+
+
 
     //===== save statistics ===== //
     auto h5_stats = top.open_group("stats");
@@ -292,7 +299,7 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
         if (save_plaintext) { savetxt("dos.dat",dos_v); savetxt("gf_refreq.dat", gf_re_v); };
     };
 
-    if (p["measure_spectrum_history"])
+    if (p["measure_history"])
     {
         const auto &spectrum_history = mc.observables.spectrum_history;
         
@@ -303,7 +310,7 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
         INFO("Using data from bin = " << dos_bin);
         INFO("DOS(0) = " << std::get<binning::bin_m::_MEAN>(dos0_stats[dos_bin]) << " +/- " << std::get<binning::bin_m::_SQERROR>(dos0_stats[dos_bin]));
 
-        if (p["save_dos_errors"]) { 
+        {
             INFO("\tLocal DOS w errorbars");
             offset = p["dos_offset"];
             triqs::arrays::array<double, 2> dos_ev(grid_real.size(),3);

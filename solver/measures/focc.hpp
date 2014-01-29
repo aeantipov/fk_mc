@@ -12,9 +12,9 @@ struct measure_focc {
     typedef typename config_t::int_array_t int_array_t;
 
     const config_t& config;
-    std::vector<std::vector<int>>& focc_;
+    std::vector<std::vector<double>>& focc_;
 
-    measure_focc(const config_t& in, std::vector<std::vector<int>>& focc): 
+    measure_focc(const config_t& in, std::vector<std::vector<double>>& focc): 
         config(in), focc_(focc)
         { focc_.resize(config.get_m_size()); };
     int _Z = 0;
@@ -35,6 +35,14 @@ void measure_focc<config_t>::accumulate (double sign)
 template <class config_t>
 void measure_focc<config_t>::collect_results(boost::mpi::communicator const &c)
 {
+    int sum_Z;
+    boost::mpi::reduce(c, _Z, sum_Z, std::plus<int>(), 0);
+    std::vector<double> focc_tmp;
+    for (size_t i=0; i<focc_.size(); ++i) {
+        focc_tmp.resize(focc_[i].size()*c.size());
+        boost::mpi::gather(c, focc_[i].data(), focc_[i].size(), focc_tmp, 0);
+        focc_[i].swap(focc_tmp);
+        };
 }
 
 } // end of namespace fk

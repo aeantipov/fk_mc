@@ -14,6 +14,7 @@ struct observables_t {
     std::vector<double> d2energies;
     typename configuration<lattice_t>::real_array_t spectrum;
     std::vector<std::vector<double>> spectrum_history; // n_eigenvalues x n_measures size
+    std::vector<std::vector<double>> focc_history;     // n_focc x n_measures size
 };
 
 template <class lattice_t>

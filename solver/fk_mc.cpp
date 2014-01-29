@@ -28,7 +28,7 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     // Generate the configuration and cache the spectrum
     double beta = p["beta"];
     config_t config(lattice,beta,p["U"],p["mu_c"],p["mu_f"]);
-    config.eval_weight_tolerance = p["eval_tol"];
+    config.eval_weight_tolerance = 0.0; // remove it 
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.calc_hamiltonian();
     config.calc_spectrum(config_t::calc_eval::full);
@@ -45,8 +45,10 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     observables.d2energies.reserve(max_bins);
     mc.add_measure(measure_energy<config_t>(beta,config,observables.energies, observables.d2energies), "energy");
     mc.add_measure(measure_spectrum<config_t>(config,observables.spectrum), "spectrum");
-    if (p["measure_spectrum_history"])
+    if (p["measure_history"]) {
         mc.add_measure(measure_spectrum_history<config_t>(config,observables.spectrum_history), "spectrum_history");
+        mc.add_measure(measure_focc<config_t>(config,observables.focc_history), "fsusc_history");
+        };
 
       // run and collect results
     mc.start(1.0, triqs::utility::clock_callback(p["max_time"]));
@@ -70,13 +72,13 @@ template <class lattice_t>
    .optional("mc_flip", double(0.0), "Make flip moves")
    .optional("mc_add_remove", double(1.0), "Make add/remove moves")
    .optional("mc_reshuffle", double(0.0), "Make reshuffle moves")
-   .optional("measure_spectrum_history", bool(false), "Measure the spectrum history")
+   .optional("measure_history", bool(true), "Measure the history")
    .optional("random_name", std::string(""), "Name of random number generator")
    .optional("Nf_start", size_t(5), "Starting number of f-electrons")
    .optional("length_cycle", int(50), "Length of a single QMC cycle")
    .optional("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
    .optional("random_seed", int(34788), "Seed for random number generator")
-   .optional("eval_tol", double(std::numeric_limits<double>::epsilon()), "Tolerance for eigenvalue weights")
+   //.optional("eval_tol", double(std::numeric_limits<double>::epsilon()), "Tolerance for eigenvalue weights")
    .optional("max_time",int(600000), "Maximum running time")
    ;
 
