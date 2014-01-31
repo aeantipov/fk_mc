@@ -10,7 +10,7 @@
 
 namespace fk {
 
-fk_mc::fk_mc(lattice_base l):
+fk_mc::fk_mc(const lattice_base& l):
     lattice(l)
 {
 }

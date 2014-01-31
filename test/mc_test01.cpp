@@ -20,8 +20,6 @@ int main(int argc, char* argv[])
     triangular_lattice lattice(L);
     lattice.fill(-1.0,0);
 
-    MY_DEBUG(lattice.hopping_m);
-
     fk_mc mc(lattice);
 
     triqs::utility::parameters p;
@@ -35,7 +33,7 @@ int main(int argc, char* argv[])
     p["n_warmup_cycles"] = 1;
     p["n_cycles"] = 400;
     p["max_time"]=5;
-    p["measure_spectrum_history"] = true;
+    p["measure_history"] = true;
 
     mc.solve(p);
 

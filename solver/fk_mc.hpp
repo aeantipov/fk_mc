@@ -26,7 +26,7 @@ public:
 
     triqs::utility::parameter_defaults solve_defaults() const;
 
-    fk_mc(lattice_base l);
+    fk_mc(const lattice_base& l);
     void solve(utility::parameters p);
 };
 
