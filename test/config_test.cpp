@@ -18,14 +18,14 @@ int main(int argc, char* argv[])
     double T = 0.15;
     double beta = 1.0/T;
 
-    square_lattice_traits<2> lattice(L);
+    hypercubic_lattice<2> lattice(L);
     lattice.fill(-1.0);
 
     MY_DEBUG(lattice.hopping_m);
 
-    configuration<square_lattice_traits<2>> config(lattice, 1.0, U, mu, mu+e_f);
+    configuration_t config(lattice, 1.0, U, mu, mu+e_f);
 
-    Eigen::ArrayXi my_config(lattice.m_size); my_config.setZero();
+    Eigen::ArrayXi my_config(lattice.get_msize()); my_config.setZero();
     for (size_t x=0; x<L; x+=1)
         for (size_t y=0; y<L; y+=2) {
             my_config(lattice.pos_to_index({x,y+x%2}))=1;

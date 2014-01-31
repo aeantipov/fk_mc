@@ -3,21 +3,19 @@
 #include "measures/energy.hpp"
 #include "measures/spectrum.hpp"
 #include "measures/spectrum_history.hpp"
-#include "measures/focc.hpp"
+#include "measures/focc_history.hpp"
 
 #include <triqs/mc_tools/mc_generic.hpp>
 #include <triqs/utility/callbacks.hpp>
 
 namespace fk {
 
-template <class lattice_t>
-fk_mc<lattice_t>::fk_mc(lattice_t l):
+fk_mc::fk_mc(lattice_base l):
     lattice(l)
 {
 }
 
-template <class lattice_t>
-void fk_mc<lattice_t>::solve(utility::parameters p)
+void fk_mc::solve(utility::parameters p)
 {
     if (world.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
     p.update(solve_defaults());
@@ -25,29 +23,29 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
 
     mc_tools::mc_generic<double> mc(p);
 
-    // Generate the configuration and cache the spectrum
+    // Generate the configuration_t and cache the spectrum
     double beta = p["beta"];
-    config_t config(lattice,beta,p["U"],p["mu_c"],p["mu_f"]);
+    configuration_t config(lattice,beta,p["U"],p["mu_c"],p["mu_f"]);
     config.eval_weight_tolerance = 0.0; // remove it 
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.calc_hamiltonian();
-    config.calc_spectrum(config_t::calc_eval::full);
+    config.calc_spectrum();
 
     if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) 
-        mc.add_move(move_flip<config_t>(beta, config, mc.rng()), "flip", p["mc_flip"]);
+        mc.add_move(move_flip(beta, config, mc.rng()), "flip", p["mc_flip"]);
     if (double(p["mc_add_remove"])>std::numeric_limits<double>::epsilon()) 
-        mc.add_move(move_addremove<config_t>(beta, config, mc.rng()), "add_remove", p["mc_add_remove"]);
+        mc.add_move(move_addremove(beta, config, mc.rng()), "add_remove", p["mc_add_remove"]);
     if (double(p["mc_reshuffle"])>std::numeric_limits<double>::epsilon()) 
-        mc.add_move(move_randomize<config_t>(beta, config, mc.rng()), "reshuffle", p["mc_reshuffle"]);
+        mc.add_move(move_randomize(beta, config, mc.rng()), "reshuffle", p["mc_reshuffle"]);
 
     size_t max_bins = p["n_cycles"];
     observables.energies.reserve(max_bins);
     observables.d2energies.reserve(max_bins);
-    mc.add_measure(measure_energy<config_t>(beta,config,observables.energies, observables.d2energies), "energy");
-    mc.add_measure(measure_spectrum<config_t>(config,observables.spectrum), "spectrum");
+    mc.add_measure(measure_energy(beta,config,observables.energies, observables.d2energies), "energy");
+    mc.add_measure(measure_spectrum(config,observables.spectrum), "spectrum");
     if (p["measure_history"]) {
-        mc.add_measure(measure_spectrum_history<config_t>(config,observables.spectrum_history), "spectrum_history");
-        mc.add_measure(measure_focc<config_t>(config,observables.focc_history), "fsusc_history");
+        mc.add_measure(measure_spectrum_history(config,observables.spectrum_history), "spectrum_history");
+        mc.add_measure(measure_focc(config,observables.focc_history), "fsusc_history");
         };
 
       // run and collect results
@@ -55,8 +53,7 @@ void fk_mc<lattice_t>::solve(utility::parameters p)
     mc.collect_results(world);
 }
 
-template <class lattice_t>
- triqs::utility::parameter_defaults fk_mc<lattice_t>::solve_defaults() const {
+ triqs::utility::parameter_defaults fk_mc::solve_defaults() const {
 
   triqs::utility::parameter_defaults pdef;
 
@@ -84,9 +81,5 @@ template <class lattice_t>
 
   return pdef;
  }
-
-/* Explicit instantiation */
-//template class fk_mc<square_lattice_traits<2>>; // Square lattice, 2d
-template class fk_mc<triangular_lattice_traits>; // Triangular lattice, 2d
 
 } // end of namespace FK

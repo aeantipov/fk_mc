@@ -1,11 +1,13 @@
 include_directories (.)
 
 set (fk_mc_src
-    lattice_traits.cpp
-    #configuration.cpp
-    #measures/energy.cpp
-    #measures/spectrum.cpp
-    #measures/spectrum_history.cpp
+    lattice.cpp
+    configuration.cpp
+    moves.cpp
+    measures/energy.cpp
+    measures/spectrum.cpp
+    measures/spectrum_history.cpp
+    measures/focc_history.cpp
     fk_mc.cpp
 )
 add_library(fk_mc STATIC ${fk_mc_src})

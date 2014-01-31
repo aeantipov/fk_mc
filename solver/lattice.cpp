@@ -1,9 +1,24 @@
-#include "lattice_traits.hpp"
+#include "lattice.hpp"
 
 namespace fk { 
 
+lattice_base::lattice_base(sparse_m &&in):
+   hopping_m(in),
+   m_size_(hopping_m.rows()) 
+{
+    if (hopping_m.rows() != hopping_m.cols() || hopping_m.rows() == 0) TRIQS_RUNTIME_ERROR << "Failed to initalize lattice. ";
+}
+
 template <size_t D>
-inline std::array<size_t, D> square_lattice_traits<D>::index_to_pos(size_t index)
+hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
+    lattice_base(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size)))
+{
+    hopping_m.reserve(Eigen::VectorXi::Constant(m_size_,D*2));
+    dims.fill(lattice_size);
+};
+
+template <size_t D>
+inline std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index)
 {
     std::array<size_t, D> out;
     for (int i=D-1; i>=0; i--) {
@@ -14,7 +29,7 @@ inline std::array<size_t, D> square_lattice_traits<D>::index_to_pos(size_t index
 }
 
 template <size_t D>
-inline size_t square_lattice_traits<D>::pos_to_index(std::array<size_t, D> pos)
+inline size_t hypercubic_lattice<D>::pos_to_index(std::array<size_t, D> pos)
 {
     size_t out=0;
     size_t mult = 1;
@@ -26,9 +41,9 @@ inline size_t square_lattice_traits<D>::pos_to_index(std::array<size_t, D> pos)
 }
 
 template <size_t D>
-void square_lattice_traits<D>::fill(double t)
+void hypercubic_lattice<D>::fill(double t)
 {
-    for (size_t i=0; i<m_size; ++i) {
+    for (size_t i=0; i<m_size_; ++i) {
         auto current_pos = index_to_pos(i);
         for (size_t n=0; n<D; ++n) {
             auto pos_l(current_pos), pos_r(current_pos);
@@ -36,16 +51,15 @@ void square_lattice_traits<D>::fill(double t)
             pos_r[n]=(current_pos[n]<dims[n]-1?current_pos[n]+1:0);
             hopping_m.coeffRef(i,pos_to_index(pos_l)) = t;
             hopping_m.coeffRef(i,pos_to_index(pos_r)) = t;
-            nonzero_elems+=2;
         }; 
     };
 }
 
 
-void triangular_lattice_traits::fill(double t, double t_p)
+void triangular_lattice::fill(double t, double t_p)
 {
-    square_lattice_traits<2>::fill(t);
-    for (size_t i=0; i<m_size; ++i) {
+    hypercubic_lattice<2>::fill(t);
+    for (size_t i=0; i<m_size_; ++i) {
         auto current_pos = index_to_pos(i);
         auto pos_l(current_pos), pos_r(current_pos);
         for (size_t n=0; n<2; ++n) {
@@ -55,13 +69,12 @@ void triangular_lattice_traits::fill(double t, double t_p)
 
         hopping_m.insert(i,pos_to_index(pos_l)) = t_p;
         hopping_m.insert(i,pos_to_index(pos_r)) = t_p;
-        nonzero_elems+=2;
         };
 }
 
-template struct square_lattice_traits<1>;
-template struct square_lattice_traits<2>;
-template struct square_lattice_traits<3>;
-template struct square_lattice_traits<4>;
+template struct hypercubic_lattice<1>;
+template struct hypercubic_lattice<2>;
+template struct hypercubic_lattice<3>;
+//template struct hypercubic_lattice<4>;
 
 } // end of namespace fk

@@ -4,7 +4,7 @@ using namespace fk;
 
 int main()
 {
-    square_lattice_traits<2> l1(4);
+    hypercubic_lattice<2> l1(4);
 
     MY_DEBUG(l1.pos_to_index({0,0}));
     MY_DEBUG(l1.pos_to_index({0,2}));
@@ -31,7 +31,7 @@ int main()
     catch (std::exception &e){MY_DEBUG(e.what());};
     INFO(l1.hopping_m);
 
-    triangular_lattice_traits t1(4);
+    triangular_lattice t1(4);
     t1.fill(-1.0,-0.5);
     INFO(t1.hopping_m);
 

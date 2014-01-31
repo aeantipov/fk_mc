@@ -2,7 +2,7 @@ include_directories(../solver .. ${TRIQS_INCLUDE_ALL})
 
 set (tests_fk
 #triqs_extra_test
-lattice_traits_test
+lattice_test
 config_test
 binning_test
 jackknife_test

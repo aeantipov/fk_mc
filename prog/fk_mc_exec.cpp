@@ -13,7 +13,7 @@
 using namespace fk;
 
 #ifdef LATTICE_triangular
-    typedef triangular_lattice_traits lattice_t;
+    typedef triangular_lattice lattice_t;
 #endif
 
 size_t _myrank;
@@ -21,11 +21,9 @@ size_t _myrank;
 #define MINFO(MSG)            if (_myrank==0) std::cout << std::boolalpha << MSG << std::endl;
 #define MINFO2(MSG)            if (_myrank==0) std::cout << "    " << std::boolalpha << MSG << std::endl;
 
-typedef fk_mc<lattice_t> mc_t;
-
 void print_section (const std::string& str); // fancy screen output
 void savetxt (std::string fname, const triqs::arrays::array<double,2>& in);
-void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext = false);
+void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext = false);
 
 int main(int argc, char* argv[])
 {
@@ -100,7 +98,7 @@ try {
     lattice_t lattice(L); // create a lattice
     lattice.fill(t,tp);
 
-    mc_t mc(lattice);
+    fk_mc mc(lattice);
 
     triqs::utility::parameters p;
     p["U"] = U;
@@ -179,7 +177,7 @@ size_t estimate_bin(const fk::binning::bin_data_t& data)
     return ind;
 }
 
-void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext)
+void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext)
 {
     print_section("Statistics");
     H5::H5File output(output_file.c_str(),H5F_ACC_TRUNC);
@@ -234,7 +232,7 @@ void save_data(const mc_t& mc, triqs::utility::parameters p, std::string output_
     std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
     typedef std::function<double(double, double, double)> cf_t;
     double beta = p["beta"];
-    double Volume = mc.lattice.m_size;
+    double Volume = mc.lattice.get_msize();
 
     INFO("\tSpecific heat");
     cf_t cv_function = [beta, Volume](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/Volume;}; 

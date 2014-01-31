@@ -17,12 +17,12 @@ int main(int argc, char* argv[])
     double T = 0.1;
     double beta = 1.0/T;
 
-    triangular_lattice_traits lattice(L);
+    triangular_lattice lattice(L);
     lattice.fill(-1.0,0);
 
     MY_DEBUG(lattice.hopping_m);
 
-    fk_mc<triangular_lattice_traits > mc(lattice);
+    fk_mc mc(lattice);
 
     triqs::utility::parameters p;
     p["U"] = U;
