@@ -1,5 +1,6 @@
 #include "lattice.hpp"
 
+
 namespace fk { 
 
 lattice_base::lattice_base(sparse_m &&in):
@@ -18,7 +19,7 @@ hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
 };
 
 template <size_t D>
-inline std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index)
+std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index)
 {
     std::array<size_t, D> out;
     for (int i=D-1; i>=0; i--) {
@@ -29,7 +30,7 @@ inline std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index)
 }
 
 template <size_t D>
-inline size_t hypercubic_lattice<D>::pos_to_index(std::array<size_t, D> pos)
+size_t hypercubic_lattice<D>::pos_to_index(std::array<size_t, D> pos)
 {
     size_t out=0;
     size_t mult = 1;
@@ -38,6 +39,25 @@ inline size_t hypercubic_lattice<D>::pos_to_index(std::array<size_t, D> pos)
         mult*=dims[i];
     };
     return out;
+}
+
+template <size_t D>
+Eigen::VectorXcd hypercubic_lattice<D>::FFT(Eigen::VectorXcd in, int direction)
+{
+    Eigen::VectorXcd out(in);
+
+    fftw_plan p;
+    p = fftw_plan_dft(D, dims.data(),
+                         reinterpret_cast<fftw_complex*>( in.data()), 
+                         reinterpret_cast<fftw_complex*>( out.data()), 
+                         direction, FFTW_ESTIMATE); 
+    fftw_execute(p);
+
+    double norm=1.0;
+    for (auto x:dims) norm*=x;
+    if (direction == FFTW_BACKWARD) out/=norm;
+    return out;
+
 }
 
 template <size_t D>

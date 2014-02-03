@@ -3,12 +3,14 @@
 
 #include "common.hpp"
 #include <Eigen/SparseCore>
+#include <fftw3.h>
 
 using namespace triqs;
 
 namespace fk {
 
 struct lattice_base {
+    typedef Eigen::MatrixXd dense_m;
     typedef Eigen::SparseMatrix<double> sparse_m;
     int get_msize() const {return m_size_;}; 
     sparse_m hopping_m;
@@ -28,10 +30,11 @@ struct hypercubic_lattice : lattice_base
     size_t pos_to_index(std::array<size_t, D> pos);
 
     static constexpr size_t Ndim = D;
-    std::array<size_t, D> dims;
+    std::array<int, D> dims;
     using lattice_base::m_size_;
     using lattice_base::hopping_m;
 
+    Eigen::VectorXcd FFT(Eigen::VectorXcd in, int direction);
     //triqs::arrays::array_view<double,D> matrix_view ( real_array_view_t in );
     //real_array_view_t flatten(triqs::arrays::array_view<double,D> in);
 

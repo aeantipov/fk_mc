@@ -20,11 +20,8 @@ void configuration_t::randomize_f(triqs::mc_tools::random_generator &rnd, size_t
 typename configuration_t::sparse_m configuration_t::calc_hamiltonian()
 {
     hamilt.reserve(lattice.hopping_m.nonZeros() + lattice.get_msize());
-    MY_DEBUG("!");
     hamilt = lattice.hopping_m;
-    MY_DEBUG(lattice.hopping_m << " " << lattice.get_msize());
     for (size_t i=0; i<lattice.get_msize(); ++i) hamilt.coeffRef(i,i)+= -mu_c + U*f_config(i); // unoptimized
-    MY_DEBUG("!!");
     return hamilt;
 }
 

@@ -30,23 +30,15 @@ find_package(TRIQS REQUIRED)
 message(STATUS ${TRIQS_CXX_DEFINITIONS})
 add_definitions ( ${TRIQS_CXX_DEFINITIONS})
 
-# find Eigen and Arpack
-option (USE_EIGEN "Use Eigen library?" ON) 
-if (USE_EIGEN)
-    # MKL
-    #if (DEFINED ENV{MKLROOT})
-    #    message (STATUS "Detected MKL. Eigen will use it")
-    #    message (STATUS "Don't forget to add mkl linking flags to CMAKE_EXE_LINKER_FLAGS")
-    #    set(EIGEN_USE_MKL_ALL true)
-    #endif()
-    #find_package (Arpack)
-    #message(STATUS "Arpack libs: " ${ARPACK_LIBRARIES})
-    find_package (Eigen3 3.1)
-    message(STATUS "Eigen3 includes: " ${EIGEN3_INCLUDE_DIR} )
-endif (USE_EIGEN)
+# find Eigen 
+find_package (Eigen3 3.1)
+message(STATUS "Eigen3 includes: " ${EIGEN3_INCLUDE_DIR} )
+#find FFTW
+#find_package (FFTW)
+#message(STATUS "FFTW includes: " ${FFTW_INCLUDE_DIR} )
 
-set (LINK_ALL ${TRIQS_LIBRARY_ALL} ${ARPACK_LIBRARIES})
-include_directories(${TRIQS_INCLUDE_ALL} ${EIGEN3_INCLUDE_DIR} ${CMAKE_BINARY_DIR}/solver)
+set (LINK_ALL ${TRIQS_LIBRARY_ALL} ${ARPACK_LIBRARIES} ${FFTW_LIBRARIES})
+include_directories(${TRIQS_INCLUDE_ALL} ${EIGEN3_INCLUDE_DIR} ${FFTW_INCLUDE_DIR} ${CMAKE_BINARY_DIR}/solver)
 
 
 #configure compile definitions file

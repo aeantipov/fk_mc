@@ -31,6 +31,17 @@ int main()
     catch (std::exception &e){MY_DEBUG(e.what());};
     INFO(l1.hopping_m);
 
+    Eigen::VectorXcd a1(l1.get_msize()); 
+    a1.setZero();
+    a1[3]=1.;
+    a1[8]=1.;
+    MY_DEBUG(a1.transpose());
+    auto af1 = l1.FFT(a1, FFTW_FORWARD);
+    MY_DEBUG(af1.transpose());
+    auto a2 = l1.FFT(af1, FFTW_BACKWARD);
+    MY_DEBUG(a2.transpose())
+    if (a2 != a1) return EXIT_FAILURE;
+
     triangular_lattice t1(4);
     t1.fill(-1.0,-0.5);
     INFO(t1.hopping_m);
