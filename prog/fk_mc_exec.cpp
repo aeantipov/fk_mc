@@ -110,7 +110,7 @@ try {
     p["random_name"] = ""; 
     //p["eval_tol"] = eval_tolerance_switch.getValue(); 
     p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
-    p["verbosity"] = 3;
+    p["verbosity"] = (!world.rank()?3:0);
     p["length_cycle"] = cycle_len_arg.getValue(); 
     p["n_warmup_cycles"] = nwarmup_arg.getValue();
     p["n_cycles"] = ncycles_arg.getValue();
@@ -156,6 +156,8 @@ void save_bin_data(const binning::bin_stats_t& data, triqs::h5::group& h5_group,
     tqa::array<double, 1> data_arr(4);
     std::copy(tmp.begin(),tmp.end(),data_arr(tqa::range()).begin());
 
+    std::cout << name << " = " << std::get<binning::_MEAN>(data) << " +/- " << std::get<binning::_SQERROR>(data) 
+              << " (" << std::get<binning::_SIZE>(data) << ") samples." << std::endl ;
     h5_write(h5_group, name, data_arr);
     if (save_plaintext) savetxt(name+"_error.dat",data_arr);
 }
@@ -202,10 +204,9 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     print_section("Statistics");
     H5::H5File output(output_file.c_str(),H5F_ACC_TRUNC);
     triqs::h5::group top(output);
-    top.create_group("mc_data");
-    top.create_group("stats");
 
     //===== save direct measures ===== //
+    top.create_group("mc_data");
     auto h5_mc_data = top.open_group("mc_data");
     h5_write(h5_mc_data,"energies", mc.observables.energies);
     h5_write(h5_mc_data,"d2energies", mc.observables.d2energies);
@@ -234,7 +235,9 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
 
 
     //===== save statistics ===== //
+    top.create_group("stats");
     auto h5_stats = top.open_group("stats");
+    top.create_group("binning");
     auto h5_binning = top.open_group("binning");
 
     const std::vector<double>& energies = mc.observables.energies;
@@ -245,7 +248,7 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     { /* Energy binning */
         INFO("Energy binning");
         size_t size = energies.size();
-        INFO("\tBinning " << maxbin <<" times.");
+        INFO("Binning " << maxbin <<" times.");
         auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), maxbin); 
         save_binning(energy_binning_data,h5_binning,"energies",save_plaintext);
         auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), maxbin); 
@@ -261,7 +264,6 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     { /* Specific heat */
         typedef std::function<double(double, double, double)> cf_t;
 
-        INFO("\tSpecific heat");
         cf_t cv_function = [beta, Volume](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/Volume;}; 
 
         typedef decltype(energies.rbegin()) it_t;
@@ -271,7 +273,6 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
             std::make_pair(d2energies.rbegin(), d2energies.rend())
         }; 
         auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,maxbin);
-        for (auto x:cv_stats){INFO(x);}; 
         save_binning(cv_stats,h5_binning,"cv",save_plaintext);
         save_bin_data(cv_stats[energy_bin],h5_stats,"cv",save_plaintext);
     };
