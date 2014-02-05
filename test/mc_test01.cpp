@@ -1,6 +1,9 @@
 #include "fk_mc.hpp"
+#include "measures/fsusc_fft.hpp"
+#include "measures/fsusc0pi.hpp"
 #include <boost/mpi/environment.hpp>
 #include <chrono>
+
 
 using namespace fk;
 
@@ -20,7 +23,6 @@ int main(int argc, char* argv[])
     triangular_lattice lattice(L);
     lattice.fill(-1.0,0);
 
-    fk_mc mc(lattice);
 
     triqs::utility::parameters p;
     p["U"] = U;
@@ -31,17 +33,31 @@ int main(int argc, char* argv[])
     p["verbosity"] = 3;
     p["length_cycle"] = 1; 
     p["n_warmup_cycles"] = 1;
-    p["n_cycles"] = 400;
+    p["n_cycles"] = 40;
     p["max_time"]=5;
     p["measure_history"] = true;
 
-    mc.solve(p);
+    MY_DEBUG(p);
+    fk_mc mc(lattice,p);
+
+    std::vector<double> n0, npi, n0_n0, npi_npi;
+
+    //mc.add_measure(measure_fsusc<triangular_lattice>(beta, lattice, mc.config, {lattice.get_bzpoint({0, 0}), lattice.get_bzpoint({PI, PI})}, mc.observables.nq_history, mc.observables.fsuscq_history), "fsusc");
+    mc.add_measure(measure_nf0pi<triangular_lattice>(mc.config, lattice, mc.observables.nf0, mc.observables.nfpi), "nf0pi");
+    mc.solve();
 
     const auto &spectrum_history = mc.observables.spectrum_history;
     for (auto x: spectrum_history[4]) std::cout << x << " " << std::flush; std::cout << std::endl;
 
+   /* const auto &nq_history = mc.observables.fsuscq_history;
+    const auto &fsuscq_history = mc.observables.fsuscq_history;
+    for (auto x : fsuscq_history[0]) std::cout << x << " " << std::flush; std::cout << std::endl;
+    for (auto x : fsuscq_history[1]) std::cout << x << " " << std::flush; std::cout << std::endl;
+    */
+
   }
   catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}
+  catch(std::exception const & e) { std::cout  << "exception "<< e.what() << std::endl;}
   return 0;
 
     return EXIT_SUCCESS;

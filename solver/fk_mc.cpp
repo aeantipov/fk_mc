@@ -5,28 +5,28 @@
 #include "measures/spectrum_history.hpp"
 #include "measures/focc_history.hpp"
 
-#include <triqs/mc_tools/mc_generic.hpp>
 #include <triqs/utility/callbacks.hpp>
 
 namespace fk {
 
-fk_mc::fk_mc(const lattice_base& l):
-    lattice(l)
+triqs::utility::parameters _update_def(triqs::utility::parameters p){p.update(fk_mc::solve_defaults()); return p;}
+
+fk_mc::fk_mc(const lattice_base& l, utility::parameters p1):
+    lattice(l),
+    p(_update_def(p1)),
+    config(l,p["beta"],p["U"],p["mu_c"],p["mu_f"]),
+    mc(p) 
 {
+    config.eval_weight_tolerance = 0.0; // remove it 
+    INFO("\tRandom seed for proc " << world.rank() << " : " << p["random_seed"]);
 }
 
-void fk_mc::solve(utility::parameters p)
+void fk_mc::solve()
 {
     if (world.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
-    p.update(solve_defaults());
-    INFO("\tRandom seed for proc " << world.rank() << " : " << p["random_seed"]);
-
-    mc_tools::mc_generic<double> mc(p);
 
     // Generate the configuration_t and cache the spectrum
     double beta = p["beta"];
-    configuration_t config(lattice,beta,p["U"],p["mu_c"],p["mu_f"]);
-    config.eval_weight_tolerance = 0.0; // remove it 
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.calc_hamiltonian();
     config.calc_spectrum();
@@ -45,7 +45,7 @@ void fk_mc::solve(utility::parameters p)
     mc.add_measure(measure_spectrum(config,observables.spectrum), "spectrum");
     if (p["measure_history"]) {
         mc.add_measure(measure_spectrum_history(config,observables.spectrum_history), "spectrum_history");
-        mc.add_measure(measure_focc(config,observables.focc_history), "fsusc_history");
+        mc.add_measure(measure_focc(config,observables.focc_history), "focc_history");
         };
 
       // run and collect results
@@ -53,7 +53,7 @@ void fk_mc::solve(utility::parameters p)
     mc.collect_results(world);
 }
 
- triqs::utility::parameter_defaults fk_mc::solve_defaults() const {
+ triqs::utility::parameter_defaults fk_mc::solve_defaults() {
 
   triqs::utility::parameter_defaults pdef;
 

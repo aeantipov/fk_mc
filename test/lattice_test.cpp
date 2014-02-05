@@ -4,7 +4,8 @@ using namespace fk;
 
 int main()
 {
-    hypercubic_lattice<2> l1(4);
+    size_t L = 4;
+    hypercubic_lattice<2> l1(L);
 
     MY_DEBUG(l1.pos_to_index({0,0}));
     MY_DEBUG(l1.pos_to_index({0,2}));
@@ -42,9 +43,25 @@ int main()
     MY_DEBUG(a2.transpose())
     if (a2 != a1) return EXIT_FAILURE;
 
-    triangular_lattice t1(4);
+    triangular_lattice t1(L);
     t1.fill(-1.0,-0.5);
     INFO(t1.hopping_m);
+
+
+    for (size_t i=0; i<L*L; i++) {
+        auto b = t1.get_bzpoint(i);
+        MY_DEBUG(b.ind_ << "->" << b << "<-" << t1.get_bzpoint(b.val_).ind_);
+        if ( t1.get_bzpoint(b.val_).ind_ != i) return EXIT_FAILURE;
+    };
+
+    auto bzpq = t1.get_bzpoint({PI, PI});
+    MY_DEBUG(bzpq.ind_ << "->" << bzpq << "<-" << t1.get_bzpoint(bzpq.val_).ind_);
+
+    try { auto bzpq1 = t1.get_bzpoint({PI, PI+PI/7.}); }
+    catch(triqs::runtime_error const & e) { std::cout  << "Caught exception "<< e.what() << std::endl;}
+
+    auto bzpts = t1.get_all_bzpoints();
+    for (auto x : bzpts) std::cout << x << " "; std::cout << std::endl;
 
     return EXIT_SUCCESS;
 }

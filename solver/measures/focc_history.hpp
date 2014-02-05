@@ -1,5 +1,5 @@
-#ifndef __FK_MC_MEASURE_FSUSC_HPP_
-#define __FK_MC_MEASURE_FSUSC_HPP_
+#ifndef __FK_MC_MEASURE_FOCC_HISTORY_HPP_
+#define __FK_MC_MEASURE_FOCC_HISTORY_HPP_
 
 #include <boost/mpi/collectives.hpp>
 
@@ -26,4 +26,4 @@ struct measure_focc {
 
 } // end of namespace fk
 
-#endif // endif :: #ifndef __FK_MC_MEASURE_FSUSC_HPP_
+#endif // endif :: #ifndef __FK_MC_MEASURE_FOCC_HISTORY_HPP_

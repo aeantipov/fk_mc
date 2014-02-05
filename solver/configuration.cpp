@@ -44,18 +44,6 @@ typename configuration_t::real_array_t configuration_t::calc_spectrum()
     return cached_spectrum;
 }
 
-/* Obsolete, clean 
-typename configuration_t::real_array_t configuration_t::calc_spectrum_arpack()
-{
-
-    Eigen::ArpackGeneralizedSelfAdjointEigenSolver<sparse_m> s(hamilt,n_calc_evals,"SA",Eigen::EigenvaluesOnly);
-    cached_spectrum = s.eigenvalues().reverse();
-    return cached_spectrum;
-}
-*/
-
-
-
 
 
 } // end of namespace fk

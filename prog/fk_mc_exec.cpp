@@ -1,4 +1,3 @@
-#include "fk_mc.hpp"
 #include <boost/mpi/environment.hpp>
 #include <chrono>
 #include <tclap/CmdLine.h>
@@ -6,6 +5,9 @@
 #include <triqs/h5.hpp>
 #include <triqs/arrays/indexmaps/cuboid/domain.hpp>
 #include <random>
+
+#include "fk_mc.hpp"
+#include "measures/fsusc0pi.hpp"
 
 #include "binning.hpp"
 #include "jackknife.hpp"
@@ -35,14 +37,14 @@ try {
     TCLAP::CmdLine cmd("Falicov-Kimball Monte Carlo - parameters from command line", ' ', "");
     //TCLAP::ValueArg<std::string> nameArg("n","name","Name to print",true,"homer","string");
     /* Required model flags. */
-    TCLAP::ValueArg<double> U_arg("U","U","value of U",false,4.0,"double",cmd);
-    TCLAP::ValueArg<double> T_arg("T","T","Temperature",false,0.15,"double",cmd);
+    TCLAP::ValueArg<double> U_arg("U","U","value of U",false,1.0,"double",cmd);
+    TCLAP::ValueArg<double> T_arg("T","T","Temperature",false,0.1,"double",cmd);
     TCLAP::ValueArg<size_t> L_arg("L","L","system size",false,4,"int",cmd);
     TCLAP::ValueArg<double> t_arg("t","t","hopping",false,-1.0,"double",cmd);
     TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,-0.0,"double",cmd);
 
     /* Optional flags. */
-    TCLAP::ValueArg<double> mu_arg("","mu","chemical potential",false,2.0,"double", cmd);
+    TCLAP::ValueArg<double> mu_arg("","mu","chemical potential",false,0.5,"double", cmd);
     //TCLAP::ValueArg<int> nc_arg("","nc","total number of c-electrons",false,4,"int", cmd);
     
     TCLAP::ValueArg<double> eps_f_arg("","ef","chemical potential",false,0.0,"double", cmd);
@@ -50,7 +52,7 @@ try {
     
 
     TCLAP::ValueArg<int> ncycles_arg("","ncycles","total number of cycles",false,50000,"int",cmd);
-    TCLAP::ValueArg<int> nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,10000,"int",cmd);
+    TCLAP::ValueArg<int> nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,0,"int",cmd);
     TCLAP::ValueArg<int> cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,1,"int",cmd);
     TCLAP::SwitchArg     random_seed_switch("s","seed","Make a random or fixed seed?", cmd, false);
 
@@ -98,7 +100,6 @@ try {
     lattice_t lattice(L); // create a lattice
     lattice.fill(t,tp);
 
-    fk_mc mc(lattice);
 
     triqs::utility::parameters p;
     p["U"] = U;
@@ -123,7 +124,11 @@ try {
     p["mc_add_remove"] = move_add_remove_switch.getValue();
     p["mc_reshuffle"] = move_reshuffle_switch.getValue();
 
-    mc.solve(p);
+    INFO(p);
+
+    fk_mc mc(lattice,p);
+    mc.add_measure(measure_nf0pi<lattice_t>(mc.config, lattice, mc.observables.nf0, mc.observables.nfpi), "nf0pi");
+    mc.solve();
 
     world.barrier();
     if (world.rank() == 0) {
@@ -189,10 +194,13 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     auto h5_mc_data = top.open_group("mc_data");
     h5_write(h5_mc_data,"energies", mc.observables.energies);
     h5_write(h5_mc_data,"d2energies", mc.observables.d2energies);
+    h5_write(h5_mc_data,"nf0", mc.observables.nf0);
+    h5_write(h5_mc_data,"nfpi", mc.observables.nfpi);
 
     std::vector<double> spectrum(mc.observables.spectrum.size());
     std::copy(mc.observables.spectrum.data(), mc.observables.spectrum.data()+spectrum.size(), spectrum.begin());
     h5_write(h5_mc_data,"spectrum", spectrum);
+
 
     if (p["measure_history"]) { 
         triqs::arrays::array<double, 2> t_spectrum_history(mc.observables.spectrum_history.size(), mc.observables.spectrum_history[0].size());
@@ -226,7 +234,9 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     save_binning(energy_binning_data,h5_stats,"energies",save_plaintext);
     auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), maxbin); 
     save_binning(d2energy_binning_data,h5_stats,"d2energies",save_plaintext);
-
+        
+    size_t energy_bin = estimate_bin(energy_binning_data);
+    
     INFO("=== Jackknife analysis ===");
     std::vector<double> energies_square(energies.size());
     std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
@@ -246,6 +256,31 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,maxbin);
     for (auto x:cv_stats){INFO(x);}; 
     save_binning(cv_stats,h5_stats,"cv",save_plaintext);
+
+    {   /* Save nf0, nfpi */
+        const std::vector<double>& nf0 = mc.observables.nf0;
+        const std::vector<double>& nfpi = mc.observables.nfpi;
+        std::vector<double> n0_n0(nf0.size()), npi_npi(nfpi.size());
+        std::transform(nf0.begin(), nf0.end(), n0_n0.begin(), [](double x){return x*x;});
+        std::transform(nfpi.begin(), nfpi.end(), npi_npi.begin(), [](double x){return x*x;});
+        std::function<double(double,double)> disp_f = [](double x, double x2){return x2 - x*x;};
+        
+        save_binning( binning::accumulate_binning(nf0.rbegin(), nf0.rend(), maxbin),h5_stats,"nf_0",save_plaintext);
+        save_binning( binning::accumulate_binning(nfpi.rbegin(), nfpi.rend(), maxbin),h5_stats,"nf_pi",save_plaintext);
+        auto fsusc0_stats = jackknife::accumulate_jackknife(disp_f,std::vector<std::vector<double>>({nf0,n0_n0}),maxbin);
+        save_binning(fsusc0_stats,h5_stats,"fsusc_0",save_plaintext);
+        auto fsuscpi_stats = jackknife::accumulate_jackknife(disp_f,std::vector<std::vector<double>>({nfpi,npi_npi}),maxbin);
+        save_binning(fsuscpi_stats,h5_stats,"fsusc_pi",save_plaintext);
+/*
+        INFO("bin = " << energy_bin);
+        auto fsusc0_stats = jackknife::jack(disp_f,std::vector<std::vector<double>>({nf0,n0_n0}),energy_bin);
+        INFO("fsusc0 : " << fsusc0_stats);
+        auto fsuscpi_stats = jackknife::jack(disp_f,std::vector<std::vector<double>>({nfpi,npi_npi}),energy_bin);
+        INFO("fsuscpi : " << fsuscpi_stats);
+*/
+    }
+
+
 
     // Local green's functions
     std::complex<double> z = 0.0;

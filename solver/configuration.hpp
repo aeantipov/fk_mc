@@ -22,7 +22,6 @@ struct configuration_t {
     double beta, U, mu_c, mu_f;
 
     mutable sparse_m hamilt;
-    size_t n_calc_evals; // number of eigenvalues to calculate
     double eval_weight_tolerance = std::numeric_limits<double>::epsilon();
     mutable real_array_t cached_spectrum;
     mutable real_array_t cached_weights;
@@ -34,32 +33,28 @@ struct configuration_t {
             hamilt(lattice.hopping_m.rows(), lattice.hopping_m.cols()),
             beta(beta),
             U(U),mu_c(mu_c),mu_f(mu_f)
-            { f_config.setZero(); n_calc_evals = lattice.get_msize(); }
+            { f_config.setZero(); }
 
     void swap(configuration_t &rhs) {
         f_config.swap(rhs.f_config); 
         cached_spectrum.swap(rhs.cached_spectrum);
         cached_weights.swap(rhs.cached_weights);
         hamilt.swap(rhs.hamilt);
-        n_calc_evals = rhs.n_calc_evals;
         beta = rhs.beta; U = rhs.U, mu_c = rhs.mu_c; mu_f = rhs.mu_f; 
         eval_weight_tolerance = rhs.eval_weight_tolerance;
         };
-
-    configuration_t(const configuration_t& rhs) = default;
+    configuration_t(const configuration_t& rhs) = default ;
     configuration_t& operator=(const configuration_t& rhs) {
         f_config = rhs.f_config; 
         cached_spectrum = rhs.cached_spectrum;
         cached_weights = rhs.cached_weights;
         hamilt = rhs.hamilt;
-        n_calc_evals = rhs.n_calc_evals;
         beta = rhs.beta; U = rhs.U, mu_c = rhs.mu_c; mu_f = rhs.mu_f; 
         eval_weight_tolerance = rhs.eval_weight_tolerance;
         return *this;
         };
     configuration_t(configuration_t&& rhs):lattice(rhs.lattice) { rhs.swap(*this); };
     configuration_t& operator=(configuration_t&& rhs) { rhs.swap(*this); return *this; };
-
     size_t get_nf() const;
     void randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf = 0);
 

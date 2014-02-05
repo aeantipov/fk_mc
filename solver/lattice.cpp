@@ -12,14 +12,21 @@ lattice_base::lattice_base(sparse_m &&in):
 
 template <size_t D>
 hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
-    lattice_base(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size)))
+    lattice_base(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size))),
+    ft_pi_array_(m_size_)
 {
-    hopping_m.reserve(Eigen::VectorXi::Constant(m_size_,D*2));
+    hopping_m.reserve(Eigen::ArrayXi::Constant(m_size_,D*2));
     dims.fill(lattice_size);
+    for (size_t i=0; i<m_size_; i++) { 
+        auto pos = index_to_pos(i); 
+        int v = 1;
+        for (int p : pos) v*=((p%2)*2-1);
+        ft_pi_array_[i]=v;
+        }; 
 };
 
 template <size_t D>
-std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index)
+std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index) const
 {
     std::array<size_t, D> out;
     for (int i=D-1; i>=0; i--) {
@@ -30,7 +37,7 @@ std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index)
 }
 
 template <size_t D>
-size_t hypercubic_lattice<D>::pos_to_index(std::array<size_t, D> pos)
+size_t hypercubic_lattice<D>::pos_to_index(std::array<size_t, D> pos) const
 {
     size_t out=0;
     size_t mult = 1;
@@ -42,9 +49,9 @@ size_t hypercubic_lattice<D>::pos_to_index(std::array<size_t, D> pos)
 }
 
 template <size_t D>
-Eigen::VectorXcd hypercubic_lattice<D>::FFT(Eigen::VectorXcd in, int direction)
+Eigen::ArrayXcd hypercubic_lattice<D>::FFT(Eigen::ArrayXcd in, int direction) const
 {
-    Eigen::VectorXcd out(in);
+    Eigen::ArrayXcd out(in);
 
     fftw_plan p;
     p = fftw_plan_dft(D, dims.data(),
@@ -58,6 +65,35 @@ Eigen::VectorXcd hypercubic_lattice<D>::FFT(Eigen::VectorXcd in, int direction)
     if (direction == FFTW_BACKWARD) out/=norm;
     return out;
 
+}
+
+template <size_t D>
+int hypercubic_lattice<D>::FFT_pi(const Eigen::ArrayXi& in) const
+{
+    return (in*ft_pi_array_).sum();
+}
+
+
+template <size_t D>
+typename hypercubic_lattice<D>::BZPoint hypercubic_lattice<D>::get_bzpoint(std::array<double, D> in) const
+{
+    return BZPoint(in, *this);
+}
+
+template <size_t D>
+typename hypercubic_lattice<D>::BZPoint hypercubic_lattice<D>::get_bzpoint(size_t in) const
+{
+    return BZPoint(in, *this);
+}
+    
+template <size_t D>
+std::vector<typename hypercubic_lattice<D>::BZPoint> hypercubic_lattice<D>::get_all_bzpoints() const
+{
+    int npts=1; for (auto x:dims) npts*=x;
+    std::vector<BZPoint> out;
+    out.reserve(npts);
+    for (int i=0; i<npts; i++) out.push_back(this->get_bzpoint(i));
+    return out;
 }
 
 template <size_t D>

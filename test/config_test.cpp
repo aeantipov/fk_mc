@@ -24,6 +24,10 @@ int main(int argc, char* argv[])
     MY_DEBUG(lattice.hopping_m);
 
     configuration_t config(lattice, 1.0, U, mu, mu+e_f);
+    configuration_t config2(config);
+    configuration_t config3(configuration_t(lattice, 1.0, U, mu, mu+e_f));
+    config3 = config2;
+    config3 = configuration_t(lattice, 1.0, U, mu, mu+e_f);
 
     Eigen::ArrayXi my_config(lattice.get_msize()); my_config.setZero();
     for (size_t x=0; x<L; x+=1)
@@ -31,9 +35,9 @@ int main(int argc, char* argv[])
             my_config(lattice.pos_to_index({x,y+x%2}))=1;
         }
     config.f_config = my_config;
-    MY_DEBUG(config.f_config);
+    MY_DEBUG(config.f_config.transpose());
     config.calc_hamiltonian();
-    MY_DEBUG(config.calc_spectrum());
+    MY_DEBUG(config.calc_spectrum().transpose());
 
    }
   catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}
