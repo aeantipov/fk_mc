@@ -3,6 +3,8 @@
 
 namespace fk {
 
+double __calc_weight_ratio(const configuration_t &old_config, const configuration_t &new_config);
+
 typename move_flip::mc_weight_type move_flip::attempt()
 {
     if (config.get_nf() == 0 || config.get_nf() == config.lattice.get_msize()) return 0; // this move won't work when the configuration is completely full or empty
@@ -63,11 +65,11 @@ typename move_addremove::mc_weight_type move_addremove::attempt()
 
 
  //************************************************************************************
-double move_flip::__calc_weight_ratio(const configuration_t &old_config, const configuration_t &new_config)
+double __calc_weight_ratio(const configuration_t &old_config, const configuration_t &new_config)
 {
     size_t size = std::max(old_config.cached_weights.size(), new_config.cached_weights.size());
 
-    real_array_t weights_old(size), weights_new(size);
+    typename move_flip::real_array_t weights_old(size), weights_new(size);
     weights_old.setZero(); weights_new.setZero();
     weights_old.head(old_config.cached_weights.size()) = old_config.cached_weights;
     weights_new.head(new_config.cached_weights.size()) = new_config.cached_weights;
@@ -75,7 +77,7 @@ double move_flip::__calc_weight_ratio(const configuration_t &old_config, const c
     double exp_e0_old = exp(old_config.beta*old_config.cached_spectrum[0]);
     double exp_e0_new = exp(new_config.beta*new_config.cached_spectrum[0]);
 
-    real_array_t evals_rate = (exp_e0_new + weights_new) / (exp_e0_old + weights_old ) * (exp_e0_old / exp_e0_new);
+    auto evals_rate = (exp_e0_new + weights_new) / (exp_e0_old + weights_old ) * (exp_e0_old / exp_e0_new);
    /* 
     double exp_e0_old  = std::min(evals_new(0),evals_old(0)); 
     double exp_emin = exp(beta*e_min);

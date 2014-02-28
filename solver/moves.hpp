@@ -14,7 +14,6 @@ struct move_flip {
     typedef typename configuration_t::real_array_t  real_array_t;
 
     double beta;
-    static double __calc_weight_ratio(const configuration_t &old_config, const configuration_t &new_config);
     configuration_t& config;
     configuration_t new_config;
     bool calc_eigenvectors_ = false;
@@ -32,12 +31,6 @@ struct move_flip {
 //************************************************************************************
 
 struct move_randomize : move_flip {
-    using typename move_flip::mc_weight_type;
-    using move_flip::beta;
-    using move_flip::config;
-    using move_flip::new_config;
-    using move_flip::RND;
-    using move_flip::__calc_weight_ratio;
     move_randomize(double beta, configuration_t& current_config, triqs::mc_tools::random_generator &RND_): 
         move_flip::move_flip(beta, current_config, RND_) {}
 
@@ -47,12 +40,6 @@ struct move_randomize : move_flip {
 //************************************************************************************
 
 struct move_addremove : move_flip {
-    using typename move_flip::mc_weight_type;
-    using move_flip::beta;
-    using move_flip::config;
-    using move_flip::new_config;
-    using move_flip::RND;
-    using move_flip::__calc_weight_ratio;
     double exp_beta_mu_f;
     move_addremove(double beta, configuration_t& current_config, triqs::mc_tools::random_generator &RND_): 
         move_flip::move_flip(beta, current_config, RND_),exp_beta_mu_f(exp(beta*config.mu_f)) {}
