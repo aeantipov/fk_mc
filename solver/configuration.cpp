@@ -26,7 +26,7 @@ typename configuration_t::sparse_m configuration_t::calc_hamiltonian()
 }
 
 
-typename configuration_t::real_array_t configuration_t::calc_spectrum()
+typename configuration_t::real_array_t configuration_t::calc_spectrum(bool calc_evals)
 {
     dense_m h(hamilt);
     Eigen::SelfAdjointEigenSolver<dense_m> s(h,Eigen::EigenvaluesOnly);

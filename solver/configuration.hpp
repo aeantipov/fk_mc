@@ -60,7 +60,7 @@ struct configuration_t {
 
     sparse_m calc_hamiltonian();
 
-    real_array_t  calc_spectrum();
+    real_array_t  calc_spectrum(bool calc_evals = false);
 };
 
 } // end of namespace fk
