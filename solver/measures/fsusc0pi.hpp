@@ -59,7 +59,7 @@ void measure_nf0pi<lattice_t>::collect_results(boost::mpi::communicator const &c
     c.barrier();
 
     tmp.resize(datasize);
-    boost::mpi::gather(c, npi_.data(), n0_.size(), tmp, 0);
+    boost::mpi::gather(c, npi_.data(), npi_.size(), tmp, 0);
     npi_.swap(tmp);
     c.barrier();
     
