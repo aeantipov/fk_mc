@@ -41,8 +41,8 @@ try {
     TCLAP::ValueArg<double> U_arg("U","U","value of U",false,1.0,"double",cmd);
     TCLAP::ValueArg<double> T_arg("T","T","Temperature",false,0.1,"double",cmd);
     TCLAP::ValueArg<size_t> L_arg("L","L","system size",false,4,"int",cmd);
-    TCLAP::ValueArg<double> t_arg("t","t","hopping",false,-1.0,"double",cmd);
-    TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,-0.0,"double",cmd);
+    TCLAP::ValueArg<double> t_arg("t","t","hopping",false,1.0,"double",cmd);
+    TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,0.0,"double",cmd);
 
     /* Optional flags. */
     TCLAP::ValueArg<double> mu_arg("","mu","chemical potential",false,0.5,"double", cmd);
