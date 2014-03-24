@@ -371,7 +371,7 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
 
         size_t dos_bin = estimate_bin(dos0_stats);
         INFO("Using data from bin = " << dos_bin);
-        INFO("DOS(0) = " << std::get<binning::bin_m::_MEAN>(dos0_stats[dos_bin]) << " +/- " << std::get<binning::bin_m::_SQERROR>(dos0_stats[dos_bin]));
+        save_bin_data(dos0_stats[dos_bin],h5_stats,"dos0",save_plaintext);
 
         {
             INFO("\tLocal DOS w errorbars");
