@@ -313,21 +313,19 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
 
 
     // Local green's functions
-    std::complex<double> z = 0.0;
-    double offset = 0.0;
-    std::function<double(std::vector<double>)> gf_im_f = [&](const std::vector<double>& spec)->double {
+    auto gf_im_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double {
         std::complex<double> d = 0.0;
         for (size_t i=0; i<spec.size(); i++) d+=1./(z - spec[i] + I*offset); 
-            return imag(d);
+            return imag(d)/norm;
         };
 
-    std::function<double(std::vector<double>)> gf_re_f = [&](const std::vector<double>& spec)->double {
+    auto gf_re_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double {
             std::complex<double> d = 0.0;
             for (size_t i=0; i<spec.size(); i++) d+=1./(z - spec[i] + I*offset); 
-            return real(d);
+            return real(d)/norm;
             };
-    std::function<double(std::vector<double>)> dos0_f = [&](const std::vector<double>& spec)->double { 
-        return -gf_im_f(spec)/PI; };
+    auto dos0_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double { 
+        return -gf_im_f(spec, z, offset, norm)/PI; };
 
     size_t dos_npts = p["dos_npts"];
     double dos_width = p["dos_width"];
@@ -335,27 +333,25 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     std::vector<double> grid_imag(std::max(int(beta)*10,1024)); for (size_t i=0; i<grid_imag.size(); i++) grid_imag[i] = PI/beta*(2.*i + 1);
 
     { // gf_matsubara - no errorbars
-        offset = 0.0;
         triqs::arrays::array<double, 2> gf_im_v(grid_imag.size(),3);
         for (size_t i=0; i<grid_imag.size(); i++) { 
-            z = I*grid_imag[i]; 
+            std::complex<double> z = I*grid_imag[i]; 
             gf_im_v(i,0) = std::imag(z); 
-            gf_im_v(i,1) = gf_re_f(spectrum); 
-            gf_im_v(i,2) = gf_im_f(spectrum); 
+            gf_im_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, 0.0, mc.lattice.get_msize())(spectrum); 
+            gf_im_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, 0.0, mc.lattice.get_msize())(spectrum); 
             };
         h5_write(h5_stats,"gw_imfreq",gf_im_v);
         if (save_plaintext) savetxt("gw_imfreq.dat",gf_im_v);
     };
 
     { // gf_refreq - no errorbars
-        offset = p["dos_offset"];
         triqs::arrays::array<double, 2> dos_v(grid_real.size(),2), gf_re_v(grid_real.size(),3);
         for (size_t i=0; i<grid_real.size(); i++) { 
-            z = grid_real[i]; 
+            std::complex<double> z = grid_real[i]; 
             dos_v(i,0) = std::real(z); gf_re_v(i,0) = std::real(z); 
-            gf_re_v(i,1) = gf_re_f(spectrum);
-            gf_re_v(i,2) = gf_im_f(spectrum);
-            dos_v(i,1) = dos0_f(spectrum); 
+            gf_re_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, p["dos_offset"], mc.lattice.get_msize())(spectrum); 
+            gf_re_v(i,2) = std::bind(gf_re_f, std::placeholders::_1, z, p["dos_offset"], mc.lattice.get_msize())(spectrum); 
+            dos_v(i,1) = std::bind(dos0_f, std::placeholders::_1, z, p["dos_offset"], mc.lattice.get_msize())(spectrum);
             };
         h5_write(h5_stats,"dos",dos_v);
         h5_write(h5_stats,"gf_re",gf_re_v);
@@ -366,7 +362,11 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     {
         const auto &spectrum_history = mc.observables.spectrum_history;
         
-        auto dos0_stats = jackknife::accumulate_jackknife(dos0_f,spectrum_history,maxbin);
+        auto dos0_stats = jackknife::accumulate_jackknife(
+
+            std::function<double(std::vector<double>)> 
+            (std::bind(dos0_f, std::placeholders::_1, 0.0, p["dos_offset"], mc.lattice.get_msize()))
+            ,spectrum_history,maxbin);
         save_binning(dos0_stats,h5_stats,"dos0",save_plaintext);
 
         size_t dos_bin = estimate_bin(dos0_stats);
@@ -375,11 +375,13 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
 
         {
             INFO("\tLocal DOS w errorbars");
-            offset = p["dos_offset"];
             triqs::arrays::array<double, 2> dos_ev(grid_real.size(),3);
             for (size_t i=0; i<grid_real.size(); i++) {
-                z = grid_real[i];
-                auto dosz_data = jackknife::jack(dos0_f,spectrum_history,dos_bin);
+                std::complex<double> z = grid_real[i];
+                auto dosz_data = jackknife::jack(
+                    std::function<double(std::vector<double>)>( 
+                    std::bind(dos0_f, std::placeholders::_1, z, p["dos_offset"], mc.lattice.get_msize()))
+                    ,spectrum_history,dos_bin);
                 dos_ev(i,0) = std::real(z); 
                 dos_ev(i,1) = std::get<binning::bin_m::_MEAN>(dosz_data);
                 dos_ev(i,2) = std::get<binning::bin_m::_SQERROR>(dosz_data); 
