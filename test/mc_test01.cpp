@@ -8,6 +8,20 @@
 using namespace fk;
 
 //complex_type glocal_imfreq(ComplexType z, std::vector<
+//calc_eigenvectors_);
+struct dummy_measure_a
+{
+    dummy_measure_a(){};
+    void accumulate(double sign){std::cout << "dummy_measure_a" << std::endl;};
+    void collect_results(boost::mpi::communicator const &c){};
+};
+
+struct dummy_measure_b
+{
+    dummy_measure_b(){};
+    void accumulate(double sign){std::cout << "dummy_measure_b" << std::endl;};
+    void collect_results(boost::mpi::communicator const &c){};
+};
 
 int main(int argc, char* argv[])
 {
@@ -44,6 +58,9 @@ int main(int argc, char* argv[])
 
     //mc.add_measure(measure_fsusc<triangular_lattice>(beta, lattice, mc.config, {lattice.get_bzpoint({0, 0}), lattice.get_bzpoint({PI, PI})}, mc.observables.nq_history, mc.observables.fsuscq_history), "fsusc");
     mc.add_measure(measure_nf0pi<triangular_lattice>(mc.config, lattice, mc.observables.nf0, mc.observables.nfpi), "nf0pi");
+    //mc.add_measure(dummy_measure,"a");
+    mc.add_measure(dummy_measure_a(),"b");
+    mc.add_measure(dummy_measure_b(),"a");
     mc.solve();
 
     const auto &spectrum_history = mc.observables.spectrum_history;
@@ -54,6 +71,8 @@ int main(int argc, char* argv[])
     for (auto x : fsuscq_history[0]) std::cout << x << " " << std::flush; std::cout << std::endl;
     for (auto x : fsuscq_history[1]) std::cout << x << " " << std::flush; std::cout << std::endl;
     */
+
+    //auto e = mc
 
   }
   catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}

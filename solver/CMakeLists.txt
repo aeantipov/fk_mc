@@ -8,6 +8,7 @@ set (fk_mc_src
     measures/spectrum.cpp
     measures/spectrum_history.cpp
     measures/focc_history.cpp
+    measures/ipr.hpp
     fk_mc.cpp
 )
 add_library(fk_mc STATIC ${fk_mc_src})

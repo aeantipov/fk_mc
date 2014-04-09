@@ -7,6 +7,7 @@ config_test
 binning_test
 jackknife_test
 #ietl_inverse01
+ipr_test
 mc_test01
 )
 
