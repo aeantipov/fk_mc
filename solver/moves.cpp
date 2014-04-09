@@ -17,7 +17,7 @@ typename move_flip::mc_weight_type move_flip::attempt()
     new_config.f_config(to) = 1;
 
     new_config.calc_hamiltonian();
-    new_config.calc_spectrum(calc_eigenvectors_);
+    new_config.calc_full_spectrum(false);//calc_eigenvectors_);
     return __calc_weight_ratio(config, new_config);
 }
 
@@ -38,7 +38,7 @@ typename move_randomize::mc_weight_type move_randomize::attempt()
     //new_config.randomize_f(RND, config.get_nf());
     new_config.randomize_f(RND);
     new_config.calc_hamiltonian();
-    new_config.calc_spectrum(calc_eigenvectors_);
+    new_config.calc_full_spectrum(false);
     auto ratio = __calc_weight_ratio(config, new_config);
     //MY_DEBUG(ratio << "*" << exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())) << "=" << exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())));
     if (beta*config.mu_f*(new_config.get_nf()-config.get_nf()) > 2.7182818 - log(ratio)) { return 1;}
@@ -54,7 +54,7 @@ typename move_addremove::mc_weight_type move_addremove::attempt()
     new_config.f_config(to) = 1 - config.f_config(to);
 
     new_config.calc_hamiltonian();
-    new_config.calc_spectrum(calc_eigenvectors_);//configuration_t::calc_eval::arpack);
+    new_config.calc_full_spectrum(false);//calc_eigenvectors_);//configuration_t::calc_eval::arpack);
     auto ratio = __calc_weight_ratio(config, new_config);
     //MY_DEBUG("Exp weight: " << t1);
     auto out = (new_config.f_config(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f);

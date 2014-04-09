@@ -26,12 +26,17 @@ typename configuration_t::sparse_m configuration_t::calc_hamiltonian()
 }
 
 
-typename configuration_t::real_array_t configuration_t::calc_spectrum(bool calc_evals)
+typename configuration_t::real_array_t configuration_t::calc_full_spectrum(bool calc_evecs)
 {
     dense_m h(hamilt);
-    Eigen::SelfAdjointEigenSolver<dense_m> s(h,Eigen::EigenvaluesOnly);
+    Eigen::SelfAdjointEigenSolver<dense_m> s(h,(calc_evecs?Eigen::ComputeEigenvectors:Eigen::EigenvaluesOnly));
     cached_spectrum = s.eigenvalues();
-    std::sort (cached_spectrum.data(), cached_spectrum.data()+cached_spectrum.size());  
+    if (calc_evecs) {
+        cached_evecs = s.eigenvectors();
+        };
+    //auto s2 = cached_spectrum;
+    //std::sort (cached_spectrum.data(), cached_spectrum.data()+cached_spectrum.size());  
+    //MY_DEBUG((Eigen::VectorXd(cached_spectrum - s2)).squaredNorm());
 
     cached_weights.resize(cached_spectrum.size());
 

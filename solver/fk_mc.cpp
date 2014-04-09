@@ -29,7 +29,7 @@ void fk_mc::solve()
     double beta = p["beta"];
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.calc_hamiltonian();
-    config.calc_spectrum();
+    config.calc_full_spectrum();
 
     if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) 
         mc.add_move(move_flip(beta, config, mc.rng()), "flip", p["mc_flip"]);
@@ -57,26 +57,26 @@ void fk_mc::solve()
 
   triqs::utility::parameter_defaults pdef;
 
-  pdef
-   .required("beta", double(), "Inverse temperature")
-   .required("U", double(1.0), "FK U")
-   .required("n_cycles", int(), "Number of QMC cycles")
-   .required("mu_c", double(0.5), "Chemical potential of c electrons")
-   .required("mu_f", double(0.5), "Chemical potential of f electrons")
+  pdef.required
+   ("beta", double(), "Inverse temperature")
+   ("U", double(1.0), "FK U")
+   ("n_cycles", int(), "Number of QMC cycles")
+   ("mu_c", double(0.5), "Chemical potential of c electrons")
+   ("mu_f", double(0.5), "Chemical potential of f electrons")
    ;
 
-  pdef
-   .optional("mc_flip", double(0.0), "Make flip moves")
-   .optional("mc_add_remove", double(1.0), "Make add/remove moves")
-   .optional("mc_reshuffle", double(0.0), "Make reshuffle moves")
-   .optional("measure_history", bool(true), "Measure the history")
-   .optional("random_name", std::string(""), "Name of random number generator")
-   .optional("Nf_start", size_t(5), "Starting number of f-electrons")
-   .optional("length_cycle", int(50), "Length of a single QMC cycle")
-   .optional("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
-   .optional("random_seed", int(34788), "Seed for random number generator")
+  pdef.optional
+   ("mc_flip", double(0.0), "Make flip moves")
+   ("mc_add_remove", double(1.0), "Make add/remove moves")
+   ("mc_reshuffle", double(0.0), "Make reshuffle moves")
+   ("measure_history", bool(true), "Measure the history")
+   ("random_name", std::string(""), "Name of random number generator")
+   ("Nf_start", size_t(5), "Starting number of f-electrons")
+   ("length_cycle", int(50), "Length of a single QMC cycle")
+   ("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
+   ("random_seed", int(34788), "Seed for random number generator")
    //.optional("eval_tol", double(std::numeric_limits<double>::epsilon()), "Tolerance for eigenvalue weights")
-   .optional("max_time",int(600000), "Maximum running time")
+   ("max_time",int(600000), "Maximum running time")
    ;
 
   return pdef;

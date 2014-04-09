@@ -16,7 +16,6 @@ struct move_flip {
     double beta;
     configuration_t& config;
     configuration_t new_config;
-    bool calc_eigenvectors_ = false;
      
     triqs::mc_tools::random_generator &RND;
 

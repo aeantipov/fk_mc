@@ -24,6 +24,7 @@ struct configuration_t {
     mutable sparse_m hamilt;
     double eval_weight_tolerance = std::numeric_limits<double>::epsilon();
     mutable real_array_t cached_spectrum;
+    mutable dense_m cached_evecs;
     mutable real_array_t cached_weights;
 
     configuration_t(
@@ -60,7 +61,7 @@ struct configuration_t {
 
     sparse_m calc_hamiltonian();
 
-    real_array_t  calc_spectrum(bool calc_evals = false);
+    real_array_t  calc_full_spectrum(bool calc_evecs = false);
 };
 
 } // end of namespace fk

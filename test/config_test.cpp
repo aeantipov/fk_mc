@@ -37,7 +37,9 @@ int main(int argc, char* argv[])
     config.f_config = my_config;
     MY_DEBUG(config.f_config.transpose());
     config.calc_hamiltonian();
-    MY_DEBUG(config.calc_spectrum().transpose());
+    config.calc_full_spectrum(true);
+    MY_DEBUG(config.cached_spectrum.transpose());
+    //MY_DEBUG(config.cached_evecs);
 
    }
   catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}
