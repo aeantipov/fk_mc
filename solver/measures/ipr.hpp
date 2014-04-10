@@ -39,9 +39,8 @@ measure_ipr<lattice_t>::measure_ipr(configuration_t& in, const lattice_t& lattic
 template <typename lattice_t>
 void measure_ipr<lattice_t>::accumulate(double sign)
 {
-    MY_DEBUG(config_.cached_evecs.rows());
     if (config_.cached_evecs.rows()==0) { 
-        MY_DEBUG("calculating evecs");
+        //MY_DEBUG("calculating evecs");
         config_.calc_full_spectrum(true); 
         };
 
@@ -56,7 +55,6 @@ void measure_ipr<lattice_t>::accumulate(double sign)
         ipr(i) = rphi4_val/rphi2(i);
     }
     for (size_t i=0; i<evals.size(); ++i) { ipr_vals_[i].push_back(ipr(i)); };
-    MY_DEBUG(ipr_vals_[0][0]);
     _Z++;
 }
 template <typename lattice_t>

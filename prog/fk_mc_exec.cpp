@@ -8,6 +8,7 @@
 
 #include "fk_mc.hpp"
 #include "measures/fsusc0pi.hpp"
+#include "measures/ipr.hpp"
 
 #include "binning.hpp"
 #include "jackknife.hpp"
@@ -65,6 +66,7 @@ try {
     TCLAP::SwitchArg     plaintext_switch("p","plaintext","Save data to plaintext format?", cmd, false);
 
     TCLAP::ValueArg<bool>     calc_history_switch("","calc_history","Calculate data history (for errorbars)", false, true, "bool", cmd);
+    TCLAP::ValueArg<bool>     calc_ipr_switch("","calc_ipr","Calculate inverse participation ratio", false, false, "bool", cmd);
     // dos-related args
     TCLAP::ValueArg<double>     dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
     TCLAP::ValueArg<int>        dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
@@ -117,6 +119,7 @@ try {
     p["max_time"]=3600*5;
 
     p["measure_history"] = calc_history_switch.getValue();
+    p["measure_ipr"] = calc_ipr_switch.getValue();
     p["dos_width"] = dos_width_arg.getValue();
     p["dos_npts"] = dos_npts_arg.getValue();
     p["dos_offset"] = dos_offset_arg.getValue();
@@ -125,10 +128,14 @@ try {
     p["mc_add_remove"] = move_add_remove_switch.getValue();
     p["mc_reshuffle"] = move_reshuffle_switch.getValue();
 
-    INFO(p);
+    if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
 
     fk_mc mc(lattice,p);
     mc.add_measure(measure_nf0pi<lattice_t>(mc.config, lattice, mc.observables.nf0, mc.observables.nfpi), "nf0pi");
+    if (p["measure_history"] && p["measure_ipr"]) {
+        if (!world.rank()) std::cout << "Measuring ipr" << std::endl;
+        mc.add_measure(measure_ipr<lattice_t>(mc.config, lattice, mc.observables.ipr_history),"ipr");
+        }
     mc.solve();
 
     world.barrier();
@@ -389,7 +396,53 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
             h5_write(h5_stats,"dos_err",dos_ev);
             if (save_plaintext) savetxt("dos_err.dat",dos_ev);
             }
-    }
+    
+    // Inverse participation ratio
+    if (p["measure_ipr"]) {
+            std::cout << "Inverse participation ratio" << std::endl;
+            triqs::arrays::array<double, 2> t_ipr_history(mc.observables.ipr_history.size(), mc.observables.ipr_history[0].size());
+            for (int i=0; i<mc.observables.ipr_history.size(); i++)
+                for (int j=0; j< mc.observables.ipr_history[0].size(); j++)
+                    t_ipr_history(i,j) =  mc.observables.ipr_history[i][j];
+            h5_write(h5_mc_data,"ipr_history", t_ipr_history);
+
+            auto ipr_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
+                std::complex<double> nom = 0.0, denom = 0.0;
+                for (size_t i=0; i<Volume; i++) {
+                    denom+=1./(z - ipr_spec[i] + I*offset); 
+                    nom+=1./(z - ipr_spec[i] + I*offset)*ipr_spec[i+Volume]; 
+                    };
+                return imag(nom)/imag(denom);
+                };
+
+            const auto& ipr_vals = mc.observables.ipr_history;
+
+            typedef std::vector<double>::const_iterator iter_t;
+            assert(Volume == ipr_vals.size());
+            std::vector<std::pair<iter_t,iter_t>> ipr_and_spectrum(2*Volume); // create a vector of pair of 2*Volume size
+            for (size_t i=0; i<Volume; ++i) { 
+                ipr_and_spectrum[i]=std::make_pair(spectrum_history[i].begin(),spectrum_history[i].end());
+                ipr_and_spectrum[i+Volume]=std::make_pair(ipr_vals[i].begin(),ipr_vals[i].end());
+            }
+
+            triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
+
+            for (size_t i=0; i<grid_real.size(); i++) {
+                std::complex<double> z = grid_real[i];
+                auto ipr_data = jackknife::jack(
+                    std::function<double(std::vector<double>)>( 
+                    std::bind(ipr_f, std::placeholders::_1, z, p["dos_offset"]))
+                    ,ipr_and_spectrum,dos_bin);
+                ipr_ev(i,0) = std::real(z); 
+                ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_data);
+                ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_data); 
+                };
+
+            h5_write(h5_stats,"ipr_err",ipr_ev);
+            if (save_plaintext) savetxt("ipr_err.dat",ipr_ev);
+
+        } // end measure_ipr
+    } // end measure_history
 }
 
 void savetxt (std::string fname, const triqs::arrays::array<double,1>& in)
