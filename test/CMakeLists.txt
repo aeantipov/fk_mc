@@ -4,6 +4,7 @@ set (tests_fk
 #triqs_extra_test
 lattice_test
 config_test
+fast_update_test
 binning_test
 jackknife_test
 #ietl_inverse01

@@ -3,7 +3,7 @@
 
 namespace fk {
 
-double __calc_weight_ratio(const configuration_t &old_config, const configuration_t &new_config);
+double calc_weight_ratio(const configuration_t &old_config, const configuration_t &new_config);
 
 typename move_flip::mc_weight_type move_flip::attempt()
 {
@@ -18,7 +18,7 @@ typename move_flip::mc_weight_type move_flip::attempt()
 
     new_config.calc_hamiltonian();
     new_config.calc_full_spectrum(false);//calc_eigenvectors_);
-    return __calc_weight_ratio(config, new_config);
+    return calc_weight_ratio(config, new_config);
 }
 
 typename move_flip::mc_weight_type move_flip::accept() 
@@ -39,7 +39,7 @@ typename move_randomize::mc_weight_type move_randomize::attempt()
     new_config.randomize_f(RND);
     new_config.calc_hamiltonian();
     new_config.calc_full_spectrum(false);
-    auto ratio = __calc_weight_ratio(config, new_config);
+    auto ratio = calc_weight_ratio(config, new_config);
     //MY_DEBUG(ratio << "*" << exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())) << "=" << exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())));
     if (beta*config.mu_f*(new_config.get_nf()-config.get_nf()) > 2.7182818 - log(ratio)) { return 1;}
     else return ratio*exp(beta*config.mu_f*(new_config.get_nf()-config.get_nf())); 
@@ -55,7 +55,7 @@ typename move_addremove::mc_weight_type move_addremove::attempt()
 
     new_config.calc_hamiltonian();
     new_config.calc_full_spectrum(false);//calc_eigenvectors_);//configuration_t::calc_eval::arpack);
-    auto ratio = __calc_weight_ratio(config, new_config);
+    auto ratio = calc_weight_ratio(config, new_config);
     //MY_DEBUG("Exp weight: " << t1);
     auto out = (new_config.f_config(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f);
     //MY_DEBUG("weight: " << out);
@@ -65,7 +65,7 @@ typename move_addremove::mc_weight_type move_addremove::attempt()
 
 
  //************************************************************************************
-double __calc_weight_ratio(const configuration_t &old_config, const configuration_t &new_config)
+double calc_weight_ratio(const configuration_t &old_config, const configuration_t &new_config)
 {
     size_t size = std::max(old_config.cached_weights.size(), new_config.cached_weights.size());
 
