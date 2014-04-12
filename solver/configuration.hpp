@@ -8,6 +8,7 @@
 
 #include "common.hpp"
 #include "lattice.hpp"
+#include "chebyshev.hpp"
 
 namespace fk {
 
@@ -20,6 +21,8 @@ struct configuration_t {
     const lattice_base& lattice;
     int_array_t f_config;
     double beta, U, mu_c, mu_f;
+    double a=1,b=0; // real spectrum = a*e + b, where e is between -1 and 1
+    double e_min_ = 0, e_max_ = 0; // minimum and maximum eigenvalues
 
     mutable sparse_m hamilt;
     double eval_weight_tolerance = std::numeric_limits<double>::epsilon();

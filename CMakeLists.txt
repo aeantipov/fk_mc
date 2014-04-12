@@ -33,6 +33,8 @@ add_definitions ( ${TRIQS_CXX_DEFINITIONS})
 # find Eigen 
 find_package (Eigen3 3.1)
 message(STATUS "Eigen3 includes: " ${EIGEN3_INCLUDE_DIR} )
+find_package (Arpack)
+message(STATUS "Arpack libraries: " ${ARPACK_LIBRARIES} )
 #find FFTW
 #find_package (FFTW)
 #message(STATUS "FFTW includes: " ${FFTW_INCLUDE_DIR} )

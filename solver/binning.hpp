@@ -8,7 +8,10 @@
 #include <ctgmath>
 #include <boost/iterator/iterator_facade.hpp>
 #include <triqs/utility/exceptions.hpp>
+
 #include <boost/preprocessor.hpp>
+#undef BOOST_PP_VARIADICS 
+#define BOOST_PP_VARIADICS 1 
 #include <iterator>
 
 namespace fk {
