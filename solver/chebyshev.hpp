@@ -14,21 +14,15 @@ inline double chebyshev_t(double x, size_t n)
 }
 
 template <typename F, typename Grid>
-inline double simpson(F&& func, const Grid& grid)
+inline double simpson(F&& f, const Grid& v)
 {
-    int n = grid.size();
-    double a = grid[0], b = grid[n-1];
-    double deltaX = (b - a)/n;
-    double s = 0.0;
-    for (int i = 1;i < n;i+=2) {
-        double  xi = a + i * deltaX;
-        double  y0 = func( xi - deltaX );
-        double  y1 = func( xi );
-        double  y2 = func( xi + deltaX );
-        s += (y0 + 4*y1 + y2); 
-        }
-    double out = (deltaX / 3)*s;
-    return out;
+    int n = v.size();
+    typedef decltype(f(v[0])) value_type; 
+    value_type s=0;
+    assert(n>=8);
+    for (int i=4;i<n-4;i++) { s += 48.*f(v[i]); }
+    auto dx = v[1] - v[0];
+    return dx/48.*(17.*f(v[0]) + 59.*f(v[1]) + 43.*f(v[2])+49.*f(v[3]) + s + 49. *f(v[n-4]) + 43.*f(v[n-3]) + 59.*f(v[n-2]) + 17.*f(v[n-1]));
 }
 
 template <typename F, typename Grid>
@@ -39,5 +33,17 @@ inline double chebyshev_moment(const F& op, int order, const Grid& grid)
     auto d = simpson(f,grid);
     return d; 
 }
+/*
+template <typename F, typename Grid>
+inline double chebyshev_moment2(const F& op, int order, const Grid& grid)
+{
+    auto ch = std::bind(chebyshev_t, std::placeholders::_1, order);
+    auto f = [&](double w){return 1./M_PI*op(w)*ch(w);};
+    double s = 0.0;
+    for (size_t i =0; i<grid.size(); ++i) s+=f(grid[i]);
+    return s; 
+}*/
+
+
 
 } // end of namespace fk
