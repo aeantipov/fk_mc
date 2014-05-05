@@ -6,14 +6,15 @@ namespace fk {
 measure_spectrum::measure_spectrum(const configuration_t& in, real_array_t& average_spectrum):
 config(in), _average_spectrum(average_spectrum) 
 {
-    _average_spectrum.resize(config.lattice.get_msize()); 
+    _average_spectrum.resize(config.lattice_.get_msize()); 
     _average_spectrum.setZero();
 };
 
 
 void measure_spectrum::accumulate (double sign) 
 {
-    auto spectrum = config.cached_spectrum;
+    if (config.ed_data_.status == ed_cache::empty) throw std::logic_error("Need calculated eigenvalues");  
+    auto spectrum = config.ed_data_.cached_spectrum;
     _average_spectrum = (_average_spectrum*_Z + spectrum)/(_Z+1);
     _Z++;
 }

@@ -34,8 +34,8 @@ struct measure_nf0pi {
 template <typename lattice_t>
 void measure_nf0pi<lattice_t>::accumulate(double sign)
 {
-    double n0 = config_.f_config.sum();
-    double npi = std::abs(lattice_.FFT_pi(config_.f_config)); 
+    double n0 = config_.f_config_.sum();
+    double npi = std::abs(lattice_.FFT_pi(config_.f_config_)); 
     average_nf0_ += n0;
     average_nfpi_ += npi;
     n0_.push_back(n0);

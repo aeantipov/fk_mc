@@ -13,11 +13,16 @@ inline double chebyshev_t(double x, size_t n)
 
 struct chebyshev_eval 
 {
-    chebyshev_eval(int max_moment, int n):
-        angle_grid(Eigen::VectorXd::LinSpaced(Eigen::Sequential, n, 0., 1.)),
-        lobatto_grid(n),
-        chebt_cache(max_moment, n)
+
+    int cheb_size() const { return chebt_cache.rows(); }
+    int grid_size() const { return chebt_cache.cols(); }
+
+    chebyshev_eval(int max_moment, int grid_size):
+        angle_grid(Eigen::VectorXd::LinSpaced(Eigen::Sequential, grid_size, 0., 1.)),
+        lobatto_grid(grid_size),
+        chebt_cache(max_moment, grid_size)
     {
+        std::cout << "Initializing Chebyshev evaluator with " << this->cheb_size() << " Chebyshev polynomials on a " << this->grid_size() << " Lobatto grid." << std::endl;
         for (int i=0; i<angle_grid.size(); i++) { 
             //angle_grid[i] = (1.*i/n);//(2.*i + 1.) / (2.*n);
             lobatto_grid[i] = -cos(M_PI*angle_grid[i]);

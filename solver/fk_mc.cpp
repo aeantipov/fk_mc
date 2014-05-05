@@ -14,10 +14,10 @@ triqs::utility::parameters _update_def(triqs::utility::parameters p){p.update(fk
 fk_mc::fk_mc(const lattice_base& l, utility::parameters p1):
     lattice(l),
     p(_update_def(p1)),
+    //cheb_eval(chebyshev_eval(p["cheb_size"], p["cheb_grid_size"])),
     config(l,p["beta"],p["U"],p["mu_c"],p["mu_f"]),
     mc(p) 
 {
-    config.eval_weight_tolerance = 0.0; // remove it 
     INFO("\tRandom seed for proc " << world.rank() << " : " << p["random_seed"]);
 }
 
@@ -29,14 +29,15 @@ void fk_mc::solve()
     double beta = p["beta"];
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.calc_hamiltonian();
-    config.calc_full_spectrum();
 
+    bool ed_move = false; 
     if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) 
-        mc.add_move(move_flip(beta, config, mc.rng()), "flip", p["mc_flip"]);
+        { mc.add_move(move_flip(beta, config, mc.rng()), "flip", p["mc_flip"]); ed_move = true; }
     if (double(p["mc_add_remove"])>std::numeric_limits<double>::epsilon()) 
-        mc.add_move(move_addremove(beta, config, mc.rng()), "add_remove", p["mc_add_remove"]);
+        { mc.add_move(move_addremove(beta, config, mc.rng()), "add_remove", p["mc_add_remove"]); ed_move = true; }
     if (double(p["mc_reshuffle"])>std::numeric_limits<double>::epsilon()) 
-        mc.add_move(move_randomize(beta, config, mc.rng()), "reshuffle", p["mc_reshuffle"]);
+        { mc.add_move(move_randomize(beta, config, mc.rng()), "reshuffle", p["mc_reshuffle"]); ed_move = true; }
+    if (ed_move) config.calc_ed(false); // start with calculated spectrum
 
     size_t max_bins = p["n_cycles"];
     observables.energies.reserve(max_bins);

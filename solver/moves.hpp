@@ -41,7 +41,7 @@ struct move_randomize : move_flip {
 struct move_addremove : move_flip {
     double exp_beta_mu_f;
     move_addremove(double beta, configuration_t& current_config, triqs::mc_tools::random_generator &RND_): 
-        move_flip::move_flip(beta, current_config, RND_),exp_beta_mu_f(exp(beta*config.mu_f)) {}
+        move_flip::move_flip(beta, current_config, RND_),exp_beta_mu_f(exp(beta*config.params_.mu_f)) {}
 
     mc_weight_type attempt();
 };

@@ -5,7 +5,8 @@ namespace fk {
 
 void measure_energy::accumulate (double sign) 
 {
-    auto spectrum = config.cached_spectrum;
+    if (config.ed_data_.status == ed_cache::empty) throw std::logic_error("Need calculated eigenvalues");  
+    auto spectrum = config.ed_data_.cached_spectrum;
     _Z++;
 
     real_array_t e_nf(spectrum.size()), d2e_nf(spectrum.size());
@@ -13,7 +14,7 @@ void measure_energy::accumulate (double sign)
         e_nf(i) = spectrum(i) / (1.0+exp(beta*(spectrum(i))));
         d2e_nf(i) = spectrum(i)*spectrum(i) / (1.0+0.5*(exp(beta*(spectrum(i))) + exp(-beta*(spectrum(i))) ));
         };
-    double e_val = e_nf.sum() - double(config.mu_f)*config.get_nf();
+    double e_val = e_nf.sum() - double(config.params_.mu_f)*config.get_nf();
     double d2e_val = d2e_nf.sum()/2.0;
     _average_energy += e_val;
     _average_d2energy += d2e_val;

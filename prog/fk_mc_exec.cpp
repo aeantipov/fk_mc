@@ -128,6 +128,10 @@ try {
     p["mc_add_remove"] = move_add_remove_switch.getValue();
     p["mc_reshuffle"] = move_reshuffle_switch.getValue();
 
+    size_t cheb_size = int(std::log(lattice.get_msize())*1.5);
+    p["cheb_size"] = cheb_size;
+    p["cheb_grid_size"] = 2000;
+
     if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
 
     fk_mc mc(lattice,p);

@@ -33,19 +33,16 @@ measure_ipr<lattice_t>::measure_ipr(configuration_t& in, const lattice_t& lattic
     lattice_(lattice),
     ipr_vals_(ipr_vals)
 {
-    ipr_vals_.resize(config_.lattice.get_msize());
+    ipr_vals_.resize(config_.lattice_.get_msize());
 }
 
 template <typename lattice_t>
 void measure_ipr<lattice_t>::accumulate(double sign)
 {
-    if (config_.cached_evecs.rows()==0) { 
-        //MY_DEBUG("calculating evecs");
-        config_.calc_full_spectrum(true); 
-        };
+    if (int(config_.ed_data_.status) < (ed_cache::full)) throw std::logic_error("Need calculated eigenvalues and eigenvectors");  
 
-    const auto& evecs = config_.cached_evecs;
-    const auto& evals = config_.cached_spectrum;
+    const auto& evecs = config_.ed_data_.cached_evecs;
+    const auto& evals = config_.ed_data_.cached_spectrum;
 
     Eigen::VectorXd ipr(evals.size());
     auto rphi2 = evecs.colwise().squaredNorm();
