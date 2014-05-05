@@ -1,6 +1,7 @@
-#include "moves.hpp"
+#include "moves_chebyshev.hpp"
 
 namespace fk {
+namespace chebyshev { 
 
 typename move_flip::mc_weight_type move_flip::attempt()
 {
@@ -14,8 +15,8 @@ typename move_flip::mc_weight_type move_flip::attempt()
     new_config.f_config_(to) = 1;
 
     new_config.calc_hamiltonian();
-    new_config.calc_ed(false);//calc_eigenvectors_);
-    auto ratio = std::exp(new_config.ed_data_.logZ - config.ed_data_.logZ );
+    new_config.calc_chebyshev(cheb_);
+    auto ratio = std::exp(new_config.cheb_data_.logZ - config.cheb_data_.logZ );
     return ratio;
 }
 
@@ -37,8 +38,9 @@ typename move_randomize::mc_weight_type move_randomize::attempt()
     //new_config.randomize_f(RND, config.get_nf());
     new_config.randomize_f(RND);
     new_config.calc_hamiltonian();
-    new_config.calc_ed(false);
-    auto log_ratio = new_config.ed_data_.logZ - config.ed_data_.logZ;
+    new_config.calc_chebyshev(cheb_);
+
+    auto log_ratio = new_config.cheb_data_.logZ - config.cheb_data_.logZ;
     if (beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf()) > 2.7182818 - log_ratio) { return 1;}
     else return std::exp(log_ratio)*exp(beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf())); 
 }
@@ -52,13 +54,15 @@ typename move_addremove::mc_weight_type move_addremove::attempt()
     new_config.f_config_(to) = 1 - config.f_config_(to);
 
     new_config.calc_hamiltonian();
-    new_config.calc_ed(false);//calc_eigenvectors_);//configuration_t::calc_eval::arpack);
-    auto ratio = std::exp(new_config.ed_data_.logZ - config.ed_data_.logZ );
-    DEBUG(new_config.ed_data_.logZ << " " << config.ed_data_.logZ);
+    new_config.calc_chebyshev(cheb_);
+
+    DEBUG(new_config.cheb_data_.logZ << " " << config.cheb_data_.logZ);
+    auto ratio = std::exp(new_config.cheb_data_.logZ - config.cheb_data_.logZ );
     auto out = (new_config.f_config_(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f);
     return out;
 }
 
 
 
+} // end of namespace chebyshev
 } // end of namespace fk

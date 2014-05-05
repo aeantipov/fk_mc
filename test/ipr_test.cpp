@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     lattice_t lattice(L);
     lattice.fill(-1.0);
 
-    MY_DEBUG(lattice.hopping_m);
+    DEBUG(lattice.hopping_m);
 
     configuration_t config(lattice, 1.0, U, mu, mu+e_f);
     configuration_t config2(config);
@@ -38,11 +38,11 @@ int main(int argc, char* argv[])
             my_config(lattice.pos_to_index({x,y+x%2}))=1;
         }
     config.f_config_ = my_config;
-    MY_DEBUG(config.f_config_.transpose());
+    DEBUG(config.f_config_.transpose());
     config.calc_hamiltonian();
     config.calc_ed(true);
-    MY_DEBUG(config.ed_data().cached_spectrum.transpose());
-    //MY_DEBUG(config.cached_evecs);
+    DEBUG(config.ed_data().cached_spectrum.transpose());
+    //DEBUG(config.cached_evecs);
 
 
     std::vector<std::vector<double>> ipr_vals;

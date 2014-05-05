@@ -22,9 +22,9 @@ using triqs::arrays::sum;
 
 #define MSG_PREFIX            __FILE__ << ":" << __LINE__ << ": "
 #ifdef FK_MC_DEBUG
-#define MY_DEBUG(MSG)            std::cout << std::boolalpha << MSG_PREFIX << MSG << std::endl; 
+#define DEBUG(MSG)            std::cout << std::boolalpha << MSG_PREFIX << MSG << std::endl; 
 #else 
-#define MY_DEBUG(MSG)
+#define DEBUG(MSG)
 #endif
 #define INFO(MSG)             std::cout << std::boolalpha << MSG << std::endl;
 #define INFO2(MSG)            std::cout << "    " << std::boolalpha << MSG << std::endl;

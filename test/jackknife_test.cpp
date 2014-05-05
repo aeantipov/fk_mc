@@ -52,33 +52,33 @@ int main()
     //std::array<std::pair<it_t,it_t>,1> o = { orig_range };
     auto res = jackknife_adapter::jack<xf_t, it_t> (f1,{orig_range});
     bin_stats_t res_correct = std::make_tuple(17,0.484035,0.0872002,0.07162);
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
     res = jackknife_adapter::jack<xf_v_t, it_t> (f_v,{orig_range});
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
     
     typedef binning::binned_iterator<it_t,0> bin0_it;
     auto res0 = jackknife_adapter::jack<xf_t,bin0_it>(f1,{find_bin_range(a.begin(),a.end(), bin0_it())});
-    MY_DEBUG(res << "==" << res0);
+    DEBUG(res << "==" << res0);
     if (!is_equal(res0,res,1e-6)) return EXIT_FAILURE;
 
     typedef binning::binned_iterator<it_t,1> bin1_it;
     res = jackknife_adapter::jack<xf_t,bin1_it>(f1,{find_bin_range(a.begin(),a.end(), bin1_it())});
     res_correct = std::make_tuple(8,0.467231,0.0422793,0.0726974);
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
     res = jackknife_adapter::jack<xf_v_t,bin1_it>(f_v,{find_bin_range(a.begin(),a.end(), bin1_it())});
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
 
     typedef binning::binned_iterator<it_t,2> bin2_it;
     res = jackknife_adapter::jack<xf_t,bin2_it>(f1,{find_bin_range(a.begin(),a.end(), bin2_it())});
     res_correct = std::make_tuple(4,0.467231,0.0269458,0.0820759);
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
     auto xx = jack(f1, std::vector<std::vector<double>>({a}), 2);
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
 
     //==================== part 2  ======================/
@@ -100,10 +100,10 @@ int main()
     INFO("T2.2: jackknife_adapter::jack test with nontrivial function");
     res = jackknife_adapter::jack<cf_t, it_t> (f2,{orig_range, std::make_pair(a2.begin(), a2.end()), std::make_pair(b.begin(),b.end())});
     res_correct = std::make_tuple(17,0.0297767,0.00815104,0.0218969);
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
     res = jackknife_adapter::jack<xf_v_t, it_t> (f2_v,{orig_range, std::make_pair(a2.begin(), a2.end()), std::make_pair(b.begin(),b.end())});
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
 
 
     res = jackknife_adapter::jack<cf_t, bin1_it> (f2,{
@@ -112,7 +112,7 @@ int main()
             find_bin_range(b.begin(),b.end(), bin1_it())
             });                
     res_correct = std::make_tuple(8,0.0309895,0.00214726,0.0163832);
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
 
     res = jackknife_adapter::jack<cf_t, bin2_it> (f2,{
@@ -121,20 +121,20 @@ int main()
             find_bin_range(b.begin(),b.end(), bin2_it())
             });                
     res_correct = std::make_tuple(4,0.0324411,0.00123011,0.0175365);
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
 
     //==================== part 3  ======================/
     INFO("T3: accumulate_jackknife"); 
     auto stats = accumulate_jackknife(f1,std::vector<std::pair<it_t,it_t>>({orig_range}),3);
-    for (auto x:stats){MY_DEBUG(x);}; 
+    for (auto x:stats){DEBUG(x);}; 
     res = stats[3];
     res_correct = std::make_tuple(2,0.467231,0.00162846,0.0285348);
-    MY_DEBUG(res << "==" << res_correct);
+    DEBUG(res << "==" << res_correct);
     if (!is_equal(res,res_correct,1e-5)) return EXIT_FAILURE;
 
     auto stats2 = accumulate_jackknife(f1,std::vector<std::vector<double>>({a}),3);
-    for (auto x:stats){MY_DEBUG(x);}; 
+    for (auto x:stats){DEBUG(x);}; 
     for (size_t i=0; i<stats.size(); i++) if (!is_equal(stats[i],stats2[i],1e-5)) return EXIT_FAILURE;
 
     //==================== part 4  ======================/
@@ -161,9 +161,9 @@ int main()
     if (!is_equal(fr1,fr2,1e-12)) return EXIT_FAILURE;
 
     stats = accumulate_jackknife(f4_1,data,2);
-    for (auto x:stats){MY_DEBUG(x);}; 
+    for (auto x:stats){DEBUG(x);}; 
     stats2 = accumulate_jackknife(f_v2,data,2);
-    for (auto x:stats2){MY_DEBUG(x);}; 
+    for (auto x:stats2){DEBUG(x);}; 
 
     if (stats != stats2) return EXIT_FAILURE;
     

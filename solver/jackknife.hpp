@@ -29,14 +29,14 @@ struct jackknife_adapter
             std::array<Arg1, L> p; std::copy(in.begin(), in.end(), p.begin());
             return triqs::tuple::apply(F_in,p);
             };
-        //MY_DEBUG("Converting f of " << L << " args to f(std::vector)");
+        //DEBUG("Converting f of " << L << " args to f(std::vector)");
         return out_;
         };
 
     /** An overload for  _vectorize_f to pass a function of vector untouched. */
     template <typename R, typename Arg1>
     static std::function<R(std::vector<Arg1>)> _vectorize_f(const std::function<R(std::vector<Arg1>)>& F_in) {
-        //MY_DEBUG("Passing f"); 
+        //DEBUG("Passing f"); 
         return F_in;
     };
 
@@ -75,7 +75,7 @@ struct jackknife_adapter
         double U_average = U_0 - (size-1)*(U_bar - U_0);
         double dU = (size-1)*std::get<_SQERROR>(U_stats);
         double var_U = dU*dU*size; 
-        //MY_DEBUG(U_0 << " " << U_average << "+/-" << dU);
+        //DEBUG(U_0 << " " << U_average << "+/-" << dU);
         return std::make_tuple(size, U_average, var_U, dU);
     }
 };

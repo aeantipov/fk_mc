@@ -26,20 +26,24 @@ struct ed_cache {
     status_eval status;
     real_array_t cached_spectrum;
     dense_m cached_evecs;
-    real_array_t cached_weights;
+
+    double logZ = 0.0;
 };
 
 struct chebyshev_cache { 
     typedef typename lattice_base::sparse_m sparse_m;
-    enum status_eval {empty, full};
+    enum status_eval {empty, logz};
 
     status_eval status;
     double e_max;
     double e_min;
     double a; // (e_max - e_min)/2.
     double b; // (e_max + e_min)/2.
+    // hamiltonian with a spectrum bound to -1 to 1
     sparse_m x;
     std::vector<double> moments;
+
+    double logZ = 0.0;
 };
 
 struct configuration_t {

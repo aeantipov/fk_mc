@@ -32,23 +32,24 @@ struct chebyshev_eval
     }
 
     template <typename F>
-    inline auto moment(const F& op, int order) -> typename std::remove_reference<typename std::result_of<F(double)>::type>::type const { // trapezoidal
-        typedef typename std::remove_reference<typename std::result_of<F(double)>::type>::type value_type;
-        std::vector<value_type> vals(angle_grid.size());
-        for (size_t i =0; i<angle_grid.size(); ++i) vals[i] = op(lobatto_grid[i]);
-        return moment(vals, order); 
-    }
+    inline auto moment(const F& op, int order) const -> 
+        typename std::remove_reference<typename std::result_of<F(double)>::type>::type { // trapezoidal
+            typedef typename std::remove_reference<typename std::result_of<F(double)>::type>::type value_type;
+            std::vector<value_type> vals(angle_grid.size());
+            for (size_t i =0; i<angle_grid.size(); ++i) vals[i] = op(lobatto_grid[i]);
+            return moment(vals, order); 
+            }
 
     template <class F>// decltype (std::declval<F>()[0])>
         auto moment(F &&in, int order) const -> 
             typename std::remove_reference<decltype (std::declval<F>()[0])>::type {
-        typedef typename std::remove_reference<decltype (std::declval<F>()[0])>::type value_type;
-        value_type s = 0.0;
-        for (size_t i =0; i<angle_grid.size()-1; ++i) { 
-            s+=(in[i+1]*chebt_cache(order, i+1) + in[i]*chebt_cache(order, i))*(angle_grid[i+1]-angle_grid[i]);
-            };
-        return s*0.5; 
-    }
+            typedef typename std::remove_reference<decltype (std::declval<F>()[0])>::type value_type;
+            value_type s = 0.0;
+            for (size_t i =0; i<angle_grid.size()-1; ++i) { 
+                s+=(in[i+1]*chebt_cache(order, i+1) + in[i]*chebt_cache(order, i))*(angle_grid[i+1]-angle_grid[i]);
+                };
+            return s*0.5; 
+        }
 
 protected:
     /// Uniform grid between (-1;1) 

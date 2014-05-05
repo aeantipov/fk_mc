@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     p["max_time"]=5;
     p["measure_history"] = true;
 
-    MY_DEBUG(p);
+    DEBUG(p);
     fk_mc mc(lattice,p);
 
     std::vector<double> n0, npi, n0_n0, npi_npi;
