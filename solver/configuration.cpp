@@ -102,6 +102,7 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
 
     cheb_data_.logZ = s;
     cheb_data_.x.swap(x);
+    cheb_data_.status = chebyshev_cache::logz;
 }
 
 void configuration_t::calc_ed(bool calc_evecs)

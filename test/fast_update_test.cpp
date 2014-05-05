@@ -21,9 +21,9 @@ typedef configuration_t::sparse_m sparse_m;
 int main(int argc, char* argv[])
 {
     boost::mpi::environment env(argc, argv);
-    size_t L = 20;
+    size_t L = 24;
 
-    double U = 1.5;
+    double U = 2.5;
     double mu = U/2;
     double e_f = 0.0;
     double t = -1.0;
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     config.calc_hamiltonian();
     config.calc_ed();
 
-    size_t cheb_size = int(std::log(lattice.get_msize())*1.5);
+    size_t cheb_size = int(std::log(lattice.get_msize())*2);
     size_t ngrid_points = std::max(size_t(200), cheb_size);
     chebyshev::chebyshev_eval ch(cheb_size, ngrid_points);
 
