@@ -61,10 +61,12 @@ struct configuration_t {
     const sparse_m& calc_hamiltonian();
     void reset_cache(){ed_data_.status =  ed_cache::empty; cheb_data_.status = chebyshev_cache::empty;}
 
-    real_array_t calc_ed(bool calc_evecs = false);
-    void calc_chebyshev(const chebyshev_eval& cheb);
+    void calc_ed(bool calc_evecs = false);
+    void calc_chebyshev(const chebyshev::chebyshev_eval& cheb);
 
-    const config_params& params(){return params_;}
+    const config_params& params() const {return params_;}
+    const ed_cache& ed_data() const {return ed_data_;}
+    const chebyshev_cache& cheb_data() const {return cheb_data_;}
 ///
     const lattice_base& lattice_;
     const config_params params_;

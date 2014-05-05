@@ -48,7 +48,7 @@ template <typename lattice_t>
 void measure_fsusc<lattice_t>::accumulate(double sign)
 {
     
-    Eigen::ArrayXcd nf_in = config_.f_config.cast<std::complex<double>>();
+    Eigen::ArrayXcd nf_in = config_.f_config_.cast<std::complex<double>>();
     Eigen::ArrayXcd nq = lattice_.FFT(nf_in, FFTW_FORWARD);
     for (size_t i=0; i<nqpts; ++i) { 
         BZPoint q = qpts_[i];
@@ -57,7 +57,7 @@ void measure_fsusc<lattice_t>::accumulate(double sign)
         nq_history_[i].push_back(nq_val); 
         fsuscq_history_[i].push_back(std::abs(nq_val*nq_val)); 
     };
-    MY_DEBUG(lattice_.FFT_pi(config_.f_config));
+    MY_DEBUG(lattice_.FFT_pi(config_.f_config_));
     _Z++;
 }
 

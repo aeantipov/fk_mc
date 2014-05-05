@@ -62,7 +62,7 @@ const typename configuration_t::sparse_m& configuration_t::calc_hamiltonian()
     return hamilt_;
 }
 
-void configuration_t::calc_chebyshev( const chebyshev_eval& cheb)
+void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
 {
     sparse_m x = hamilt_; 
     double e_min = Eigen::ArpackGeneralizedSelfAdjointEigenSolver<sparse_m>(hamilt_,1,"SA",Eigen::EigenvaluesOnly).eigenvalues()[0];
@@ -73,9 +73,9 @@ void configuration_t::calc_chebyshev( const chebyshev_eval& cheb)
     x/=a;
 }
 
-typename configuration_t::real_array_t configuration_t::calc_ed(bool calc_evecs)
+void configuration_t::calc_ed(bool calc_evecs)
 {
-    if ( (ed_data_.status == ed_cache::spectrum && !calc_evecs) || (ed_data_.status == ed_cache::full && calc_evecs)) return ed_data_.cached_spectrum;
+    if ( (ed_data_.status == ed_cache::spectrum && !calc_evecs) || (ed_data_.status == ed_cache::full && calc_evecs)) return;
 
     dense_m h(hamilt_);
     Eigen::SelfAdjointEigenSolver<dense_m> s(h,(calc_evecs?Eigen::ComputeEigenvectors:Eigen::EigenvaluesOnly));
@@ -99,7 +99,6 @@ typename configuration_t::real_array_t configuration_t::calc_ed(bool calc_evecs)
         ed_data_.cached_weights(i) = exp(-params_.beta*(cached_spectrum(i)-e0)); 
         };
 
-    return cached_spectrum; //ed_data_.cached_spectrum;
 }
 
 

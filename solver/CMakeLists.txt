@@ -2,8 +2,10 @@ include_directories (.)
 
 set (fk_mc_src
     lattice.cpp
-    configuration.cpp
-    moves.cpp
+    chebyshev.hpp
+    configuration.hpp configuration.cpp
+    moves.hpp moves.cpp
+    moves_chebyshev.hpp moves_chebyshev.cpp
     measures/energy.cpp
     measures/spectrum.cpp
     measures/spectrum_history.cpp

@@ -4,6 +4,7 @@
 #include <string>
 
 namespace fk {
+namespace chebyshev { 
 
 inline double chebyshev_t(double x, size_t n)
 {
@@ -58,4 +59,5 @@ protected:
     Eigen::MatrixXd chebt_cache;
 };
 
+} // end of namespace chebyshev
 } // end of namespace fk

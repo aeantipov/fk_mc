@@ -34,11 +34,11 @@ int main(int argc, char* argv[])
         for (size_t y=0; y<L; y+=2) {
             my_config(lattice.pos_to_index({x,y+x%2}))=1;
         }
-    config.f_config = my_config;
-    MY_DEBUG(config.f_config.transpose());
+    config.f_config_ = my_config;
+    MY_DEBUG(config.f_config_.transpose());
     config.calc_hamiltonian();
-    config.calc_full_spectrum(true);
-    MY_DEBUG(config.cached_spectrum.transpose());
+    config.calc_ed();
+    MY_DEBUG(config.ed_data().cached_spectrum.transpose());
     //MY_DEBUG(config.cached_evecs);
 
    }
