@@ -45,6 +45,9 @@ try {
     TCLAP::ValueArg<double> t_arg("t","t","hopping",false,1.0,"double",cmd);
     TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,0.0,"double",cmd);
 
+    TCLAP::ValueArg<std::string> h5_arg("o","output","archive to read/write data to",false,"output.h5","string",cmd);
+    TCLAP::SwitchArg             resume_switch("r","resume","Attepmpt to resume a calculation", cmd, false);
+
     // Optional flags.
     TCLAP::ValueArg<double> mu_arg("","mu","chemical potential",false,0.5,"double", cmd);
     //TCLAP::ValueArg<int> nc_arg("","nc","total number of c-electrons",false,4,"int", cmd);
@@ -53,7 +56,7 @@ try {
     
 
     TCLAP::ValueArg<int>      ncycles_arg("","ncycles","total number of cycles",false,100,"int",cmd);
-    TCLAP::ValueArg<int>      nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,10,"int",cmd);
+    TCLAP::ValueArg<int>      nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,1,"int",cmd);
     TCLAP::ValueArg<int>      cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,100,"int",cmd);
     TCLAP::SwitchArg          random_seed_switch("s","seed","Make a random or fixed seed?", cmd, false);
 
@@ -370,7 +373,7 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     };
 
     if (p["measure_history"])
-    {
+    { // dos(w=0)
         const auto &spectrum_history = mc.observables.spectrum_history;
         
         auto dos0_stats = jackknife::accumulate_jackknife(
@@ -383,7 +386,7 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
         size_t dos_bin = estimate_bin(dos0_stats);
         INFO("Using data from bin = " << dos_bin);
         save_bin_data(dos0_stats[dos_bin],h5_stats,"dos0",save_plaintext);
-
+        // dos(w)
         {
             INFO("\tLocal DOS w errorbars");
             triqs::arrays::array<double, 2> dos_ev(grid_real.size(),3);
@@ -429,8 +432,17 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
                 ipr_and_spectrum[i+Volume]=std::make_pair(ipr_vals[i].begin(),ipr_vals[i].end());
             }
 
-            triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
+            { // save ipr at w=0
+                auto ipr0_stats = jackknife::jack(
+                    std::function<double(std::vector<double>)>( 
+                    std::bind(ipr_f, std::placeholders::_1, 0.0, p["dos_offset"]))
+                    ,ipr_and_spectrum,dos_bin);
 
+                //save_binning(ipr0_stats,h5_stats,"ipr0",save_plaintext);
+                save_bin_data(ipr0_stats,h5_stats,"ipr0",save_plaintext);
+            }
+
+            triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
             for (size_t i=0; i<grid_real.size(); i++) {
                 std::complex<double> z = grid_real[i];
                 auto ipr_data = jackknife::jack(
@@ -440,6 +452,7 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
                 ipr_ev(i,0) = std::real(z); 
                 ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_data);
                 ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_data); 
+
                 };
 
             h5_write(h5_stats,"ipr_err",ipr_ev);
