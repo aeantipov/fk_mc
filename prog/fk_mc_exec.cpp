@@ -45,7 +45,7 @@ try {
     TCLAP::ValueArg<double> t_arg("t","t","hopping",false,1.0,"double",cmd);
     TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,0.0,"double",cmd);
 
-    TCLAP::ValueArg<std::string> h5_arg("o","output","archive to read/write data to",false,"output.h5","string",cmd);
+    TCLAP::ValueArg<std::string> h5file_arg("o","output","archive to read/write data to",false,"output.h5","string",cmd);
     TCLAP::SwitchArg             resume_switch("r","resume","Attepmpt to resume a calculation", cmd, false);
 
     // Optional flags.
@@ -114,7 +114,7 @@ try {
     p["mu_c"] = mu_c; p["mu_f"] = mu_f;
     p["beta"] = beta;
     p["Nf_start"] = L*L/2;
-    p["random_name"] = ""; 
+    //p["random_name"] = ""; 
     p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(32167+world.rank()));
     p["verbosity"] = (!world.rank()?1:0);
     p["length_cycle"] = cycle_len_arg.getValue(); 
@@ -147,7 +147,7 @@ try {
 
     world.barrier();
     if (world.rank() == 0) {
-        save_data(mc,p,"output.h5",plaintext_switch.getValue());
+        save_data(mc,p,h5file_arg.getValue(),plaintext_switch.getValue());
         }
     }
     // Any exceptions related with command line parsing.
@@ -218,6 +218,8 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     print_section("Statistics");
     H5::H5File output(output_file.c_str(),H5F_ACC_TRUNC);
     triqs::h5::group top(output);
+    //===== save parameters ===== //
+    h5_write(top, "parameters", p);
 
     //===== save direct measures ===== //
     top.create_group("mc_data");
