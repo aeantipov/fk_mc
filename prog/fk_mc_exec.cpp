@@ -38,17 +38,16 @@ _myrank = world.rank();
 try {
     TCLAP::CmdLine cmd("Falicov-Kimball Monte Carlo - parameters from command line", ' ', "");
     //TCLAP::ValueArg<std::string> nameArg("n","name","Name to print",true,"homer","string");
-    /* Required model flags. */
+    // Required model flags.
     TCLAP::ValueArg<double> U_arg("U","U","value of U",false,1.0,"double",cmd);
     TCLAP::ValueArg<double> T_arg("T","T","Temperature",false,0.1,"double",cmd);
     TCLAP::ValueArg<size_t> L_arg("L","L","system size",false,4,"int",cmd);
     TCLAP::ValueArg<double> t_arg("t","t","hopping",false,1.0,"double",cmd);
     TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,0.0,"double",cmd);
 
-    /* Optional flags. */
+    // Optional flags.
     TCLAP::ValueArg<double> mu_arg("","mu","chemical potential",false,0.5,"double", cmd);
     //TCLAP::ValueArg<int> nc_arg("","nc","total number of c-electrons",false,4,"int", cmd);
-    
     TCLAP::ValueArg<double> eps_f_arg("","ef","chemical potential",false,0.0,"double", cmd);
     //TCLAP::ValueArg<int> nf_arg("","nf","total number of f-electrons",false,4,"int", cmd);
     
@@ -71,6 +70,10 @@ try {
     TCLAP::ValueArg<double>     dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
     TCLAP::ValueArg<int>        dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
     TCLAP::ValueArg<double>     dos_offset_arg("","dos_offset","offset of dos from real axis", false, 0.05, "double", cmd);
+
+    // chebyshev flags
+    TCLAP::SwitchArg           chebyshev_switch("c","chebyshev","Make chebyshev moves?", cmd, false);
+    TCLAP::ValueArg<double>    chebyshev_prefactor("","cheb_prefactor","Prefactor of log(N) chebyshev polynomials", false, 2.2, "double", cmd);
 
     TCLAP::SwitchArg exit_switch("","exit","Dry run", cmd, false);
     cmd.parse( argc, argv );
@@ -98,7 +101,6 @@ try {
     MINFO2("MC flip moves weight         : " << move_flips_switch.getValue());
     MINFO2("MC add/remove moves weight   : " << move_add_remove_switch.getValue());
     MINFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
-    //MINFO2("Eigenvalue Boltzmann weight cutoff    : " << eval_tolerance_switch.getValue());
     if (exit_switch.getValue()) exit(0);
     lattice_t lattice(L); // create a lattice
     lattice.fill(t,tp);
@@ -110,9 +112,8 @@ try {
     p["beta"] = beta;
     p["Nf_start"] = L*L/2;
     p["random_name"] = ""; 
-    //p["eval_tol"] = eval_tolerance_switch.getValue(); 
     p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
-    p["verbosity"] = (!world.rank()?3:0);
+    p["verbosity"] = (!world.rank()?1:0);
     p["length_cycle"] = cycle_len_arg.getValue(); 
     p["n_warmup_cycles"] = nwarmup_arg.getValue();
     p["n_cycles"] = ncycles_arg.getValue();
@@ -128,9 +129,8 @@ try {
     p["mc_add_remove"] = move_add_remove_switch.getValue();
     p["mc_reshuffle"] = move_reshuffle_switch.getValue();
 
-    size_t cheb_size = int(std::log(lattice.get_msize())*1.5);
-    p["cheb_size"] = cheb_size;
-    p["cheb_grid_size"] = 2000;
+    p["cheb_moves"] = chebyshev_switch.getValue(); 
+    p["cheb_prefactor"] = chebyshev_prefactor.getValue();
 
     if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
 

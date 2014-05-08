@@ -1,5 +1,6 @@
 #include "fk_mc.hpp"
 #include "moves.hpp"
+#include "moves_chebyshev.hpp"
 #include "measures/energy.hpp"
 #include "measures/spectrum.hpp"
 #include "measures/spectrum_history.hpp"
@@ -30,14 +31,29 @@ void fk_mc::solve()
     config.randomize_f(mc.rng(),p["Nf_start"]);
     config.calc_hamiltonian();
 
-    bool ed_move = false; 
-    if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) 
-        { mc.add_move(move_flip(beta, config, mc.rng()), "flip", p["mc_flip"]); ed_move = true; }
-    if (double(p["mc_add_remove"])>std::numeric_limits<double>::epsilon()) 
-        { mc.add_move(move_addremove(beta, config, mc.rng()), "add_remove", p["mc_add_remove"]); ed_move = true; }
-    if (double(p["mc_reshuffle"])>std::numeric_limits<double>::epsilon()) 
-        { mc.add_move(move_randomize(beta, config, mc.rng()), "reshuffle", p["mc_reshuffle"]); ed_move = true; }
-    if (ed_move) config.calc_ed(false); // start with calculated spectrum
+    std::unique_ptr<chebyshev::chebyshev_eval> cheb_ptr;
+
+    bool cheb_move = p["cheb_moves"];
+    if (cheb_move) {
+        int cheb_size = int(lattice.get_msize() * double(p["cheb_prefactor"]));
+        cheb_size+=cheb_size%2;
+        size_t ngrid_points = std::max(cheb_size*2,20);
+        cheb_ptr.reset(new chebyshev::chebyshev_eval(cheb_size, ngrid_points));
+    }
+        
+
+    if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) { 
+        if (!cheb_move) mc.add_move(move_flip(beta, config, mc.rng()), "flip", p["mc_flip"]); 
+                   else mc.add_move(chebyshev::move_flip(beta, config, *cheb_ptr, mc.rng()), "flip", p["mc_flip"]); 
+        };
+    if (double(p["mc_add_remove"])>std::numeric_limits<double>::epsilon()) { 
+        if (!cheb_move) mc.add_move(move_addremove(beta, config, mc.rng()), "add_remove", p["mc_add_remove"]);
+                   else mc.add_move(chebyshev::move_addremove(beta, config, *cheb_ptr, mc.rng()), "add_remove", p["mc_add_remove"]);
+        };
+    if (double(p["mc_reshuffle"])>std::numeric_limits<double>::epsilon()) { 
+        if (!cheb_move) mc.add_move(move_randomize(beta, config, mc.rng()),  "reshuffle", p["mc_reshuffle"]);
+                   else mc.add_move(chebyshev::move_randomize(beta, config, *cheb_ptr, mc.rng()), "reshuffle", p["mc_reshuffle"]);
+        };
 
     size_t max_bins = p["n_cycles"];
     observables.energies.reserve(max_bins);
@@ -70,13 +86,14 @@ void fk_mc::solve()
    ("mc_flip", double(0.0), "Make flip moves")
    ("mc_add_remove", double(1.0), "Make add/remove moves")
    ("mc_reshuffle", double(0.0), "Make reshuffle moves")
+   ("cheb_moves", bool(false), "Allow moves using Chebyshev sampling")
+   ("cheb_prefactor", double(2.2), "Prefactor for number of Chebyshev polynomials = #ln(Volume)")
    ("measure_history", bool(true), "Measure the history")
    ("random_name", std::string(""), "Name of random number generator")
    ("Nf_start", size_t(5), "Starting number of f-electrons")
    ("length_cycle", int(50), "Length of a single QMC cycle")
    ("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
    ("random_seed", int(34788), "Seed for random number generator")
-   //.optional("eval_tol", double(std::numeric_limits<double>::epsilon()), "Tolerance for eigenvalue weights")
    ("max_time",int(600000), "Maximum running time")
    ;
 
