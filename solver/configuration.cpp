@@ -106,7 +106,7 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
     int m=2;
     bool still_sparse = true;
     // first try to get as much from the sparse matrices as we can - then move on to dense matrices
-    for (; m<cheb_size && still_sparse; ++m) {
+    for (; m<=cheb_size/2 && still_sparse; ++m) {
             cm_tmp = (x*2.*cm1).pruned(1.0) - cm0; cm0.swap(cm1); cm1.swap(cm_tmp);
             if (!is_set[m]) { 
                 cheb_data_.moments[m] = cm1.diagonal().sum()/msize;
@@ -115,11 +115,9 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
                 };
             //DEBUG(cm1.nonZeros() << " nonzero elems [" << msize*msize << "] = " << (double(cm1.nonZeros())/msize/msize));
 //            std::cout << cm1.nonZeros() << " nonzero elems [" << msize*msize << "] = " << (double(cm1.nonZeros())/msize/msize) << std::endl;
-/*
             // add moments for 2*m using relations for Chebyshev polynomials
             int k = 2*(m)-1;
             if (k < cheb_size && k>=cheb_size/2) { 
-
                 double moment_k = (sparse_m(cm0 * cm1).diagonal().sum()*2. - x.diagonal().sum())/msize;
                 is_set[k] = true;
                 cheb_data_.moments[k] = moment_k;
@@ -133,22 +131,41 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
                     DEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
                 };
             }
-*/
             still_sparse = (double(cm1.nonZeros())/msize/msize < 0.5);
         }
-    DEBUG("Evaluated " << m << " moments with sparse matrices");
     // now go on with dense
+    if (m <=cheb_size/2) {
+        DEBUG("Evaluated " << m << " moments with sparse matrices");
+        dense_m dm0 = cm0;
+        dense_m dm1 = cm1;
+        dense_m dm_tmp;
+        for (; m<=cheb_size/2; m++) {
+                dm_tmp = (x*2*dm1) - dm0; dm0.swap(dm1); dm1.swap(dm_tmp); 
+                if (!is_set[m]) { 
+                    cheb_data_.moments[m] = dm1.diagonal().sum()/msize;
+                    is_set[m] = true;
+                    DEBUG("moment [" << m << "] = " << cheb_data_.moments[m]);
+                    };
 
-    dense_m dm0 = cm0;
-    dense_m dm1 = cm1;
-    dense_m dm_tmp;
-    for (; m<cheb_size; m++) {
-            dm_tmp = (x*2*dm1) - dm0; dm0.swap(dm1); dm1.swap(dm_tmp); 
-            cheb_data_.moments[m] = dm1.diagonal().sum()/msize;
-            DEBUG("moment [" << m << "] = " << cheb_data_.moments[m]);
+                int k = 2*(m)-1;
+                if (k < cheb_size && k>=cheb_size/2) { 
+                    double moment_k = ((dm0 * dm1).diagonal().sum()*2. - x.diagonal().sum())/msize;
+                    is_set[k] = true;
+                    cheb_data_.moments[k] = moment_k;
+                    DEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
+
+                    if (k!=cheb_size-1) { 
+                        ++k;
+                        moment_k = ((dm1 * dm1).diagonal().sum()/msize*2. - 1.0);
+                        cheb_data_.moments[k] = moment_k;
+                        is_set[k] = true;
+                        DEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
+                    };
+                }
+            }
         }
 
-    assert(m==cheb_size);
+    assert(m==cheb_size/2+1);
 
     auto logz_f = [a,b,beta,msize](double w){return msize*log(1. + exp(-beta*(a*w+b)));}; 
     double s = cheb.moment(logz_f, 0);

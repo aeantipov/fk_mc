@@ -3,6 +3,7 @@
 #include <Eigen/Sparse>
 
 #include <chrono>
+#include<random>
  
 using namespace std::chrono;
 //using std::chrono::duration_cast;
@@ -28,11 +29,13 @@ double weight_tol = 6e-2;
 
 typedef std::tuple<double,double,int> TUL_tuple;
 class FastUpdateTest : public ::testing::TestWithParam<TUL_tuple> {
+public:
+    size_t seed1 = std::random_device()();
 };
 
 std::vector<double> T_vals({{0.15}});
-std::vector<double> U_vals({{2.0}});
-std::vector<int>    L_vals({{8,16,32,40,48,64}});
+std::vector<double> U_vals({{2.0, 16.0}});
+std::vector<int>    L_vals({{32,48}});
 
 std::vector<TUL_tuple> generate() { 
     std::vector<TUL_tuple> out;
@@ -60,14 +63,17 @@ TEST_P(FastUpdateTest, weight) {
 
     std::cout << "Number of states = " << lattice.get_msize() << std::endl;
     std::cout << "log(nstates) = " << int(std::log(lattice.get_msize())) << std::endl;
-    size_t cheb_size = std::min( int(std::log(lattice.get_msize()))*2, lattice.get_msize()/4);
+
+    double cheb_prefactor = 2.5 ;
+
+    size_t cheb_size = std::min( int(std::log(lattice.get_msize())*cheb_prefactor), lattice.get_msize()/4);
     cheb_size+=cheb_size%2;
     std::cout << "Number of Chebyshev polynomials = " << cheb_size << std::endl;
     size_t ngrid_points = cheb_size*2;// std::max(size_t(200), cheb_size);
     chebyshev::chebyshev_eval ch(cheb_size, ngrid_points);
 
     configuration_t config(lattice, beta, U, mu, mu+e_f);
-    triqs::mc_tools::random_generator r1("mt19937", 32167);
+    triqs::mc_tools::random_generator r1("mt19937", seed1);
     config.randomize_f(r1,L*L/2);
     config.calc_hamiltonian();
     config.calc_ed();
@@ -81,7 +87,7 @@ TEST_P(FastUpdateTest, weight) {
         };
 
    // test move
-    triqs::mc_tools::random_generator r("mt19937", 32167);
+    triqs::mc_tools::random_generator r("mt19937", seed1);
     triqs::mc_tools::random_generator r2(r);
     bool result;
     steady_clock::time_point start, end;
