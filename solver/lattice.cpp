@@ -105,8 +105,8 @@ void hypercubic_lattice<D>::fill(double t)
             auto pos_l(current_pos), pos_r(current_pos);
             pos_l[n]=(current_pos[n]>0?current_pos[n]-1:dims[n]-1);
             pos_r[n]=(current_pos[n]<dims[n]-1?current_pos[n]+1:0);
-            hopping_m.coeffRef(i,pos_to_index(pos_l)) = -1.0*t;
-            hopping_m.coeffRef(i,pos_to_index(pos_r)) = -1.0*t;
+            hopping_m.insert(i,pos_to_index(pos_l)) = -1.0*t;
+            hopping_m.insert(i,pos_to_index(pos_r)) = -1.0*t;
         }; 
     };
 }

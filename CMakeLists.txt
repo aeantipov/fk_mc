@@ -56,10 +56,23 @@ if (Execs)
     add_subdirectory(prog)
 endif (Execs)
 
-#build tests
+option(Benchmark "Enable benchmark" OFF)
 option(Testing "Enable testing" OFF)
+
+if (Benchmark OR Testing)
+    include(UseGtest)
+    add_subdirectory(${gtest_ROOT})
+    include_directories(${gtest_INCLUDE_DIR})
+endif()
+
+if (Benchmark)
+    message(STATUS "Building benchmark")
+    add_subdirectory(benchmark)
+endif (Benchmark)
+
+#build tests
 if (Testing)
-    message(STATUS "Enabled test building and running")
-    add_subdirectory(test)
+    message(STATUS "Building tests")
     enable_testing()
+    add_subdirectory(test)
 endif (Testing)
