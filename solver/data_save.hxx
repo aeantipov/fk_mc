@@ -1,3 +1,6 @@
+#pragma once
+
+#include <iostream>
 #include <fstream>
 
 #include "data_saveload.hpp"
@@ -6,6 +9,17 @@
 #include "jackknife.hpp"
 
 namespace fk {
+
+triqs::utility::parameter_defaults save_defaults() {
+  triqs::utility::parameter_defaults pdef;
+  pdef.optional
+   ("dos_npts", int(100), "Number of points for dos")
+   ("dos_width", double(6), "Energy window to save dos")
+   ("dos_offset", double(0.05), "dos offset from the real axis")
+   ("measure_ipr", bool(false), "Measure inverse participation ratio")
+   ;
+  return pdef;
+ }
 
 void savetxt (std::string fname, const triqs::arrays::array<double,1>& in);
 void savetxt (std::string fname, const triqs::arrays::array<double,2>& in);
@@ -56,15 +70,16 @@ size_t estimate_bin(const fk::binning::bin_data_t& data)
     return ind;
 }
 
-void print_section (const std::string& str)
+inline void print_section (const std::string& str)
 {
   std::cout << std::string(str.size(),'=') << std::endl;
   std::cout << str << std::endl;
 }
 
-void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext)
+template <typename MC>
+void save_data(const MC& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext)
 {
-
+    p.update(save_defaults());
     double beta = p["beta"];
     double Volume = mc.lattice.get_msize();
 
@@ -77,10 +92,10 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
     //===== save direct measures ===== //
     top.create_group("mc_data");
     auto h5_mc_data = top.open_group("mc_data");
-    h5_write(h5_mc_data,"energies", mc.observables.energies);
-    h5_write(h5_mc_data,"d2energies", mc.observables.d2energies);
-    h5_write(h5_mc_data,"nf0", mc.observables.nf0);
-    h5_write(h5_mc_data,"nfpi", mc.observables.nfpi);
+    if (mc.observables.energies.size()) h5_write(h5_mc_data,"energies", mc.observables.energies);
+    if (mc.observables.d2energies.size()) h5_write(h5_mc_data,"d2energies", mc.observables.d2energies);
+    if (mc.observables.nf0.size()) h5_write(h5_mc_data,"nf0", mc.observables.nf0);
+    if (mc.observables.nfpi.size()) h5_write(h5_mc_data,"nfpi", mc.observables.nfpi);
 
     std::vector<double> spectrum(mc.observables.spectrum.size());
     std::copy(mc.observables.spectrum.data(), mc.observables.spectrum.data()+spectrum.size(), spectrum.begin());
@@ -101,6 +116,15 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
         h5_write(h5_mc_data,"focc_history", focc_history);
         };
 
+    // Inverse participation ratio
+    if (p["measure_ipr"] && p["measure_history"]) {
+        std::cout << "Inverse participation ratio" << std::endl;
+        triqs::arrays::array<double, 2> t_ipr_history(mc.observables.ipr_history.size(), mc.observables.ipr_history[0].size());
+        for (int i=0; i<mc.observables.ipr_history.size(); i++)
+            for (int j=0; j< mc.observables.ipr_history[0].size(); j++)
+                t_ipr_history(i,j) =  mc.observables.ipr_history[i][j];
+        h5_write(h5_mc_data,"ipr_history", t_ipr_history);
+        };
 
 
     //===== save statistics ===== //
@@ -146,7 +170,8 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
         save_bin_data(cv_stats[energy_bin],h5_stats,"cv",save_plaintext);
     };
 
-    {   /* Save nf(q=0), nf(q=pi) */
+    if (mc.observables.nf0.size() && mc.observables.nfpi.size()) { 
+          /* Save nf(q=0), nf(q=pi) */
         const std::vector<double>& nf0 = mc.observables.nf0;
         const std::vector<double>& nfpi = mc.observables.nfpi;
         std::vector<double> nn_0(nf0.size()), nn_pi(nfpi.size());
@@ -259,15 +284,9 @@ void save_data(const fk_mc& mc, triqs::utility::parameters p, std::string output
             if (save_plaintext) savetxt("dos_err.dat",dos_ev);
             }
     
+    
     // Inverse participation ratio
     if (p["measure_ipr"]) {
-            std::cout << "Inverse participation ratio" << std::endl;
-            triqs::arrays::array<double, 2> t_ipr_history(mc.observables.ipr_history.size(), mc.observables.ipr_history[0].size());
-            for (int i=0; i<mc.observables.ipr_history.size(); i++)
-                for (int j=0; j< mc.observables.ipr_history[0].size(); j++)
-                    t_ipr_history(i,j) =  mc.observables.ipr_history[i][j];
-            h5_write(h5_mc_data,"ipr_history", t_ipr_history);
-
             auto ipr_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
                 std::complex<double> nom = 0.0, denom = 0.0;
                 for (size_t i=0; i<Volume; i++) {

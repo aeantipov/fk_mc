@@ -1,15 +1,18 @@
-#include <fstream>
-
 #include "data_saveload.hpp"
+#include <iostream>
 
 namespace fk {
 
-fk_mc load_data(triqs::utility::parameters p, std::string output_file);
-
-void print_section (const std::string& str)
+template <typename MC>
+MC load_data(std::string output_file)
 {
-  std::cout << std::string(str.size(),'=') << std::endl;
-  std::cout << str << std::endl;
+    H5::H5File input(output_file.c_str(),H5F_ACC_RDONLY);
+    triqs::h5::group top(input);
+
+    triqs::utility::parameters p;
+    h5_read(top, "parameters", p);
+
+    exit(0);
 }
 
 } // end of namespace fk

@@ -10,6 +10,7 @@ jackknife_test
 #ietl_inverse01
 ipr_test
 mc_test01
+saveload_test
 )
 
 set (other_tests

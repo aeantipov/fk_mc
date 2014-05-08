@@ -23,26 +23,30 @@ struct observables_t {
     std::vector<std::vector<double>> fsuscq_history;   // nqpts x n_measures size
 };
 
+template <typename LatticeType>
 class fk_mc 
 {
-    typedef configuration_t config_t;
-    boost::mpi::communicator world;
+    static_assert(!std::is_same<LatticeType,lattice_base>::value,"Can't construct mc for an unspecified lattice");
+    boost::mpi::communicator comm;
 public:
+    typedef configuration_t config_t;
+    typedef LatticeType lattice_type;
     utility::parameters p;
     configuration_t config;
     mc_tools::mc_generic<double> mc;
-    const lattice_base& lattice;
+    const lattice_type& lattice;
     observables_t observables;
     template <typename MeasureType> void add_measure(MeasureType&& in, std::string name);
 
     static triqs::utility::parameter_defaults solve_defaults();
 
-    fk_mc(const lattice_base& l, utility::parameters p);
+    fk_mc(const lattice_type& l, utility::parameters p);
     void solve();
 };
 
+template <typename LatticeType>
 template <typename MeasureType>
-void fk_mc::add_measure(MeasureType&& in, std::string name)
+void fk_mc<LatticeType>::add_measure(MeasureType&& in, std::string name)
 {
     mc.add_measure(in,name);
 }
@@ -50,3 +54,5 @@ void fk_mc::add_measure(MeasureType&& in, std::string name)
 }; // end of namespace FK
 
 #endif // #ifndef __FK_MC_HPP
+
+

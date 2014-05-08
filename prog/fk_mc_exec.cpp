@@ -22,7 +22,6 @@ size_t _myrank;
 #define MINFO(MSG)            if (_myrank==0) std::cout << std::boolalpha << MSG << std::endl;
 #define MINFO2(MSG)            if (_myrank==0) std::cout << "    " << std::boolalpha << MSG << std::endl;
 
-void print_section (const std::string& str); // fancy screen output
 
 int main(int argc, char* argv[])
 {
@@ -132,7 +131,7 @@ try {
 
     if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
 
-    fk_mc mc(lattice,p);
+    fk_mc<lattice_t> mc(lattice,p);
     mc.add_measure(measure_nf0pi<lattice_t>(mc.config, lattice, mc.observables.nf0, mc.observables.nfpi), "nf0pi");
     if (p["measure_history"] && p["measure_ipr"]) {
         if (!world.rank()) std::cout << "Measuring ipr" << std::endl;
@@ -151,11 +150,5 @@ try {
 return 0;
 }
 
-void print_section (const std::string& str)
-{
-  MINFO(std::string(str.size(),'='));
-  MINFO(str)
-  MINFO(std::string(str.size(),'='));
-}
 
 

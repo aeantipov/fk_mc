@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     p["measure_history"] = true;
 
     FKDEBUG(p);
-    fk_mc mc(lattice,p);
+    fk_mc<triangular_lattice> mc(lattice,p);
 
     std::vector<double> n0, npi, n0_n0, npi_npi;
 
