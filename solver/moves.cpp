@@ -41,7 +41,7 @@ typename move_randomize::mc_weight_type move_randomize::attempt()
     config.calc_ed(false);
     new_config.calc_ed(false);
     auto log_ratio = new_config.ed_data_.logZ - config.ed_data_.logZ;
-    //DEBUG(log_ratio);
+    //FKDEBUG(log_ratio);
     if (beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf()) > 2.7182818 - log_ratio) { return 1;}
     else if (beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf()) + log_ratio < 0) {return 0;}
     else return std::exp(log_ratio)*exp(beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf())); 

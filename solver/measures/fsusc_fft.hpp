@@ -53,11 +53,11 @@ void measure_fsusc<lattice_t>::accumulate(double sign)
     for (size_t i=0; i<nqpts; ++i) { 
         BZPoint q = qpts_[i];
         std::complex<double> nq_val = nq(q.ind_);
-        DEBUG(size_t(q) << q <<":" << nq_val << " " << std::abs(nq_val * nq_val));
+        FKDEBUG(size_t(q) << q <<":" << nq_val << " " << std::abs(nq_val * nq_val));
         nq_history_[i].push_back(nq_val); 
         fsuscq_history_[i].push_back(std::abs(nq_val*nq_val)); 
     };
-    DEBUG(lattice_.FFT_pi(config_.f_config_));
+    FKDEBUG(lattice_.FFT_pi(config_.f_config_));
     _Z++;
 }
 

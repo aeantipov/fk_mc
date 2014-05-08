@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     hypercubic_lattice<2> lattice(L);
     lattice.fill(-1.0);
 
-    DEBUG(lattice.hopping_m);
+    FKDEBUG(lattice.hopping_m);
 
     configuration_t config(lattice, 1.0, U, mu, mu+e_f);
     configuration_t config2(config);
@@ -35,11 +35,11 @@ int main(int argc, char* argv[])
             my_config(lattice.pos_to_index({x,y+x%2}))=1;
         }
     config.f_config_ = my_config;
-    DEBUG(config.f_config_.transpose());
+    FKDEBUG(config.f_config_.transpose());
     config.calc_hamiltonian();
     config.calc_ed();
-    DEBUG(config.ed_data().cached_spectrum.transpose());
-    //DEBUG(config.cached_evecs);
+    FKDEBUG(config.ed_data().cached_spectrum.transpose());
+    //FKDEBUG(config.cached_evecs);
 
    }
   catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}

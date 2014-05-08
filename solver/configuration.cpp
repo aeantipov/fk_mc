@@ -99,7 +99,7 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
     sparse_m cm1 = (x*cm0).pruned(1.0);
     cheb_data_.moments[1] = cm1.diagonal().sum()/msize;
     is_set[1] = true;
-    DEBUG(cm1.nonZeros() << " nonzero elems [" << msize*msize << "] = " << (double(cm1.nonZeros())/msize/msize));
+    FKDEBUG(cm1.nonZeros() << " nonzero elems [" << msize*msize << "] = " << (double(cm1.nonZeros())/msize/msize));
 
     sparse_m cm_tmp;
 
@@ -111,9 +111,9 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
             if (!is_set[m]) { 
                 cheb_data_.moments[m] = cm1.diagonal().sum()/msize;
                 is_set[m] = true;
-                DEBUG("moment [" << m << "] = " << cheb_data_.moments[m]);
+                FKDEBUG("moment [" << m << "] = " << cheb_data_.moments[m]);
                 };
-            //DEBUG(cm1.nonZeros() << " nonzero elems [" << msize*msize << "] = " << (double(cm1.nonZeros())/msize/msize));
+            //FKDEBUG(cm1.nonZeros() << " nonzero elems [" << msize*msize << "] = " << (double(cm1.nonZeros())/msize/msize));
 //            std::cout << cm1.nonZeros() << " nonzero elems [" << msize*msize << "] = " << (double(cm1.nonZeros())/msize/msize) << std::endl;
             // add moments for 2*m using relations for Chebyshev polynomials
             int k = 2*(m)-1;
@@ -121,21 +121,21 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
                 double moment_k = (sparse_m(cm0 * cm1).diagonal().sum()*2. - x.diagonal().sum())/msize;
                 is_set[k] = true;
                 cheb_data_.moments[k] = moment_k;
-                DEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
+                FKDEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
 
                 if (k!=cheb_size-1) { 
                     ++k;
                     moment_k = (sparse_m(cm1 * cm1).diagonal().sum()/msize*2. - 1.0);
                     cheb_data_.moments[k] = moment_k;
                     is_set[k] = true;
-                    DEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
+                    FKDEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
                 };
             }
             still_sparse = (double(cm1.nonZeros())/msize/msize < 0.5);
         }
     // now go on with dense
     if (m <=cheb_size/2) {
-        DEBUG("Evaluated " << m << " moments with sparse matrices");
+        FKDEBUG("Evaluated " << m << " moments with sparse matrices");
         dense_m dm0 = cm0;
         dense_m dm1 = cm1;
         dense_m dm_tmp;
@@ -144,7 +144,7 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
                 if (!is_set[m]) { 
                     cheb_data_.moments[m] = dm1.diagonal().sum()/msize;
                     is_set[m] = true;
-                    DEBUG("moment [" << m << "] = " << cheb_data_.moments[m]);
+                    FKDEBUG("moment [" << m << "] = " << cheb_data_.moments[m]);
                     };
 
                 int k = 2*(m)-1;
@@ -152,14 +152,14 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
                     double moment_k = ((dm0 * dm1).diagonal().sum()*2. - x.diagonal().sum())/msize;
                     is_set[k] = true;
                     cheb_data_.moments[k] = moment_k;
-                    DEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
+                    FKDEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
 
                     if (k!=cheb_size-1) { 
                         ++k;
                         moment_k = ((dm1 * dm1).diagonal().sum()/msize*2. - 1.0);
                         cheb_data_.moments[k] = moment_k;
                         is_set[k] = true;
-                        DEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
+                        FKDEBUG(m << " + moment [" << k << "] = " << cheb_data_.moments[k]);
                     };
                 }
             }
@@ -190,7 +190,7 @@ void configuration_t::calc_ed(bool calc_evecs)
         };
     //auto s2 = cached_spectrum;
     //std::sort (cached_spectrum.data(), cached_spectrum.data()+cached_spectrum.size());  
-    //DEBUG((Eigen::VectorXd(cached_spectrum - s2)).squaredNorm());
+    //FKDEBUG((Eigen::VectorXd(cached_spectrum - s2)).squaredNorm());
 
     const auto& cached_spectrum = ed_data_.cached_spectrum;
 

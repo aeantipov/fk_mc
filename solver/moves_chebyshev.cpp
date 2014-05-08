@@ -60,7 +60,7 @@ typename move_addremove::mc_weight_type move_addremove::attempt()
     new_config.calc_hamiltonian();
     new_config.calc_chebyshev(cheb_);
 
-    //DEBUG(new_config.cheb_data_.logZ << " " << config.cheb_data_.logZ);
+    //FKDEBUG(new_config.cheb_data_.logZ << " " << config.cheb_data_.logZ);
     auto ratio = std::exp(new_config.cheb_data_.logZ - config.cheb_data_.logZ );
     auto out = (new_config.f_config_(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f);
     return out;

@@ -36,28 +36,28 @@ int main()
     INFO(arr1());
 
     binned_iterator<std::vector<double>::iterator,0> it0(a.begin());
-    DEBUG(it0.step); DEBUG(*it0); it0++; DEBUG(*it0);
+    FKDEBUG(it0.step); FKDEBUG(*it0); it0++; FKDEBUG(*it0);
 
     binned_iterator<std::vector<double>::iterator,1> it1(a.begin());
-    DEBUG(it1.step); DEBUG(*it1); it1++; DEBUG(*it1);
+    FKDEBUG(it1.step); FKDEBUG(*it1); it1++; FKDEBUG(*it1);
 
     binned_iterator<std::vector<double>::iterator,2> it2(a.begin());
-    DEBUG(it2.step); DEBUG(*it2); it2++; DEBUG(*it2);
+    FKDEBUG(it2.step); FKDEBUG(*it2); it2++; FKDEBUG(*it2);
 
 try{ 
     bin<6>(a.begin(), a.end());
     }
 catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() << std::endl;}
    
-    DEBUG("--0 :" << calc_stats(a.begin(), a.end()));
-    DEBUG("--0 :" << calc_stats(a.crbegin(), a.crend()));
-    DEBUG(bin<0>(a.begin(), a.end()));
-    DEBUG(bin<0>(a.rbegin(), a.rend()));
-    DEBUG(bin<1>(a.begin(), a.end()));
-    DEBUG(bin<2>(a.begin(), a.end()));
+    FKDEBUG("--0 :" << calc_stats(a.begin(), a.end()));
+    FKDEBUG("--0 :" << calc_stats(a.crbegin(), a.crend()));
+    FKDEBUG(bin<0>(a.begin(), a.end()));
+    FKDEBUG(bin<0>(a.rbegin(), a.rend()));
+    FKDEBUG(bin<1>(a.begin(), a.end()));
+    FKDEBUG(bin<2>(a.begin(), a.end()));
 
-    DEBUG(bin(a.begin(), a.end(),2));
-    DEBUG(bin(a,2));
+    FKDEBUG(bin(a.begin(), a.end(),2));
+    FKDEBUG(bin(a,2));
 
     auto bin_stats = binning_accumulator<3>::accumulate_binning(a.begin(),a.end());
     auto cor_lens = calc_cor_length(bin_stats); 
