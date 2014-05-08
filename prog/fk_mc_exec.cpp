@@ -62,18 +62,19 @@ try {
     TCLAP::ValueArg<double>     move_reshuffle_switch("","reshuffle","Make reshuffle step (non conserving)", false, 0.0, "double", cmd);
 
     //TCLAP::ValueArg<double>     eval_tolerance_switch("","evaltol","Tolerance for eigenvalue weights", false, std::numeric_limits<double>::epsilon(), "double", cmd);
-    TCLAP::SwitchArg     plaintext_switch("p","plaintext","Save data to plaintext format?", cmd, false);
+    TCLAP::SwitchArg          plaintext_switch("p","plaintext","Save data to plaintext format?", cmd, false);
+    TCLAP::ValueArg<int>      maxtime_arg("","maxtime","Maximum evaluation time (in hours)", false, 24*30, "int", cmd);
 
     TCLAP::ValueArg<bool>     calc_history_switch("","calc_history","Calculate data history (for errorbars)", false, false, "bool", cmd);
     TCLAP::ValueArg<bool>     calc_ipr_switch("","calc_ipr","Calculate inverse participation ratio", false, false, "bool", cmd);
     // dos-related args
-    TCLAP::ValueArg<double>     dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
-    TCLAP::ValueArg<int>        dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
-    TCLAP::ValueArg<double>     dos_offset_arg("","dos_offset","offset of dos from real axis", false, 0.05, "double", cmd);
+    TCLAP::ValueArg<double>   dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
+    TCLAP::ValueArg<int>      dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
+    TCLAP::ValueArg<double>   dos_offset_arg("","dos_offset","offset of dos from real axis", false, 0.05, "double", cmd);
 
     // chebyshev flags
-    TCLAP::SwitchArg           chebyshev_switch("c","chebyshev","Make chebyshev moves?", cmd, false);
-    TCLAP::ValueArg<double>    chebyshev_prefactor("","cheb_prefactor","Prefactor of log(N) chebyshev polynomials", false, 2.2, "double", cmd);
+    TCLAP::SwitchArg          chebyshev_switch("c","chebyshev","Make chebyshev moves?", cmd, false);
+    TCLAP::ValueArg<double>   chebyshev_prefactor("","cheb_prefactor","Prefactor of log(N) chebyshev polynomials", false, 2.2, "double", cmd);
 
     TCLAP::SwitchArg exit_switch("","exit","Dry run", cmd, false);
     cmd.parse( argc, argv );
@@ -117,10 +118,10 @@ try {
     p["length_cycle"] = cycle_len_arg.getValue(); 
     p["n_warmup_cycles"] = nwarmup_arg.getValue();
     p["n_cycles"] = ncycles_arg.getValue();
-    p["max_time"]=3600*5;
+    p["max_time"]=maxtime_arg.getValue()*3600;
 
     p["measure_ipr"] = calc_ipr_switch.getValue();
-    p["measure_history"] = calc_history_switch.getValue() || p["measure_ipr"];
+    p["measure_history"] = calc_history_switch.getValue() || bool(p["measure_ipr"]);
     p["dos_width"] = dos_width_arg.getValue();
     p["dos_npts"] = dos_npts_arg.getValue();
     p["dos_offset"] = dos_offset_arg.getValue();
