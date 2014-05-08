@@ -4,7 +4,7 @@
 
 namespace fk {
 
-measure_spectrum_history::measure_spectrum_history(const configuration_t& in, std::vector<std::vector<double>>& spectrum_history):
+measure_spectrum_history::measure_spectrum_history(configuration_t& in, std::vector<std::vector<double>>& spectrum_history):
     config(in), _spectrum_history(spectrum_history)
 { 
     _spectrum_history.resize(config.lattice_.get_msize());
@@ -12,7 +12,7 @@ measure_spectrum_history::measure_spectrum_history(const configuration_t& in, st
 
 void measure_spectrum_history::accumulate (double sign) 
 {
-    if (config.ed_data_.status == ed_cache::empty) throw std::logic_error("Need calculated eigenvalues");  
+    config.calc_ed(false);
     auto spectrum = config.ed_data_.cached_spectrum;
     for (size_t i=0; i<spectrum.size(); ++i) { _spectrum_history[i].push_back(spectrum(i)); };
     _Z++;

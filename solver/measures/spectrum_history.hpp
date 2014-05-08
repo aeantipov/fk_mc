@@ -10,12 +10,12 @@ namespace fk {
 struct measure_spectrum_history {
     typedef typename configuration_t::real_array_t  real_array_t;
 
-    const configuration_t& config;
+    configuration_t& config;
 
     int _Z = 0.0;
     std::vector<std::vector<double>>& _spectrum_history;
 
-    measure_spectrum_history(const configuration_t& in, std::vector<std::vector<double>>& spectrum_history);
+    measure_spectrum_history(configuration_t& in, std::vector<std::vector<double>>& spectrum_history);
  
     void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);

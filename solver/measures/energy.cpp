@@ -5,7 +5,7 @@ namespace fk {
 
 void measure_energy::accumulate (double sign) 
 {
-    if (config.ed_data_.status == ed_cache::empty) throw std::logic_error("Need calculated eigenvalues");  
+    config.calc_ed(false);
     auto spectrum = config.ed_data_.cached_spectrum;
     _Z++;
 

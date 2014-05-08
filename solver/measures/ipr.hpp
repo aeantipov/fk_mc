@@ -39,7 +39,7 @@ measure_ipr<lattice_t>::measure_ipr(configuration_t& in, const lattice_t& lattic
 template <typename lattice_t>
 void measure_ipr<lattice_t>::accumulate(double sign)
 {
-    if (int(config_.ed_data_.status) < (ed_cache::full)) throw std::logic_error("Need calculated eigenvalues and eigenvectors");  
+    config_.calc_ed(true);
 
     const auto& evecs = config_.ed_data_.cached_evecs;
     const auto& evals = config_.ed_data_.cached_spectrum;

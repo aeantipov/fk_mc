@@ -35,9 +35,9 @@ void fk_mc::solve()
 
     bool cheb_move = p["cheb_moves"];
     if (cheb_move) {
-        int cheb_size = int(lattice.get_msize() * double(p["cheb_prefactor"]));
+        int cheb_size = int(std::log(lattice.get_msize()) * double(p["cheb_prefactor"]));
         cheb_size+=cheb_size%2;
-        size_t ngrid_points = std::max(cheb_size*2,20);
+        size_t ngrid_points = std::max(cheb_size*2,10);
         cheb_ptr.reset(new chebyshev::chebyshev_eval(cheb_size, ngrid_points));
     }
         

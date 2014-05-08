@@ -11,7 +11,7 @@ struct measure_energy {
     typedef typename configuration_t::real_array_t  real_array_t;
 
     double beta;
-    const configuration_t& config;
+    configuration_t& config;
 
     int _Z = 0.0;
     double _average_energy = 0.0;
@@ -19,7 +19,7 @@ struct measure_energy {
     std::vector<double>& _energies;
     std::vector<double>& _d2energies;
 
-    measure_energy(double beta, const configuration_t& in, std::vector<double>& energies, std::vector<double>& d2energies):
+    measure_energy(double beta, configuration_t& in, std::vector<double>& energies, std::vector<double>& d2energies):
         beta(beta),config(in), _energies(energies),_d2energies(d2energies){};
  
     void accumulate(double sign);

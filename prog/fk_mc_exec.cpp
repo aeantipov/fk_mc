@@ -52,9 +52,9 @@ try {
     //TCLAP::ValueArg<int> nf_arg("","nf","total number of f-electrons",false,4,"int", cmd);
     
 
-    TCLAP::ValueArg<int> ncycles_arg("","ncycles","total number of cycles",false,50000,"int",cmd);
-    TCLAP::ValueArg<int> nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,0,"int",cmd);
-    TCLAP::ValueArg<int> cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,1,"int",cmd);
+    TCLAP::ValueArg<int> ncycles_arg("","ncycles","total number of cycles",false,100,"int",cmd);
+    TCLAP::ValueArg<int> nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,10,"int",cmd);
+    TCLAP::ValueArg<int> cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,100,"int",cmd);
     TCLAP::SwitchArg     random_seed_switch("s","seed","Make a random or fixed seed?", cmd, false);
 
     TCLAP::ValueArg<double>     move_flips_switch("","flip","Make flip (conserving)", false, 0.0, "double", cmd);
@@ -64,7 +64,7 @@ try {
     //TCLAP::ValueArg<double>     eval_tolerance_switch("","evaltol","Tolerance for eigenvalue weights", false, std::numeric_limits<double>::epsilon(), "double", cmd);
     TCLAP::SwitchArg     plaintext_switch("p","plaintext","Save data to plaintext format?", cmd, false);
 
-    TCLAP::ValueArg<bool>     calc_history_switch("","calc_history","Calculate data history (for errorbars)", false, true, "bool", cmd);
+    TCLAP::ValueArg<bool>     calc_history_switch("","calc_history","Calculate data history (for errorbars)", false, false, "bool", cmd);
     TCLAP::ValueArg<bool>     calc_ipr_switch("","calc_ipr","Calculate inverse participation ratio", false, false, "bool", cmd);
     // dos-related args
     TCLAP::ValueArg<double>     dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
@@ -112,15 +112,15 @@ try {
     p["beta"] = beta;
     p["Nf_start"] = L*L/2;
     p["random_name"] = ""; 
-    p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(34788+world.rank()));
+    p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(32167+world.rank()));
     p["verbosity"] = (!world.rank()?1:0);
     p["length_cycle"] = cycle_len_arg.getValue(); 
     p["n_warmup_cycles"] = nwarmup_arg.getValue();
     p["n_cycles"] = ncycles_arg.getValue();
     p["max_time"]=3600*5;
 
-    p["measure_history"] = calc_history_switch.getValue();
     p["measure_ipr"] = calc_ipr_switch.getValue();
+    p["measure_history"] = calc_history_switch.getValue() || p["measure_ipr"];
     p["dos_width"] = dos_width_arg.getValue();
     p["dos_npts"] = dos_npts_arg.getValue();
     p["dos_offset"] = dos_offset_arg.getValue();

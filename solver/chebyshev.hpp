@@ -24,7 +24,8 @@ struct chebyshev_eval
         chebt_cache(max_moment+max_moment%2, grid_size)
     {
         max_moment = max_moment+max_moment%2;
-        std::cout << "Initializing Chebyshev evaluator with " << this->cheb_size() << " Chebyshev polynomials on a " << this->grid_size() << " Lobatto grid." << std::endl;
+        std::cout << "Initializing Chebyshev evaluator with " << this->cheb_size() << " Chebyshev polynomials on a Lobatto grid with " 
+                  <<   this->grid_size() << " points." << std::endl;
         for (int i=0; i<angle_grid.size(); i++) { 
             //angle_grid[i] = (1.*i/n);//(2.*i + 1.) / (2.*n);
             lobatto_grid[i] = -cos(M_PI*angle_grid[i]);
