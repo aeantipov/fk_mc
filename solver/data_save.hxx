@@ -98,9 +98,10 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
     if (mc.observables.nfpi.size()) h5_write(h5_mc_data,"nfpi", mc.observables.nfpi);
 
     std::vector<double> spectrum(mc.observables.spectrum.size());
-    std::copy(mc.observables.spectrum.data(), mc.observables.spectrum.data()+spectrum.size(), spectrum.begin());
-    h5_write(h5_mc_data,"spectrum", spectrum);
-
+    if (spectrum.size()) { 
+        std::copy(mc.observables.spectrum.data(), mc.observables.spectrum.data()+spectrum.size(), spectrum.begin());
+        h5_write(h5_mc_data,"spectrum", spectrum);
+        };
 
     if (p["measure_history"]) { 
         triqs::arrays::array<double, 2> t_spectrum_history(mc.observables.spectrum_history.size(), mc.observables.spectrum_history[0].size());
@@ -133,41 +134,45 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
     top.create_group("binning");
     auto h5_binning = top.open_group("binning");
 
-    const std::vector<double>& energies = mc.observables.energies;
-    const std::vector<double>& d2energies = mc.observables.d2energies;
-    int maxbin = std::min(15,std::max(int(std::log(energies.size()/16)/std::log(2.)-1),1));
-    size_t energy_bin = 0;
+    int maxbin = std::min(15,std::max(int(std::log(double(p["n_cycles"])/16)/std::log(2.)-1),1));
 
-    { /* Energy binning */
-        INFO("Energy binning");
-        size_t size = energies.size();
-        INFO("Binning " << maxbin <<" times.");
-        auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), maxbin); 
-        save_binning(energy_binning_data,h5_binning,"energies",save_plaintext);
-        auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), maxbin); 
-        save_binning(d2energy_binning_data,h5_binning,"d2energies",save_plaintext);
+    if (mc.observables.energies.size()) { 
+        const std::vector<double>& energies = mc.observables.energies;
+        const std::vector<double>& d2energies = mc.observables.d2energies;
+        int maxbin = std::min(15,std::max(int(std::log(energies.size()/16)/std::log(2.)-1),1));
+        size_t energy_bin = 0;
 
-        energy_bin = estimate_bin(energy_binning_data);
-        save_bin_data(energy_binning_data[energy_bin],h5_stats,"energy",save_plaintext);
-        save_bin_data(d2energy_binning_data[energy_bin],h5_stats,"d2energy",save_plaintext);
-    };
-    
-    std::vector<double> energies_square(energies.size());
-    std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
-    { /* Specific heat */
-        typedef std::function<double(double, double, double)> cf_t;
+        { /* Energy binning */
+            INFO("Energy binning");
+            size_t size = energies.size();
+            INFO("Binning " << maxbin <<" times.");
+            auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), maxbin); 
+            save_binning(energy_binning_data,h5_binning,"energies",save_plaintext);
+            auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), maxbin); 
+            save_binning(d2energy_binning_data,h5_binning,"d2energies",save_plaintext);
 
-        cf_t cv_function = [beta, Volume](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/Volume;}; 
+            energy_bin = estimate_bin(energy_binning_data);
+            save_bin_data(energy_binning_data[energy_bin],h5_stats,"energy",save_plaintext);
+            save_bin_data(d2energy_binning_data[energy_bin],h5_stats,"d2energy",save_plaintext);
+        };
+        
+        std::vector<double> energies_square(energies.size());
+        std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
+        { /* Specific heat */
+            typedef std::function<double(double, double, double)> cf_t;
 
-        typedef decltype(energies.rbegin()) it_t;
-        std::vector<std::pair<it_t,it_t>> c_data = {
-            std::make_pair(energies.rbegin(), energies.rend()), 
-            std::make_pair(energies_square.rbegin(), energies_square.rend()), 
-            std::make_pair(d2energies.rbegin(), d2energies.rend())
-        }; 
-        auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,maxbin);
-        save_binning(cv_stats,h5_binning,"cv",save_plaintext);
-        save_bin_data(cv_stats[energy_bin],h5_stats,"cv",save_plaintext);
+            cf_t cv_function = [beta, Volume](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/Volume;}; 
+
+            typedef decltype(energies.rbegin()) it_t;
+            std::vector<std::pair<it_t,it_t>> c_data = {
+                std::make_pair(energies.rbegin(), energies.rend()), 
+                std::make_pair(energies_square.rbegin(), energies_square.rend()), 
+                std::make_pair(d2energies.rbegin(), d2energies.rend())
+            }; 
+            auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,maxbin);
+            save_binning(cv_stats,h5_binning,"cv",save_plaintext);
+            save_bin_data(cv_stats[energy_bin],h5_stats,"cv",save_plaintext);
+        };
     };
 
     if (mc.observables.nf0.size() && mc.observables.nfpi.size()) { 
@@ -226,7 +231,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
     std::vector<double> grid_real(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real[i] = -dos_width+2.*dos_width*i/(1.*dos_npts);
     std::vector<double> grid_imag(std::max(int(beta)*10,1024)); for (size_t i=0; i<grid_imag.size(); i++) grid_imag[i] = PI/beta*(2.*i + 1);
 
-    { // gf_matsubara - no errorbars
+    if (mc.observables.energies.size()){ // gf_matsubara - no errorbars
         triqs::arrays::array<double, 2> gf_im_v(grid_imag.size(),3);
         for (size_t i=0; i<grid_imag.size(); i++) { 
             std::complex<double> z = I*grid_imag[i]; 
@@ -238,7 +243,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
         if (save_plaintext) savetxt("gw_imfreq.dat",gf_im_v);
     };
 
-    { // gf_refreq - no errorbars
+    if (mc.observables.energies.size()) { // gf_refreq - no errorbars
         triqs::arrays::array<double, 2> dos_v(grid_real.size(),2), gf_re_v(grid_real.size(),3);
         for (size_t i=0; i<grid_real.size(); i++) { 
             std::complex<double> z = grid_real[i]; 

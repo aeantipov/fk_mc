@@ -7,6 +7,8 @@
 #include "measures/spectrum.hpp"
 #include "measures/spectrum_history.hpp"
 #include "measures/focc_history.hpp"
+#include "measures/fsusc0pi.hpp"
+#include "measures/ipr.hpp"
 
 #include <triqs/utility/callbacks.hpp>
 
@@ -61,12 +63,24 @@ void fk_mc<L>::solve()
         };
 
     size_t max_bins = p["n_cycles"];
-    observables.energies.reserve(max_bins);
-    observables.d2energies.reserve(max_bins);
-    mc.add_measure(measure_energy(beta,config,observables.energies, observables.d2energies), "energy");
-    mc.add_measure(measure_spectrum(config,observables.spectrum), "spectrum");
+    observables.reserve(max_bins);
+
+    bool calc_spectrum = !cheb_move; 
+    mc.add_measure(measure_nf0pi<lattice_type>(config, lattice, observables.nf0, observables.nfpi), "nf0pi");
+    if (p["measure_history"] && p["measure_ipr"]) {
+        if (!comm.rank()) std::cout << "Measuring ipr" << std::endl;
+        mc.add_measure(measure_ipr<lattice_type>(config, lattice, observables.ipr_history),"ipr");
+        }
+
+    calc_spectrum = calc_spectrum || p["measure_ipr"];
+
+    if (!cheb_move || calc_spectrum) {
+        mc.add_measure(measure_energy(beta,config,observables.energies, observables.d2energies), "energy");
+        mc.add_measure(measure_spectrum(config,observables.spectrum), "spectrum");
+        if (p["measure_history"]) 
+            mc.add_measure(measure_spectrum_history(config,observables.spectrum_history), "spectrum_history");
+        };
     if (p["measure_history"]) {
-        mc.add_measure(measure_spectrum_history(config,observables.spectrum_history), "spectrum_history");
         mc.add_measure(measure_focc(config,observables.focc_history), "focc_history");
         };
 
@@ -101,6 +115,7 @@ template <typename L>
    ("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
    ("random_seed", int(34788), "Seed for random number generator")
    ("max_time",int(600000), "Maximum running time")
+   ("measure_ipr", bool(false), "Measure inverse participation ratio")
    ;
 
   return pdef;

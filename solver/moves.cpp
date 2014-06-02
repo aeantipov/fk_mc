@@ -63,6 +63,25 @@ typename move_addremove::mc_weight_type move_addremove::attempt()
     return out;
 }
 
+// move_cluster
+/*
+template <typename Lattice>
+typename move_cluster<Lattice>::mc_weight_type move_cluster::attempt()
+{
+    new_config = config;
+    size_t m_size = config.lattice_.get_msize();
 
+    // Generate bonds
+    size_t to = RND(m_size);
+    new_config.f_config_(to) = 1 - config.f_config_(to);
+
+    config.calc_ed(false);
+    new_config.calc_hamiltonian();
+    new_config.calc_ed(false);//calc_eigenvectors_);//configuration_t::calc_eval::arpack);
+    auto ratio = std::exp(new_config.ed_data_.logZ - config.ed_data_.logZ );
+    auto out = (new_config.f_config_(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f);
+    return out;
+}
+*/
 
 } // end of namespace fk

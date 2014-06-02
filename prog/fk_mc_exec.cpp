@@ -6,8 +6,6 @@
 #include <random>
 
 #include "fk_mc.hpp"
-#include "measures/fsusc0pi.hpp"
-#include "measures/ipr.hpp"
 #include "data_saveload.hpp"
 
 
@@ -132,12 +130,7 @@ try {
     if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
 
     fk_mc<lattice_t> mc(lattice,p);
-    mc.add_measure(measure_nf0pi<lattice_t>(mc.config, lattice, mc.observables.nf0, mc.observables.nfpi), "nf0pi");
-    if (p["measure_history"] && p["measure_ipr"]) {
-        if (!world.rank()) std::cout << "Measuring ipr" << std::endl;
-        mc.add_measure(measure_ipr<lattice_t>(mc.config, lattice, mc.observables.ipr_history),"ipr");
-        }
-    mc.solve();
+        mc.solve();
 
     world.barrier();
     if (world.rank() == 0) {

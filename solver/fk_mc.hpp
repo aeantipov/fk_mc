@@ -21,6 +21,8 @@ struct observables_t {
     std::vector<std::vector<double>> focc_history;     // L^D x n_measures size
     std::vector<std::vector<std::complex<double>>> nq_history;       // nqpts x n_measures size
     std::vector<std::vector<double>> fsuscq_history;   // nqpts x n_measures size
+
+    void reserve(int n); 
 };
 
 template <typename LatticeType>
