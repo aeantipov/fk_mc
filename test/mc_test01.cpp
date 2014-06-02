@@ -57,7 +57,6 @@ int main(int argc, char* argv[])
     std::vector<double> n0, npi, n0_n0, npi_npi;
 
     //mc.add_measure(measure_fsusc<triangular_lattice>(beta, lattice, mc.config, {lattice.get_bzpoint({0, 0}), lattice.get_bzpoint({PI, PI})}, mc.observables.nq_history, mc.observables.fsuscq_history), "fsusc");
-    mc.add_measure(measure_nf0pi<triangular_lattice>(mc.config, lattice, mc.observables.nf0, mc.observables.nfpi), "nf0pi");
     //mc.add_measure(dummy_measure,"a");
     mc.add_measure(dummy_measure_a(),"b");
     mc.add_measure(dummy_measure_b(),"a");
