@@ -69,7 +69,7 @@ struct hypercubic_lattice : lattice_base
     hypercubic_lattice(size_t lattice_size);
         
     void fill(double t);
-    protected:
+//    protected:
         Eigen::ArrayXi ft_pi_array_;
 };
 
