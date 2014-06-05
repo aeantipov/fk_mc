@@ -12,6 +12,7 @@
 using namespace fk;
 
 #ifdef LATTICE_triangular
+    #include "lattice/triangular.hpp"
     typedef triangular_lattice lattice_t;
 #endif
 

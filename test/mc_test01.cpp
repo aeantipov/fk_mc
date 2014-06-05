@@ -1,8 +1,10 @@
+#include <boost/mpi/environment.hpp>
+#include <chrono>
+
+#include "lattice/triangular.hpp"
 #include "fk_mc.hpp"
 #include "measures/fsusc_fft.hpp"
 #include "measures/fsusc0pi.hpp"
-#include <boost/mpi/environment.hpp>
-#include <chrono>
 
 
 using namespace fk;

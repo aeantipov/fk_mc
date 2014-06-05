@@ -1,7 +1,9 @@
 include_directories (.)
 
 set (fk_mc_src
-    lattice.cpp
+    lattice.hpp
+    lattice/hypercubic.cpp
+    lattice/triangular.cpp
     chebyshev.hpp
     configuration.hpp configuration.cpp
     moves.hpp moves.cpp

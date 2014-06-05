@@ -1,5 +1,6 @@
 #include <boost/mpi/environment.hpp>
 #include <chrono>
+#include "lattice/hypercubic.hpp"
 #include "fk_mc.hpp"
 #include "measures/ipr.hpp"
 

@@ -1,5 +1,7 @@
 #include "fk_mc.hxx"
 
+#include "lattice/triangular.hpp"
+
 namespace fk {
 
 template class fk_mc<triangular_lattice>; 

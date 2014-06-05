@@ -2,6 +2,9 @@
 
 #include "fk_mc.hpp"
 
+#include "lattice/hypercubic.hpp"
+#include "lattice/triangular.hpp"
+
 
 using namespace fk;
 

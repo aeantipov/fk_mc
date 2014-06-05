@@ -1,3 +1,4 @@
+#include "lattice/hypercubic.hpp"
 #include "fk_mc.hpp"
 #include <boost/mpi/environment.hpp>
 #include <chrono>

@@ -14,6 +14,7 @@ using namespace std::chrono;
 #include "eigen/ArpackSupport"
 //#include <triqs/gfs.hpp>
 
+#include "lattice/hypercubic.hpp"
 #include "fk_mc.hpp"
 #include "moves.hpp"
 #include "chebyshev.hpp"
