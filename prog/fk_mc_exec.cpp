@@ -7,6 +7,7 @@
 
 #include "fk_mc.hpp"
 #include "data_saveload.hpp"
+#include "measures/polarization.hpp"
 
 
 using namespace fk;
@@ -154,7 +155,12 @@ try {
     if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
 
     fk_mc<lattice_t> mc(lattice,p);
-        mc.solve();
+
+    #ifdef LATTICE_chain
+    mc.add_measure(measure_polarization<lattice_t>(mc.config,lattice),"polarization");
+    #endif
+        
+    mc.solve();
 
     world.barrier();
     if (world.rank() == 0) {
