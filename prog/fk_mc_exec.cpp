@@ -14,7 +14,17 @@ using namespace fk;
 #ifdef LATTICE_triangular
     #include "lattice/triangular.hpp"
     typedef triangular_lattice lattice_t;
+#elif LATTICE_cubic1d
+    #include "lattice/hypercubic.hpp"
+    typedef hypercubic_lattice<1> lattice_t;
+#elif LATTICE_cubic2d
+    #include "lattice/hypercubic.hpp"
+    typedef hypercubic_lattice<2> lattice_t;
+#elif LATTICE_chain
+    #include "lattice/chain.hpp"
+    typedef chain_lattice lattice_t;
 #endif
+
 
 size_t _myrank;
 
@@ -36,7 +46,12 @@ try {
     TCLAP::ValueArg<double> T_arg("T","T","Temperature",false,0.1,"double",cmd);
     TCLAP::ValueArg<size_t> L_arg("L","L","system size",false,4,"int",cmd);
     TCLAP::ValueArg<double> t_arg("t","t","hopping",false,1.0,"double",cmd);
-    TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,0.0,"double",cmd);
+    #ifdef LATTICE_triangular
+        TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,0.0,"double",cmd);
+    #elif LATTICE_chain
+        TCLAP::ValueArg<double> delta_arg("","delta","delta",false,0.0,"double",cmd);
+        TCLAP::ValueArg<double> eta_arg("","eta","eta",false,0.0,"double",cmd);
+    #endif
 
     TCLAP::ValueArg<std::string> h5file_arg("o","output","archive to read/write data to",false,"output.h5","string",cmd);
     TCLAP::SwitchArg             resume_switch("r","resume","Attepmpt to resume a calculation", cmd, false);
@@ -79,7 +94,6 @@ try {
     size_t L = L_arg.getValue();     MINFO2("System size                  : " << L);
     double U = U_arg.getValue();     MINFO2("U                            : " << U);
     double t = t_arg.getValue();     MINFO2("t                            : " << t);
-    double tp = tp_arg.getValue();   MINFO2("tp                           : " << tp);
     double T = T_arg.getValue();     MINFO2("Temperature                  : " << T);
 
     double mu_c = (U_arg.isSet() && (!mu_arg.isSet())?U/2.:mu_arg.getValue()); 
@@ -99,14 +113,23 @@ try {
     MINFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
     if (exit_switch.getValue()) exit(0);
     lattice_t lattice(L); // create a lattice
-    lattice.fill(t,tp);
-
-
     triqs::utility::parameters p;
+#ifdef LATTICE_triangular
+    double tp = tp_arg.getValue();   MINFO2("tp                           : " << tp);
+    lattice.fill(t,tp);
+    p["Nf_start"] = L*L/2;
+#elif LATTICE_chain
+    lattice.fill(t,eta_arg.getValue(),delta_arg.getValue());
+    p["Nf_start"] = L/2;
+#elif LATTICE_cubic1d 
+    lattice.fill(t);
+    p["Nf_start"] = L/2;
+#endif
+
+
     p["U"] = U;
     p["mu_c"] = mu_c; p["mu_f"] = mu_f;
     p["beta"] = beta;
-    p["Nf_start"] = L*L/2;
     //p["random_name"] = ""; 
     p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(32167+world.rank()));
     p["verbosity"] = (!world.rank()?1:0);

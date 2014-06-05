@@ -48,9 +48,9 @@ void configuration_t::randomize_f(triqs::mc_tools::random_generator &rnd, size_t
     if (!nf) nf = rnd(lattice_.get_msize());
     f_config_.setZero();
     for (size_t i=0; i<nf; ++i) {  
-    size_t ind = rnd(lattice_.get_msize());
-    while (f_config_(ind)==1) ind = rnd(lattice_.get_msize());
-    f_config_(ind) = 1; 
+        size_t ind = rnd(lattice_.get_msize());
+        while (f_config_(ind)==1) ind = rnd(lattice_.get_msize());
+        f_config_(ind) = 1; 
     };
 }
 
