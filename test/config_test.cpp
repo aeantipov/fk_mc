@@ -40,6 +40,8 @@ int main(int argc, char* argv[])
     config.calc_hamiltonian();
     config.calc_ed();
     FKDEBUG(config.ed_data().cached_spectrum.transpose());
+    FKDEBUG(config.ed_data().cached_weights.transpose());
+    FKDEBUG(config.ed_data().cached_weights.sum());
     //FKDEBUG(config.cached_evecs);
 
    }

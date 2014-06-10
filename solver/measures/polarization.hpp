@@ -20,7 +20,9 @@ struct measure_polarization {
     measure_polarization(configuration_t& in, const Lattice& lattice, int dir = 0): 
         config_(in), lattice_(lattice){
             phase_v.resize(lattice.get_msize());
-            for (int j=0; j<lattice.get_msize(); j++) phase_v[j] = exp(I*double(j)/double(lattice_.index_to_pos(j)[dir])*2.*M_PI);
+            for (int j=0; j<lattice.get_msize(); j++) { 
+                phase_v[j] = exp(I*double(lattice_.index_to_pos(j)[dir])*2.*M_PI / double(lattice_.dims[dir]));
+                }
         }
  
     void accumulate(double sign);
@@ -36,13 +38,19 @@ void measure_polarization<Lattice>::accumulate(double sign)
     const auto& evecs = config_.ed_data().cached_evecs;
     const auto& evals = config_.ed_data().cached_spectrum;
 
-    double pol = 0.0;
+    std::complex<double> pol = 0.0;
+    double nc = 0.0;
 
-    for (size_t i=0; i<evals.size(); i++) {
+    for (size_t i=0; i<evals.size() && config_.ed_data().cached_weights[i]>=1e-5; i++) {
         const auto &ev = evecs.col(i);
-        std::complex<double> x = ev.transpose()*phase_v;
-        //pol+=x * config.ed_data().cached_weight;
+        std::complex<double> x = (ev.array()*ev.array()).matrix().transpose()*phase_v;
+        FKDEBUG(i << " " << config_.ed_data().cached_weights[i] << " : " << x << " -> " << x*config_.ed_data().cached_weights[i]);
+        FKDEBUG(ev.transpose() << std::endl);
+        //FKDEBUG(phase_v.transpose());
+        pol+=x*config_.ed_data().cached_weights[i];
     }
+    FKDEBUG(pol);
+    exit(0);
 
     pol_v.push_back(pol);
     //_Z++;

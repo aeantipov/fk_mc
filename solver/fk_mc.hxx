@@ -86,7 +86,7 @@ void fk_mc<L>::solve()
         };
 
       // run and collect results
-    this->start(1.0, triqs::utility::clock_callback(p["max_time"]));
+    this->start(1.0, [](){return false;}); //triqs::utility::clock_callback(p["max_time"]));
     this->collect_results(comm);
 }
 
