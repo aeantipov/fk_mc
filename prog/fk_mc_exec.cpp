@@ -32,6 +32,7 @@ size_t _myrank;
 #define MINFO(MSG)            if (_myrank==0) std::cout << std::boolalpha << MSG << std::endl;
 #define MINFO2(MSG)            if (_myrank==0) std::cout << "    " << std::boolalpha << MSG << std::endl;
 
+using namespace std::chrono;
 
 int main(int argc, char* argv[])
 {
@@ -160,11 +161,20 @@ try {
     mc.add_measure(measure_polarization<lattice_t>(mc.config,lattice),"polarization");
     #endif
         
+    steady_clock::time_point start, end;
+    start = steady_clock::now();
     mc.solve();
+    end = steady_clock::now();
 
     world.barrier();
     if (world.rank() == 0) {
         save_data(mc,p,h5file_arg.getValue(),plaintext_switch.getValue());
+        std::cout << "Calculation lasted : " 
+            << duration_cast<hours>(end-start).count() << "h " 
+            << duration_cast<minutes>(end-start).count()%60 << "m " 
+            << duration_cast<seconds>(end-start).count()%60 << "s " 
+            << duration_cast<milliseconds>(end-start).count()%1000 << "ms " 
+            << std::endl;
         }
     }
     // Any exceptions related with command line parsing.
