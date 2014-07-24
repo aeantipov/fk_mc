@@ -91,7 +91,7 @@ try {
     cmd.parse( argc, argv );
 
     MINFO("Falicov-Kimball Monte Carlo");
-    print_section("Model parameters:");
+    if (!_myrank) print_section("Model parameters:");
     size_t L = L_arg.getValue();     MINFO2("System size                  : " << L);
     double U = U_arg.getValue();     MINFO2("U                            : " << U);
     double t = t_arg.getValue();     MINFO2("t                            : " << t);
@@ -104,7 +104,7 @@ try {
                                      MINFO2("mu_f (mu_c + e_f)            : " << mu_f);
     double beta = 1.0/T;             MINFO2("beta                         : " << beta);
 
-    print_section("Monte Carlo parameters:");
+    if (!_myrank) print_section("Monte Carlo parameters:");
     MINFO2("Total number of cycles       : " << ncycles_arg.getValue()); 
     MINFO2("MC steps in a cycle          : " << cycle_len_arg.getValue()); 
     MINFO2("Warmup cycles                : " << nwarmup_arg.getValue()); 
