@@ -8,7 +8,7 @@ namespace fk {
 
 template class fk_mc<triangular_lattice>; 
 template class fk_mc<hypercubic_lattice<1>>; 
-//template class fk_mc<hypercubic_lattice<2>>; 
+template class fk_mc<hypercubic_lattice<2>>; 
 template class fk_mc<chain_lattice>; 
 
 void observables_t::reserve(int n) 

@@ -126,6 +126,9 @@ try {
 #elif LATTICE_cubic1d 
     lattice.fill(t);
     p["Nf_start"] = L/2;
+#elif LATTICE_cubic2d 
+    lattice.fill(t);
+    p["Nf_start"] = L*L/2;
 #endif
 
 
