@@ -7,7 +7,8 @@
 - TCLAP command line parser : http://tclap.sourceforge.net/
 - gtest : https://code.google.com/p/googletest/ (fetched automatically) 
 
-##### Sample cmake compilation script : 
+##### Sample cmake compilation script 
+Create a build directory and run 
 ```
 cmake \
 -DCMAKE_INSTALL_PREFIX="$SOME_PATH" \
@@ -17,5 +18,7 @@ cmake \
 -DBenchmark=OFF \
 -DCMAKE_BUILD_TYPE="Release" \
 -DLATTICES="triangular" \
-..
+${PATH_TO_FKMC}
 ```
+##### Author
+- Andrey Antipov, *Andrey.E.Antipov[at]gmail.com*, 2013-now
