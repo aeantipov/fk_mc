@@ -38,6 +38,7 @@ public:
     configuration_t config;
     //mc_tools::mc_generic<double> mc;
     const lattice_type& lattice;
+    //lattice_type lattice;
     observables_t observables;
     //template <typename MeasureType> void add_measure(MeasureType&& in, std::string name);
 

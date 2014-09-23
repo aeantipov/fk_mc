@@ -317,7 +317,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                     std::bind(ipr_f, std::placeholders::_1, 0.0, p["dos_offset"]))
                     ,ipr_and_spectrum,dos_bin);
 
-                //save_binning(ipr0_stats,h5_stats,"ipr0",save_plaintext);
+                //save_binning(ipr0_stats,h5_binning,"ipr0",save_plaintext);
                 save_bin_data(ipr0_stats,h5_stats,"ipr0",save_plaintext);
             }
 

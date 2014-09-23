@@ -92,49 +92,23 @@ try {
     cmd.parse( argc, argv );
 
     MINFO("Falicov-Kimball Monte Carlo");
-    if (!_myrank) print_section("Model parameters:");
-    size_t L = L_arg.getValue();     MINFO2("System size                  : " << L);
-    double U = U_arg.getValue();     MINFO2("U                            : " << U);
-    double t = t_arg.getValue();     MINFO2("t                            : " << t);
-    double T = T_arg.getValue();     MINFO2("Temperature                  : " << T);
-
-    double mu_c = (U_arg.isSet() && (!mu_arg.isSet())?U/2.:mu_arg.getValue()); 
-                                     MINFO2("Chemical potential (mu_c)    : " << mu_c);
-    double mu_f = (U_arg.isSet() && (!eps_f_arg.isSet())?mu_c:mu_c + eps_f_arg.getValue()); 
-                                     MINFO2("e_f                          : " << eps_f_arg.getValue());
-                                     MINFO2("mu_f (mu_c + e_f)            : " << mu_f);
-    double beta = 1.0/T;             MINFO2("beta                         : " << beta);
-
-    if (!_myrank) print_section("Monte Carlo parameters:");
-    MINFO2("Total number of cycles       : " << ncycles_arg.getValue()); 
-    MINFO2("MC steps in a cycle          : " << cycle_len_arg.getValue()); 
-    MINFO2("Warmup cycles                : " << nwarmup_arg.getValue()); 
-    MINFO2("Pure random (entropic) seed  : " << random_seed_switch.getValue()); 
-    MINFO2("MC flip moves weight         : " << move_flips_switch.getValue());
-    MINFO2("MC add/remove moves weight   : " << move_add_remove_switch.getValue());
-    MINFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
-    if (exit_switch.getValue()) exit(0);
-    lattice_t lattice(L); // create a lattice
+    std::unique_ptr<fk_mc<lattice_t>> mc_ptr;
     triqs::utility::parameters p;
-#ifdef LATTICE_triangular
-    double tp = tp_arg.getValue();   MINFO2("tp                           : " << tp);
-    lattice.fill(t,tp);
-    p["Nf_start"] = L*L/2;
-#elif LATTICE_chain
-    lattice.fill(t,eta_arg.getValue(),delta_arg.getValue());
-    p["Nf_start"] = L/2;
-#elif LATTICE_cubic1d 
-    lattice.fill(t);
-    p["Nf_start"] = L/2;
-#elif LATTICE_cubic2d 
-    lattice.fill(t);
-    p["Nf_start"] = L*L/2;
-#endif
 
+    double T = T_arg.getValue();    
+    double beta = 1.0/T;
+    double U = U_arg.getValue();
 
-    p["U"] = U;
-    p["mu_c"] = mu_c; p["mu_f"] = mu_f;
+    // convert input to triqs::parameters
+    p["L"] = L_arg.getValue();
+    p["U"] = U_arg.getValue();
+    p["t"] = t_arg.getValue();
     p["beta"] = beta;
+    p["t"] = t_arg.getValue();
+    double mu_c = (U_arg.isSet() && (!mu_arg.isSet())?U/2.:mu_arg.getValue()); 
+    p["mu_c"] = mu_c; 
+    double mu_f = (U_arg.isSet() && (!eps_f_arg.isSet())?mu_c:mu_c + eps_f_arg.getValue()); 
+    p["mu_f"] = mu_f;
     //p["random_name"] = ""; 
     p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(32167+world.rank()));
     p["verbosity"] = (!world.rank()?1:0);
@@ -155,10 +129,62 @@ try {
 
     p["cheb_moves"] = chebyshev_switch.getValue(); 
     p["cheb_prefactor"] = chebyshev_prefactor.getValue();
+    //if (!world.rank()) std::cout << p << std::endl;
 
-    if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
+    lattice_t lattice(p["L"]);
+    if (resume_switch.getValue()) { 
+        if (!world.rank()) std::cout << "Resuming calculation" << std::endl;
+        mc_ptr.reset( new fk_mc<lattice_t>(load_data<fk_mc<lattice_t>>(h5file_arg.getValue(),p)) );
+        exit(0);
+        }
+    else { 
+        size_t L = p["L"];
+        double U = p["U"]; 
+        double t = p["t"]; 
 
-    fk_mc<lattice_t> mc(lattice,p);
+        if (!_myrank) print_section("Model parameters:");
+        MINFO2("System size                  : " << L);
+        MINFO2("U                            : " << U);
+        MINFO2("t                            : " << t);
+        MINFO2("Temperature                  : " << T);
+
+        MINFO2("Chemical potential (mu_c)    : " << mu_c);
+        MINFO2("e_f                          : " << eps_f_arg.getValue());
+        MINFO2("mu_f (mu_c + e_f)            : " << mu_f);
+        MINFO2("beta                         : " << beta);
+
+        if (!_myrank) print_section("Monte Carlo parameters:");
+        MINFO2("Total number of cycles       : " << ncycles_arg.getValue()); 
+        MINFO2("MC steps in a cycle          : " << cycle_len_arg.getValue()); 
+        MINFO2("Warmup cycles                : " << nwarmup_arg.getValue()); 
+        MINFO2("Pure random (entropic) seed  : " << random_seed_switch.getValue()); 
+        MINFO2("MC flip moves weight         : " << move_flips_switch.getValue());
+        MINFO2("MC add/remove moves weight   : " << move_add_remove_switch.getValue());
+        MINFO2("MC reshuffle moves weight    : " << move_reshuffle_switch.getValue());
+        if (exit_switch.getValue()) exit(0);
+
+
+        #ifdef LATTICE_triangular
+            double tp = tp_arg.getValue();   MINFO2("tp                           : " << tp);
+            lattice.fill(t,tp);
+            p["Nf_start"] = L*L/2;
+            p["tp"] = tp;
+        #elif LATTICE_chain
+            lattice.fill(t,eta_arg.getValue(),delta_arg.getValue());
+            p["Nf_start"] = L/2;
+        #elif LATTICE_cubic1d 
+            lattice.fill(t);
+            p["Nf_start"] = L/2;
+        #elif LATTICE_cubic2d 
+            lattice.fill(t);
+            p["Nf_start"] = L*L/2;
+        #endif
+
+        if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
+        mc_ptr.reset(new fk_mc<lattice_t> (lattice,p));
+        }; // end - noresume
+
+    fk_mc<lattice_t>& mc = *mc_ptr;
 
     #ifdef LATTICE_chain
     mc.add_measure(measure_polarization<lattice_t>(mc.config,lattice),"polarization");
@@ -179,6 +205,7 @@ try {
             << duration_cast<milliseconds>(end-start).count()%1000 << "ms " 
             << std::endl;
         }
+    mc_ptr.release();
     }
     // Any exceptions related with command line parsing.
     catch (TCLAP::ArgException &e) {std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; } 

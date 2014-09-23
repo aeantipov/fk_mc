@@ -10,6 +10,7 @@ binning_test
 jackknife_test
 #ietl_inverse01
 ipr_test
+polarized_test
 #mc_test01
 #saveload_test
 )
