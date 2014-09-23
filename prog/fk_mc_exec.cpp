@@ -117,8 +117,10 @@ try {
     p["n_cycles"] = ncycles_arg.getValue();
     p["max_time"]=maxtime_arg.getValue()*3600;
 
+    p["cheb_moves"] = chebyshev_switch.getValue(); 
+    p["cheb_prefactor"] = chebyshev_prefactor.getValue();
     p["measure_ipr"] = calc_ipr_switch.getValue();
-    p["measure_history"] = calc_history_switch.getValue() || bool(p["measure_ipr"]);
+    p["measure_history"] = (calc_history_switch.getValue() && !bool(p["cheb_moves"])) || bool(p["measure_ipr"]);
     p["dos_width"] = dos_width_arg.getValue();
     p["dos_npts"] = dos_npts_arg.getValue();
     p["dos_offset"] = dos_offset_arg.getValue();
@@ -127,8 +129,6 @@ try {
     p["mc_add_remove"] = move_add_remove_switch.getValue();
     p["mc_reshuffle"] = move_reshuffle_switch.getValue();
 
-    p["cheb_moves"] = chebyshev_switch.getValue(); 
-    p["cheb_prefactor"] = chebyshev_prefactor.getValue();
     //if (!world.rank()) std::cout << p << std::endl;
 
     lattice_t lattice(p["L"]);
