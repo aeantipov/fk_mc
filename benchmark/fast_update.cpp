@@ -21,6 +21,8 @@ using namespace std::chrono;
 #include "chebyshev.hpp"
 #include "moves_chebyshev.hpp"
 
+#include <tclap/CmdLine.h>
+
 using namespace fk;
 
 typedef configuration_t::dense_m dense_m;
@@ -28,44 +30,25 @@ typedef configuration_t::sparse_m sparse_m;
 
 double weight_tol = 6e-2;
 
-typedef std::tuple<double,double,int> TUL_tuple;
-class FastUpdateTest : public ::testing::TestWithParam<TUL_tuple> {
-public:
-    size_t seed1 = std::random_device()();
-};
+int L;
+double U,T,cheb_prefactor;
+size_t rnd_seed;
 
-std::vector<double> T_vals({{0.15}});
-std::vector<double> U_vals({{2.0, 16.0}});
-std::vector<int>    L_vals({{32,48}});
-
-std::vector<TUL_tuple> generate() { 
-    std::vector<TUL_tuple> out;
-    out.reserve(T_vals.size() * U_vals.size() * L_vals.size());
-    for (double T:T_vals) 
-        for (double U:U_vals) 
-            for (int L:L_vals) 
-                out.push_back(std::make_tuple(T,U,L));
-    return out;
-}
-
-TEST_P(FastUpdateTest, weight) { 
-    double T,U; int L;
-    std::tie(T,U,L) = GetParam();
+TEST(FastUpdateTest, weight) { 
     std::cout << "T = " << T <<  "; U = " << U << "; L = " << L << std::endl;
 
     double mu = U/2.;
     double e_f = 0.0;
-    double t = -1.0;
+    double t = 1.0;
     double beta = 1.0/T;
 
     typedef hypercubic_lattice<2> lattice_t;
     lattice_t lattice(L);
     lattice.fill(-1.0);
 
+    std::cout << "Random seed : " << rnd_seed << std::endl;
     std::cout << "Number of states = " << lattice.get_msize() << std::endl;
     std::cout << "log(nstates) = " << int(std::log(lattice.get_msize())) << std::endl;
-
-    double cheb_prefactor = 2.3 ;
 
     size_t cheb_size = std::min( int(std::log(lattice.get_msize())*cheb_prefactor), lattice.get_msize()/4);
     cheb_size+=cheb_size%2;
@@ -74,7 +57,7 @@ TEST_P(FastUpdateTest, weight) {
     chebyshev::chebyshev_eval ch(cheb_size, ngrid_points);
 
     configuration_t config(lattice, beta, U, mu, mu+e_f);
-    triqs::mc_tools::random_generator r1("mt19937", seed1);
+    triqs::mc_tools::random_generator r1("mt19937", rnd_seed);
     config.randomize_f(r1,L*L/2);
     config.calc_hamiltonian();
     config.calc_ed();
@@ -88,7 +71,7 @@ TEST_P(FastUpdateTest, weight) {
         };
 
    // test move
-    triqs::mc_tools::random_generator r("mt19937", seed1);
+    triqs::mc_tools::random_generator r("mt19937", rnd_seed);
     triqs::mc_tools::random_generator r2(r);
     bool result;
     steady_clock::time_point start, end;
@@ -148,13 +131,30 @@ TEST_P(FastUpdateTest, weight) {
     result = correct_w(w,w_c);
     if (result) std::cout << "-->weight diff: " << std::abs((w_c - w)) << " ; tol = " << weight_tol << std::endl;
     EXPECT_EQ(result, true);
+    std::cout << "Random seed : " << rnd_seed << std::endl;
 }
 
-INSTANTIATE_TEST_CASE_P(ULtest,
-                        FastUpdateTest,::testing::ValuesIn(generate()));
 
 int main(int argc, char* argv[])
 {
+    boost::mpi::environment env(argc, argv);
+    boost::mpi::communicator world;
+
+    TCLAP::CmdLine cmd("Falicov-Kimball Monte Carlo weight check", ' ', "");
+    TCLAP::ValueArg<double> U_arg("U","U","value of U",false,1.0,"double",cmd);
+    TCLAP::ValueArg<double> T_arg("T","T","Temperature",false,0.1,"double",cmd);
+    TCLAP::ValueArg<size_t> L_arg("L","L","system size",false,16,"int",cmd);
+    TCLAP::ValueArg<double>   cheb_pref_arg("c","cheb_prefactor","Prefactor of log(N) chebyshev polynomials", false, 2.35, "double", cmd);
+    TCLAP::SwitchArg          random_seed_switch("s","s","Make a random or fixed seed?", cmd, false);
+    TCLAP::ValueArg<int>   seed_arg("","seed","Random seed (otherwise random)", false, 32167, "int", cmd);
+    cmd.parse( argc, argv );
+
+    U = U_arg.getValue();
+    T = T_arg.getValue();
+    L = L_arg.getValue();
+    cheb_prefactor = cheb_pref_arg.getValue();
+    rnd_seed = (random_seed_switch.getValue()?std::random_device()():(seed_arg.getValue()+world.rank())); 
+
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
