@@ -22,21 +22,23 @@ triqs::utility::parameters load_parameters(std::string output_file, triqs::utili
     triqs::utility::parameters pold, p;
     h5_read(top, "parameters", pold);
 
-    //if (!bool(p["measure_history"])) TRIQS_RUNTIME_ERROR << "No data to load. Need measure_history = 1 for that" << std::end
-
+    // Check that the most important parameters are the same in new and old runs
     success = 
         (!pold.has_key("t") || std::abs(double(pnew["t"]) - double(pold["t"])) < 1e-4) && 
         (!pold.has_key("L") || int(pold["L"]) == int(pnew["L"])) && 
         std::abs(double(pnew["U"]) - double(pold["U"])) < 1e-4 && 
         std::abs(double(pnew["beta"]) - double(pold["beta"])) < 1e-4 && 
         bool(pnew["measure_history"]) == bool(pold["measure_history"]) && 
-        bool(pnew["measure_ipr"]) == bool(pold["measure_ipr"]);
+        bool(pnew["measure_ipr"]) == bool(pold["measure_ipr"]) && 
+        bool(pnew["cheb_moves"]) == bool(pold["cheb_moves"]) &&
+        double(pnew["cheb_prefactor"]) == double(pold["cheb_prefactor"]);
 
     if (!success) { 
             if (!world.rank()) std::cout << "Parameters mismatch" << std::endl << "old: " << pold << std::endl << "new: " << pnew << std::endl; 
             TRIQS_RUNTIME_ERROR << "Parameters mismatch";
             };
 
+    // first put old parameters and then override them with new ones
     p.update(pold);
     p.update(pnew);
     // update ncycles and max_time but keep old cycle length
@@ -56,14 +58,11 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
 
     auto h5_mc_data = top.open_group("mc_data");
     std::cout << "Loading observables... " << std::flush;
-    h5_read(h5_mc_data,"energies", obs.energies);
-    h5_read(h5_mc_data,"d2energies", obs.d2energies);
+    if (h5_mc_data.has_key("energies")) h5_read(h5_mc_data,"energies", obs.energies);
+    if (h5_mc_data.has_key("d2energies")) h5_read(h5_mc_data,"d2energies", obs.d2energies);
     h5_read(h5_mc_data,"nf0", obs.nf0);
     h5_read(h5_mc_data,"nfpi", obs.nfpi);
-    std::vector<double> spectrum;
-    h5_read(h5_mc_data,"spectrum", spectrum);
-    obs.spectrum.resize(spectrum.size());
-    std::copy(spectrum.begin(), spectrum.end(), obs.spectrum.data());
+    if (h5_mc_data.has_key("specteum")) h5_read(h5_mc_data,"spectrum", obs.spectrum);
 
     if (p["measure_history"]) { 
         std::cout << "spectrum_history... " << std::flush;

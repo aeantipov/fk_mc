@@ -65,7 +65,7 @@ TEST_P(FastUpdateTest, weight) {
     std::cout << "Number of states = " << lattice.get_msize() << std::endl;
     std::cout << "log(nstates) = " << int(std::log(lattice.get_msize())) << std::endl;
 
-    double cheb_prefactor = 2.5 ;
+    double cheb_prefactor = 2.3 ;
 
     size_t cheb_size = std::min( int(std::log(lattice.get_msize())*cheb_prefactor), lattice.get_msize()/4);
     cheb_size+=cheb_size%2;

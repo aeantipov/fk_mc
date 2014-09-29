@@ -91,7 +91,7 @@ try {
 
     // chebyshev flags
     TCLAP::SwitchArg          chebyshev_switch("c","chebyshev","Make chebyshev moves?", cmd, false);
-    TCLAP::ValueArg<double>   chebyshev_prefactor("","cheb_prefactor","Prefactor of log(N) chebyshev polynomials", false, 2.2, "double", cmd);
+    TCLAP::ValueArg<double>   chebyshev_prefactor("","cheb_prefactor","Prefactor of log(N) chebyshev polynomials", false, 2.35, "double", cmd);
 
     TCLAP::SwitchArg exit_switch("","exit","Dry run", cmd, false);
     cmd.parse( argc, argv );
@@ -148,14 +148,16 @@ try{
     // try resuming calc
     observables_t obs_old;
     if (resume) {
+        p = load_parameters(h5fname, p);
         if (!world.rank()) {
              std::cout << "Resuming calculation" << std::endl;
-             p = load_parameters(h5fname, p);
              obs_old = load_observables(h5fname, p);
              std::cout << "parameters for run : " << p << std::endl;
         };
         world.barrier();
-        boost::mpi::broadcast(world, p, 0); 
+       // boost::mpi::broadcast(world, p, 0); 
+        //std::cout << "proc " << world.rank() << " parameters : " << p << std::endl;
+        //exit(0);
         }
 
     size_t L = p["L"];
