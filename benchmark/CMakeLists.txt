@@ -1,4 +1,6 @@
-include_directories(../solver .. ${TRIQS_INCLUDE_ALL})
+find_package (TCLAP)
+
+include_directories(../solver .. ${TRIQS_INCLUDE_ALL} ${TCLAP_INCLUDE_DIRS})
 
 set (benchmarks
 fast_update
