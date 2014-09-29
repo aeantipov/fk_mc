@@ -56,8 +56,8 @@ if (Execs)
     add_subdirectory(prog)
 endif (Execs)
 
-option(Benchmark "Enable benchmark" OFF)
-option(Testing "Enable testing" OFF)
+option(Benchmark "Enable benchmark" ON)
+option(Testing "Enable testing" ON)
 
 if (Benchmark OR Testing)
     include(UseGtest)
