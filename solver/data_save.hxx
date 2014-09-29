@@ -153,6 +153,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
             save_binning(d2energy_binning_data,h5_binning,"d2energies",save_plaintext);
 
             energy_bin = estimate_bin(energy_binning_data);
+            INFO("Average energy bin = " << energy_bin);
             save_bin_data(energy_binning_data[energy_bin],h5_stats,"energy",save_plaintext);
             save_bin_data(d2energy_binning_data[energy_bin],h5_stats,"d2energy",save_plaintext);
         };
@@ -195,6 +196,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
         save_binning(fsuscpi_stats,h5_binning,"fsusc_pi",save_plaintext);
 
         auto nf_bin = estimate_bin(fsusc0_stats);
+        INFO("Average fsusc0 bin = " << nf_bin);
         save_bin_data(nf0_stats[nf_bin],h5_stats,"nf_0",save_plaintext);
         save_bin_data(fsusc0_stats[nf_bin],h5_stats,"fsusc_0",save_plaintext);
         save_bin_data(nfpi_stats[nf_bin],h5_stats,"nf_pi",save_plaintext);
@@ -270,11 +272,11 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
         save_binning(dos0_stats,h5_stats,"dos0",save_plaintext);
 
         size_t dos_bin = estimate_bin(dos0_stats);
-        INFO("Using data from bin = " << dos_bin);
+        INFO("DOS(0) bin = " << dos_bin);
         save_bin_data(dos0_stats[dos_bin],h5_stats,"dos0",save_plaintext);
         // dos(w)
         {
-            INFO("\tLocal DOS w errorbars");
+            INFO("Saving local DOS w errorbars");
             triqs::arrays::array<double, 2> dos_ev(grid_real.size(),3);
             for (size_t i=0; i<grid_real.size(); i++) {
                 std::complex<double> z = grid_real[i];
@@ -312,15 +314,21 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                 ipr_and_spectrum[i+Volume]=std::make_pair(ipr_vals[i].begin(),ipr_vals[i].end());
             }
 
-            { // save ipr at w=0
-                auto ipr0_stats = jackknife::jack(
-                    std::function<double(std::vector<double>)>( 
-                    std::bind(ipr_f, std::placeholders::_1, 0.0, p["dos_offset"]))
-                    ,ipr_and_spectrum,dos_bin);
+            typename binning::bin_data_t ipr0_binning(maxbin);
+            for (int i=0; i<maxbin; i++) 
+                { // save ipr at w=0
+                    auto ipr0_stats = jackknife::jack(
+                        std::function<double(std::vector<double>)>( 
+                        std::bind(ipr_f, std::placeholders::_1, 0.0, p["dos_offset"]))
+                        ,ipr_and_spectrum,i);
 
-                //save_binning(ipr0_stats,h5_binning,"ipr0",save_plaintext);
-                save_bin_data(ipr0_stats,h5_stats,"ipr0",save_plaintext);
-            }
+                    ipr0_binning[i] = ipr0_stats;
+                }
+            save_binning(ipr0_binning,h5_binning,"ipr0",save_plaintext);
+            int ipr0_bin = estimate_bin(ipr0_binning);;
+            INFO("IPR(0) bin = " << dos_bin);
+            save_bin_data(ipr0_binning[ipr0_bin],h5_stats,"ipr0",save_plaintext);
+                    
 
             triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
             for (size_t i=0; i<grid_real.size(); i++) {
@@ -328,7 +336,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                 auto ipr_data = jackknife::jack(
                     std::function<double(std::vector<double>)>( 
                     std::bind(ipr_f, std::placeholders::_1, z, p["dos_offset"]))
-                    ,ipr_and_spectrum,dos_bin);
+                    ,ipr_and_spectrum,ipr0_bin);
                 ipr_ev(i,0) = std::real(z); 
                 ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_data);
                 ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_data); 
