@@ -57,6 +57,7 @@ struct hypercubic_lattice : lattice_base
     //real_array_view_t flatten(triqs::arrays::array_view<double,D> in);
 
     hypercubic_lattice(size_t lattice_size);
+    hypercubic_lattice(hypercubic_lattice const& rhs):lattice_base(rhs), dims(rhs.dims), ft_pi_array_(rhs.ft_pi_array_){} 
         
     void fill(double t);
 //    protected:
