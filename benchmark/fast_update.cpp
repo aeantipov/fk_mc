@@ -36,6 +36,7 @@ size_t rnd_seed;
 
 TEST(FastUpdateTest, weight) { 
     std::cout << "T = " << T <<  "; U = " << U << "; L = " << L << std::endl;
+    std::cout << "cheb prefactor : " << cheb_prefactor << std::endl;
 
     double mu = U/2.;
     double e_f = 0.0;
@@ -145,7 +146,7 @@ int main(int argc, char* argv[])
     TCLAP::ValueArg<double> T_arg("T","T","Temperature",false,0.1,"double",cmd);
     TCLAP::ValueArg<size_t> L_arg("L","L","system size",false,16,"int",cmd);
     TCLAP::ValueArg<double>   cheb_pref_arg("c","cheb_prefactor","Prefactor of log(N) chebyshev polynomials", false, 2.35, "double", cmd);
-    TCLAP::SwitchArg          random_seed_switch("s","s","Make a random or fixed seed?", cmd, false);
+    TCLAP::SwitchArg          fixed_seed_switch("f","f","Make a random or fixed seed?", cmd, false);
     TCLAP::ValueArg<int>   seed_arg("","seed","Random seed (otherwise random)", false, 32167, "int", cmd);
     cmd.parse( argc, argv );
 
@@ -153,7 +154,7 @@ int main(int argc, char* argv[])
     T = T_arg.getValue();
     L = L_arg.getValue();
     cheb_prefactor = cheb_pref_arg.getValue();
-    rnd_seed = (random_seed_switch.getValue()?std::random_device()():(seed_arg.getValue()+world.rank())); 
+    rnd_seed = (!fixed_seed_switch.getValue()?std::random_device()():(seed_arg.getValue()+world.rank())); 
 
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
