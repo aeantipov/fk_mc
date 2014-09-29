@@ -58,10 +58,10 @@ TEST(Chebyshev,diff)
     cheb_size = ch.cheb_size();
     std::cout << "Number of Chebyshev polynomials = " << cheb_size << std::endl;
 
-    ASSERT_NEAR(ch.moment([](double x){return 1.;},0),1., 1e-8);
-    ASSERT_NEAR(ch.moment([](double x){return x*x;},0),0.5, 1e-8);
-    ASSERT_NEAR(ch.moment([](double x){return sin(x);},1),0.440051, 1e-6);
-    ASSERT_NEAR(ch.moment([](double x){return sin(x);},5),0.000249758, 1e-9);
+    ASSERT_NEAR(ch.moment_f([](double x){return 1.;},0),1., 1e-8);
+    ASSERT_NEAR(ch.moment_f([](double x){return x*x;},0),0.5, 1e-8);
+    ASSERT_NEAR(ch.moment_f([](double x){return sin(x);},1),0.440051, 1e-6);
+    ASSERT_NEAR(ch.moment_f([](double x){return sin(x);},5),0.000249758, 1e-9);
 
     config.calc_chebyshev(ch);
     auto logZ = config.cheb_data_.logZ;

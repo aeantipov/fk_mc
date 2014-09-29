@@ -61,7 +61,7 @@ option(Testing "Enable testing" OFF)
 
 if (Benchmark OR Testing)
     include(UseGtest)
-    add_subdirectory(${gtest_ROOT})
+    add_subdirectory(${gtest_ROOT} ${PROJECT_BINARY_DIR}/gtest)
     include_directories(${gtest_INCLUDE_DIR})
 endif()
 

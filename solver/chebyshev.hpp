@@ -34,7 +34,7 @@ struct chebyshev_eval
     }
 
     template <typename F>
-    inline auto moment(const F& op, int order) const -> 
+    inline auto moment_f(const F& op, int order) const -> 
         typename std::remove_reference<typename std::result_of<F(double)>::type>::type { // trapezoidal
             typedef typename std::remove_reference<typename std::result_of<F(double)>::type>::type value_type;
             std::vector<value_type> vals(angle_grid.size());

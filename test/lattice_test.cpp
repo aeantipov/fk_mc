@@ -38,10 +38,10 @@ TEST(lattice, bzpoints)
         ASSERT_EQ( t1.get_bzpoint(b.val_).ind_ , i);
     };
 
-    auto bzpq = t1.get_bzpoint({PI, PI});
+    auto bzpq = t1.get_bzpoint({{PI, PI}});
     FKDEBUG(bzpq.ind_ << "->" << bzpq << "<-" << t1.get_bzpoint(bzpq.val_).ind_);
 
-    EXPECT_ANY_THROW({ auto bzpq1 = t1.get_bzpoint({PI, PI+PI/7.}); });
+    EXPECT_ANY_THROW({ auto bzpq1 = t1.get_bzpoint({{PI, PI+PI/7.}}); });
 
     auto bzpts = t1.get_all_bzpoints();
     for (auto x : bzpts) std::cout << x << " "; std::cout << std::endl;

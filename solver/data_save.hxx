@@ -27,7 +27,7 @@ void savetxt (std::string fname, const triqs::arrays::array<double,2>& in);
 void save_bin_data(const binning::bin_stats_t& data, triqs::h5::group& h5_group, std::string name, bool save_plaintext = false)
 {
     std::array<double, 4> tmp (
-        {double(std::get<binning::_SIZE>(data)), std::get<binning::_MEAN>(data), std::get<binning::_DISP>(data), std::get<binning::_SQERROR>(data) });
+        {{double(std::get<binning::_SIZE>(data)), std::get<binning::_MEAN>(data), std::get<binning::_DISP>(data), std::get<binning::_SQERROR>(data) }});
     tqa::array<double, 1> data_arr(4);
     std::copy(tmp.begin(),tmp.end(),data_arr(tqa::range()).begin());
 
@@ -44,7 +44,7 @@ void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_
     //if (save_plaintext) out.open(name+"_binning.dat",std::ios::out);
     for (size_t i=0; i<binning_data.size(); i++){
         auto e = binning_data[i]; double c = cor_lens[i];
-        std::array<double, 5> t ({double(std::get<binning::_SIZE>(e)), std::get<binning::_MEAN>(e), std::get<binning::_DISP>(e), std::get<binning::_SQERROR>(e), c });
+        std::array<double, 5> t ({{double(std::get<binning::_SIZE>(e)), std::get<binning::_MEAN>(e), std::get<binning::_DISP>(e), std::get<binning::_SQERROR>(e), c }});
         std::copy(t.begin(),t.end(),data_arr(i,tqa::range()).begin());
         //if (save_plaintext) out << i << " " << std::get<binning::_SIZE>(e) << "  " << std::get<binning::_MEAN>(e) 
             //<< "  " << std::get<binning::_DISP>(e) << "  " << std::get<binning::_SQERROR>(e) << "  " << c << "\n";

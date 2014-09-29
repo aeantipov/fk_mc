@@ -167,9 +167,9 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
 
     assert(m==cheb_size/2+1);
 
-    auto logz_f = [a,b,beta,msize](double w){return msize*log(1. + exp(-beta*(a*w+b)));}; 
-    double s = cheb.moment(logz_f, 0);
-    for (m=1; m<cheb_size; m++) s+=2.*cheb.moment(logz_f, m)*cheb_data_.moments[m];
+    std::function<double(double)> logz_f = [a,b,beta,msize](double w){return msize*log(1. + exp(-beta*(a*w+b)));}; 
+    double s = cheb.moment_f(logz_f, 0);
+    for (m=1; m<cheb_size; m++) s+=2.*cheb.moment_f(logz_f, m)*cheb_data_.moments[m];
 
     cheb_data_.logZ = s;
     cheb_data_.x.swap(x);
