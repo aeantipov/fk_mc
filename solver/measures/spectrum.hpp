@@ -9,14 +9,12 @@
 namespace fk {
 
 struct measure_spectrum {
-    typedef typename configuration_t::real_array_t  real_array_t;
-
     configuration_t& config;
 
     int _Z = 0.0;
-    real_array_t& _average_spectrum;
+    std::vector<double>& _average_spectrum;
 
-    measure_spectrum(configuration_t& in, real_array_t& average_spectrum);
+    measure_spectrum(configuration_t& in, std::vector<double>& average_spectrum);
  
     void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);

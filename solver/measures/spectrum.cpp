@@ -3,11 +3,10 @@
 
 namespace fk {
 
-measure_spectrum::measure_spectrum(configuration_t& in, real_array_t& average_spectrum):
+measure_spectrum::measure_spectrum(configuration_t& in, std::vector<double>& average_spectrum):
 config(in), _average_spectrum(average_spectrum) 
 {
-    _average_spectrum.resize(config.lattice_.get_msize()); 
-    _average_spectrum.setZero();
+    _average_spectrum.resize(config.lattice_.get_msize(), 0.0); 
 };
 
 
@@ -15,7 +14,9 @@ void measure_spectrum::accumulate (double sign)
 {
     config.calc_ed(false);
     auto spectrum = config.ed_data_.cached_spectrum;
-    _average_spectrum = (_average_spectrum*_Z + spectrum)/(_Z+1);
+    for (int i=0; i<_average_spectrum.size(); i++) {
+        _average_spectrum[i] = (_average_spectrum[i]*_Z + spectrum[i])/(_Z+1);
+        }
     _Z++;
 }
 
@@ -23,11 +24,10 @@ void measure_spectrum::collect_results(boost::mpi::communicator const &c)
 {
     int sum_Z;
     boost::mpi::reduce(c, _Z, sum_Z, std::plus<int>(), 0);
-    triqs::arrays::array<double, 1> arr(_average_spectrum.size());
-    std::copy(_average_spectrum.data(),_average_spectrum.data()+_average_spectrum.size(),arr.begin());
-    boost::mpi::reduce(c, arr, arr, std::plus<triqs::arrays::array<double, 1>>(), 0);
-    arr/=c.size();
-    std::copy(arr.begin(), arr.end(), _average_spectrum.data());
+    std::vector<double> arr(_average_spectrum.size());
+    boost::mpi::reduce(c, _average_spectrum, arr, std::plus<double>(), 0);
+    int n = c.size();
+    std::transform(arr.begin(), arr.end(), _average_spectrum.data(), [n](double x){return x / n; });
 }
 
 
