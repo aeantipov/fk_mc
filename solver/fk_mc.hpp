@@ -15,14 +15,17 @@ struct observables_t {
     std::vector<double> d2energies;
     std::vector<double> nf0;
     std::vector<double> nfpi;
-    typename configuration_t::real_array_t spectrum;
+    std::vector<double> spectrum;
     std::vector<std::vector<double>> spectrum_history; // L^D x n_measures size
     std::vector<std::vector<double>> ipr_history; // L^D x n_measures size
     std::vector<std::vector<double>> focc_history;     // L^D x n_measures size
     std::vector<std::vector<std::complex<double>>> nq_history;       // nqpts x n_measures size
     std::vector<std::vector<double>> fsuscq_history;   // nqpts x n_measures size
 
+    void merge(observables_t& rhs);
+
     void reserve(int n); 
+    observables_t() = default;
 };
 
 template <typename LatticeType>
@@ -35,17 +38,18 @@ public:
     typedef configuration_t config_t;
     typedef LatticeType lattice_type;
     utility::parameters p;
+    lattice_type lattice;
     configuration_t config;
     //mc_tools::mc_generic<double> mc;
-    const lattice_type& lattice;
-    //lattice_type lattice;
+    //const lattice_type& lattice;
     observables_t observables;
     //template <typename MeasureType> void add_measure(MeasureType&& in, std::string name);
 
     static triqs::utility::parameter_defaults solve_defaults();
 
-    fk_mc(const lattice_type& l, utility::parameters p);
+    fk_mc(lattice_type l, utility::parameters p, bool randomize_config = true);
     void solve();
+    utility::parameters& parameters() { return p; } 
 };
 
 

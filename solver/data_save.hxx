@@ -134,7 +134,8 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
     top.create_group("binning");
     auto h5_binning = top.open_group("binning");
 
-    int maxbin = std::min(15,std::max(int(std::log(double(p["n_cycles"])/16)/std::log(2.)-1),1));
+    int ncycles = mc.observables.nfpi.size();
+    int maxbin = std::min(15,std::max(int(std::log(double(ncycles)/16)/std::log(2.)-1),1));
 
     if (mc.observables.energies.size()) { 
         const std::vector<double>& energies = mc.observables.energies;

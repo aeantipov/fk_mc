@@ -10,8 +10,7 @@ template <typename MC>
 void save_data(const MC& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext = false);
 
 // construct a solver from given hdf5 file. The observables are populated with existing data
-template <typename MC>
-MC load_data(std::string output_file, triqs::utility::parameters pnew)
+triqs::utility::parameters load_parameters(std::string output_file, triqs::utility::parameters pnew)
 {
     boost::mpi::communicator world;
     bool success = true; 
@@ -38,68 +37,70 @@ MC load_data(std::string output_file, triqs::utility::parameters pnew)
             TRIQS_RUNTIME_ERROR << "Parameters mismatch";
             };
 
-    p.update(pnew);
     p.update(pold);
-    // update ncycles and max_time but keep old cycle length. No warmups
-    p["n_cycles"] = std::max(int(pnew["n_cycles"]) - int(pold["n_cycles"]),0); 
-    p["max_time"] = pnew["max_time"];
-    p["n_warmup_cycles"] = int(0);
-    p["random_seed"] = pnew["random_seed"];
+    p.update(pnew);
+    // update ncycles and max_time but keep old cycle length
+    //p["n_cycles"] = std::max(int(pnew["n_cycles"]) - int(pold["n_cycles"]),0); 
+    p["length_cycle"] = pold["length_cycle"];
     if (!world.rank()) std::cout << "params : " << p << std::endl;
 
-    int L = p["L"];
-    typedef typename MC::lattice_type lattice_t;
-    lattice_t lattice(L);
+    return p;
+}
 
-    fk_mc<lattice_t> mc(lattice,p); 
+observables_t load_observables(std::string output_file, triqs::utility::parameters p)
+{
     // now load actual data
+    H5::H5File input(output_file.c_str(),H5F_ACC_RDONLY);
+    triqs::h5::group top(input);
+    observables_t obs;
 
     auto h5_mc_data = top.open_group("mc_data");
-    if (!world.rank()) std::cout << "Loading mc observables... " << std::flush;
-    h5_read(h5_mc_data,"energies", mc.observables.energies);
-    h5_read(h5_mc_data,"d2energies", mc.observables.d2energies);
-    h5_read(h5_mc_data,"nf0", mc.observables.nf0);
-    h5_read(h5_mc_data,"nfpi", mc.observables.nfpi);
+    std::cout << "Loading observables... " << std::flush;
+    h5_read(h5_mc_data,"energies", obs.energies);
+    h5_read(h5_mc_data,"d2energies", obs.d2energies);
+    h5_read(h5_mc_data,"nf0", obs.nf0);
+    h5_read(h5_mc_data,"nfpi", obs.nfpi);
     std::vector<double> spectrum;
     h5_read(h5_mc_data,"spectrum", spectrum);
-    mc.observables.spectrum.resize(spectrum.size());
-    std::copy(spectrum.begin(), spectrum.end(), mc.observables.spectrum.data());
+    obs.spectrum.resize(spectrum.size());
+    std::copy(spectrum.begin(), spectrum.end(), obs.spectrum.data());
 
     if (p["measure_history"]) { 
+        std::cout << "spectrum_history... " << std::flush;
         triqs::arrays::array<double, 2> t_spectrum_history; 
         h5_read(h5_mc_data,"spectrum_history", t_spectrum_history);
-        mc.observables.spectrum_history.resize(t_spectrum_history.shape()[0]);
-        for (int i=0; i<mc.observables.spectrum_history.size(); i++) { 
-            mc.observables.spectrum_history[i].resize(t_spectrum_history.shape()[1]);
-            for (int j=0; j< mc.observables.spectrum_history[0].size(); j++)
-                mc.observables.spectrum_history[i][j] = t_spectrum_history(i,j);
+        obs.spectrum_history.resize(t_spectrum_history.shape()[0]);
+        for (int i=0; i<obs.spectrum_history.size(); i++) { 
+            obs.spectrum_history[i].resize(t_spectrum_history.shape()[1]);
+            for (int j=0; j< obs.spectrum_history[0].size(); j++)
+                obs.spectrum_history[i][j] = t_spectrum_history(i,j);
             }
         
+        std::cout << "focc_history... " << std::flush;
         triqs::arrays::array<double, 2> focc_history;
         h5_read(h5_mc_data,"focc_history", focc_history);
-        mc.observables.focc_history.resize(focc_history.shape()[0]);
-        for (int i=0; i<mc.observables.focc_history.size(); i++) { 
-            mc.observables.focc_history[i].resize(focc_history.shape()[1]);
-            for (int j=0; j< mc.observables.focc_history[0].size(); j++)
-                focc_history(i,j) =  mc.observables.focc_history[i][j];
+        obs.focc_history.resize(focc_history.shape()[0]);
+        for (int i=0; i<obs.focc_history.size(); i++) { 
+            obs.focc_history[i].resize(focc_history.shape()[1]);
+            for (int j=0; j< obs.focc_history[0].size(); j++)
+                focc_history(i,j) =  obs.focc_history[i][j];
             }
         };
 
     // Inverse participation ratio
     if (p["measure_ipr"] && p["measure_history"]) {
-        std::cout << "loading ipr..." << std::flush;
+        std::cout << "ipr..." << std::flush;
         triqs::arrays::array<double, 2> t_ipr_history;
         h5_read(h5_mc_data,"ipr_history", t_ipr_history);
-        mc.observables.ipr_history.resize(t_ipr_history.shape()[0]);
-        for (int i=0; i<mc.observables.ipr_history.size(); i++) { 
-            mc.observables.ipr_history[i].resize(t_ipr_history.shape()[1]);
-            for (int j=0; j< mc.observables.ipr_history[0].size(); j++)
-                mc.observables.ipr_history[i][j] = t_ipr_history(i,j); 
+        obs.ipr_history.resize(t_ipr_history.shape()[0]);
+        for (int i=0; i<obs.ipr_history.size(); i++) { 
+            obs.ipr_history[i].resize(t_ipr_history.shape()[1]);
+            for (int j=0; j< obs.ipr_history[0].size(); j++)
+                obs.ipr_history[i][j] = t_ipr_history(i,j); 
             };
         };
-    if (!world.rank()) std::cout << "done." << std::endl;
-
-    exit(0);
+    std::cout << "done." << std::endl;
+    return std::move(obs);
 }
 
 

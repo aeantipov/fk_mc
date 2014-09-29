@@ -18,25 +18,26 @@ template <typename L>
 triqs::utility::parameters _update_def(triqs::utility::parameters p){p.update(fk_mc<L>::solve_defaults()); return p;}
 
 template <typename L>
-fk_mc<L>::fk_mc(const lattice_type& l, utility::parameters p1):
+fk_mc<L>::fk_mc(lattice_type l, utility::parameters p1, bool randomize_config):
     base(_update_def<L>(p1)),
     p(_update_def<L>(p1)),
     lattice(l),
     //cheb_eval(chebyshev_eval(p["cheb_size"], p["cheb_grid_size"])),
-    config(l,p["beta"],p["U"],p["mu_c"],p["mu_f"])
+    config(lattice,p["beta"],p["U"],p["mu_c"],p["mu_f"])
     //mc(p) 
 {
     INFO("\tRandom seed for proc " << comm.rank() << " : " << p["random_seed"]);
+    if (randomize_config) config.randomize_f(this->rng(),p["Nf_start"]);
 }
 
 template <typename L>
 void fk_mc<L>::solve()
 {
+    if (int(p["n_cycles"]) == 0) return;
     if (comm.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
 
     // Generate the configuration_t and cache the spectrum
     double beta = p["beta"];
-    config.randomize_f(this->rng(),p["Nf_start"]);
     config.calc_hamiltonian();
 
     std::unique_ptr<chebyshev::chebyshev_eval> cheb_ptr;
