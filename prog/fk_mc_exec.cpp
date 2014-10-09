@@ -6,7 +6,8 @@
 #include <random>
 
 #include "fk_mc.hpp"
-#include "data_saveload.hpp"
+#include "data_save.hpp"
+#include "data_load.hpp"
 #include "measures/polarization.hpp"
 
 
@@ -143,6 +144,8 @@ try {
     catch (TCLAP::ArgException &e) {std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; exit(1); } 
     catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() << std::endl; exit(1); }
 
+    int n_cycles_new = std::max(int(p["n_cycles"]), 0);
+
 // Now we construct and run mc 
 try{
     // try resuming calc
@@ -160,6 +163,8 @@ try{
         //exit(0);
         }
 
+    int n_cycles_total = p["n_cycles"]; // this is old + new number of cycles
+    p["n_cycles"] = n_cycles_new; // do a calc with only new number of cycles
     size_t L = p["L"];
     double U = p["U"]; 
     double t = p["t"]; 
@@ -221,6 +226,7 @@ try{
     world.barrier();
     if (world.rank() == 0) {
         mc.observables.merge(obs_old);
+        p["n_cycles"] = n_cycles_total;
         save_data(mc,p,h5fname,save_plaintext);
         std::cout << "Calculation lasted : " 
             << duration_cast<hours>(end-start).count() << "h " 

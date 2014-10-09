@@ -5,9 +5,6 @@
 
 namespace fk { 
 
-// save data from solver to hdf5 file 
-template <typename MC>
-void save_data(const MC& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext = false);
 
 // construct a solver from given hdf5 file. The observables are populated with existing data
 triqs::utility::parameters load_parameters(std::string output_file, triqs::utility::parameters pnew)
@@ -42,7 +39,7 @@ triqs::utility::parameters load_parameters(std::string output_file, triqs::utili
     p.update(pold);
     p.update(pnew);
     // update ncycles and max_time but keep old cycle length
-    //p["n_cycles"] = std::max(int(pnew["n_cycles"]) - int(pold["n_cycles"]),0); 
+    p["n_cycles"] = std::max(int(pnew["n_cycles"]) + int(pold["n_cycles"]),0); 
     p["length_cycle"] = pold["length_cycle"];
     if (!world.rank()) std::cout << "params : " << p << std::endl;
 
@@ -105,7 +102,5 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
 
 
 } // end of namespace fk
-
-#include "data_save.hxx"
 
 

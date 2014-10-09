@@ -3,12 +3,15 @@
 #include <iostream>
 #include <fstream>
 
-#include "data_saveload.hpp"
 
 #include "binning.hpp"
 #include "jackknife.hpp"
 
 namespace fk {
+
+// save data from solver to hdf5 file 
+template <typename MC>
+void save_data(const MC& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext = false);
 
 triqs::utility::parameter_defaults save_defaults() {
   triqs::utility::parameter_defaults pdef;
