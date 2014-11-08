@@ -9,6 +9,7 @@
 #include "measures/focc_history.hpp"
 #include "measures/fsusc0pi.hpp"
 #include "measures/ipr.hpp"
+#include "measures/stiffness.hpp"
 
 #include <triqs/utility/callbacks.hpp>
 
@@ -18,7 +19,7 @@ template <typename L>
 triqs::utility::parameters _update_def(triqs::utility::parameters p){p.update(fk_mc<L>::solve_defaults()); return p;}
 
 template <typename L>
-fk_mc<L>::fk_mc(lattice_type l, utility::parameters p1, bool randomize_config):
+fk_mc<L>::fk_mc(lattice_type l, triqs::utility::parameters p1, bool randomize_config):
     base(_update_def<L>(p1)),
     p(_update_def<L>(p1)),
     lattice(l),

@@ -10,6 +10,8 @@
 
 namespace fk {
 
+using triqs::utility::parameters;
+
 struct observables_t {
     std::vector<double> energies;
     std::vector<double> d2energies;
@@ -29,15 +31,15 @@ struct observables_t {
 };
 
 template <typename LatticeType>
-class fk_mc : public mc_tools::mc_generic<double> 
+class fk_mc : public triqs::mc_tools::mc_generic<double> 
 {
-    typedef mc_tools::mc_generic<double> base;
+    typedef triqs::mc_tools::mc_generic<double> base;
     static_assert(!std::is_same<LatticeType,lattice_base>::value,"Can't construct mc for an unspecified lattice");
     boost::mpi::communicator comm;
 public:
     typedef configuration_t config_t;
     typedef LatticeType lattice_type;
-    utility::parameters p;
+    parameters p;
     lattice_type lattice;
     configuration_t config;
     //mc_tools::mc_generic<double> mc;
@@ -47,9 +49,9 @@ public:
 
     static triqs::utility::parameter_defaults solve_defaults();
 
-    fk_mc(lattice_type l, utility::parameters p, bool randomize_config = true);
+    fk_mc(lattice_type l, parameters p, bool randomize_config = true);
     void solve();
-    utility::parameters& parameters() { return p; } 
+    parameters& parameters() { return p; } 
 };
 
 

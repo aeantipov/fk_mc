@@ -19,7 +19,7 @@ TEST(lattice, hopping)
     l1.fill(-0.8);
     l2.fill(-0.8, 0, 0);
     ASSERT_EQ(l2.get_msize(), L);
-    ASSERT_EQ(l2.hopping_m.isApprox(l1.hopping_m),true);
+    ASSERT_EQ(l2.hopping_m().isApprox(l1.hopping_m()),true);
 };
 
 TEST(lattice, hopping2)
@@ -28,7 +28,7 @@ TEST(lattice, hopping2)
     chain_lattice l2(L);
     l2.fill(-0.8, 0.1, 0.07);
     ASSERT_EQ(l2.get_msize(), L);
-    FKDEBUG(l2.hopping_m);
+    FKDEBUG(l2.hopping_m());
 };
 
 TEST(config, t1)
@@ -36,7 +36,7 @@ TEST(config, t1)
     size_t L = 36;
     chain_lattice l2(L);
     l2.fill(0.8, 0.0, 0.00);
-    FKDEBUG(l2.hopping_m);
+    FKDEBUG(l2.hopping_m());
 
     double U = 2.0;
     double beta = 40;

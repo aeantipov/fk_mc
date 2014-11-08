@@ -49,7 +49,7 @@ struct hypercubic_lattice : lattice_base
     static constexpr size_t Ndim = D;
     std::array<int, D> dims;
     using lattice_base::m_size_;
-    using lattice_base::hopping_m;
+    using lattice_base::hopping_m_;
 
     Eigen::ArrayXcd FFT(Eigen::ArrayXcd in, int direction) const;
     int FFT_pi(const Eigen::ArrayXi& in) const;

@@ -7,7 +7,7 @@ hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
     lattice_base(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size))),
     ft_pi_array_(m_size_)
 {
-    hopping_m.reserve(Eigen::ArrayXi::Constant(m_size_,D*2));
+    hopping_m_.reserve(Eigen::ArrayXi::Constant(m_size_,D*2));
     dims.fill(lattice_size);
     for (size_t i=0; i<m_size_; i++) { 
         auto pos = index_to_pos(i); 
@@ -97,8 +97,8 @@ void hypercubic_lattice<D>::fill(double t)
             auto pos_l(current_pos), pos_r(current_pos);
             pos_l[n]=(current_pos[n]>0?current_pos[n]-1:dims[n]-1);
             pos_r[n]=(current_pos[n]<dims[n]-1?current_pos[n]+1:0);
-            hopping_m.insert(i,pos_to_index(pos_l)) = -1.0*t;
-            hopping_m.insert(i,pos_to_index(pos_r)) = -1.0*t;
+            hopping_m_.insert(i,pos_to_index(pos_l)) = -1.0*t;
+            hopping_m_.insert(i,pos_to_index(pos_r)) = -1.0*t;
         }; 
     };
 }

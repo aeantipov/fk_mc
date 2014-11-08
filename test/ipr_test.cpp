@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     lattice_t lattice(L);
     lattice.fill(-1.0);
 
-    FKDEBUG(lattice.hopping_m);
+    FKDEBUG(lattice.hopping_m());
 
     configuration_t config(lattice, 1.0, U, mu, mu+e_f);
     configuration_t config2(config);

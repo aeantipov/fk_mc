@@ -13,8 +13,8 @@ void triangular_lattice::fill(double t, double t_p)
             pos_r[n]=(current_pos[n]<dims[n]-1?current_pos[n]+1:0);
             };
 
-        hopping_m.insert(i,pos_to_index(pos_l)) = -1.0*t_p;
-        hopping_m.insert(i,pos_to_index(pos_r)) = -1.0*t_p;
+        hopping_m_.insert(i,pos_to_index(pos_l)) = -1.0*t_p;
+        hopping_m_.insert(i,pos_to_index(pos_r)) = -1.0*t_p;
         };
 }
 

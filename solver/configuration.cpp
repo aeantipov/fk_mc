@@ -15,7 +15,7 @@ configuration_t::configuration_t(
     lattice_(lattice),
     f_config_(lattice_.get_msize()),
     params_(config_params({beta, U, mu_c, mu_f})),
-    hamilt_(lattice_.hopping_m.rows(), lattice_.hopping_m.cols())
+    hamilt_(lattice_.hopping_m().rows(), lattice_.hopping_m().cols())
 { 
     f_config_.setZero(); 
 }
@@ -57,8 +57,8 @@ void configuration_t::randomize_f(triqs::mc_tools::random_generator &rnd, size_t
 const typename configuration_t::sparse_m& configuration_t::calc_hamiltonian()
 {
     reset_cache();
-    hamilt_.reserve(lattice_.hopping_m.nonZeros() + lattice_.get_msize());
-    hamilt_ = lattice_.hopping_m;
+    hamilt_.reserve(lattice_.hopping_m().nonZeros() + lattice_.get_msize());
+    hamilt_ = lattice_.hopping_m();
     for (size_t i=0; i<lattice_.get_msize(); ++i) hamilt_.coeffRef(i,i)+= -params_.mu_c + params_.U*f_config_(i); // unoptimized
     return hamilt_;
 }

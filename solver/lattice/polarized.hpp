@@ -12,7 +12,7 @@ struct polarized_lattice : hypercubic_lattice<D>
     using base::Ndim;
     using base::dims;
     using base::m_size_;
-    using base::hopping_m;
+    using base::hopping_m_;
     polarized_lattice(size_t lattice_size):base(lattice_size){}
     void fill(double t1, double t2);
     void fill(double t1) { this->fill(t1,t1); }
@@ -34,21 +34,21 @@ inline void polarized_lattice<D>::fill(double t1, double t2)
             if (n==0) {
                 // introduce polarization in x axis
                 if (is_even) { 
-                    hopping_m.insert(i,this->pos_to_index(pos_l)) = -1.0*t1;
-                    hopping_m.insert(i,this->pos_to_index(pos_r)) = -1.0*t2;
+                    hopping_m_.insert(i,this->pos_to_index(pos_l)) = -1.0*t1;
+                    hopping_m_.insert(i,this->pos_to_index(pos_r)) = -1.0*t2;
                 }
                 else {
-                    hopping_m.insert(i,this->pos_to_index(pos_l)) = -1.0*t2;
-                    hopping_m.insert(i,this->pos_to_index(pos_r)) = -1.0*t1;
+                    hopping_m_.insert(i,this->pos_to_index(pos_l)) = -1.0*t2;
+                    hopping_m_.insert(i,this->pos_to_index(pos_r)) = -1.0*t1;
                     }
                 }
             else { 
                 // regular hopping in y direction 
-                hopping_m.insert(i,this->pos_to_index(pos_l)) = -1.0*t1;
-                hopping_m.insert(i,this->pos_to_index(pos_r)) = -1.0*t1;
+                hopping_m_.insert(i,this->pos_to_index(pos_l)) = -1.0*t1;
+                hopping_m_.insert(i,this->pos_to_index(pos_r)) = -1.0*t1;
             }
-           // FKDEBUG(pos << " -> " << pos_l << " : " << hopping_m.coeffRef(i,this->pos_to_index(pos_l)));
-           // FKDEBUG(pos << " -> " << pos_r << " : " << hopping_m.coeffRef(i,this->pos_to_index(pos_r)));
+           // FKDEBUG(pos << " -> " << pos_l << " : " << hopping_m_.coeffRef(i,this->pos_to_index(pos_l)));
+           // FKDEBUG(pos << " -> " << pos_r << " : " << hopping_m_.coeffRef(i,this->pos_to_index(pos_r)));
 
         };
         };
