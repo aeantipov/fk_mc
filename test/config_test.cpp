@@ -31,8 +31,8 @@ int main(int argc, char* argv[])
     config3 = configuration_t(lattice, 1.0, U, mu, mu+e_f);
 
     Eigen::ArrayXi my_config(lattice.get_msize()); my_config.setZero();
-    for (size_t x=0; x<L; x+=1)
-        for (size_t y=0; y<L; y+=2) {
+    for (int x=0; x<L; x+=1)
+        for (int y=0; y<L; y+=2) {
             my_config(lattice.pos_to_index({{x,y+x%2}}))=1;
         }
     config.f_config_ = my_config;

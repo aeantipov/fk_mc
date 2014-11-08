@@ -37,8 +37,8 @@ static const complex_t I (0.0,1.0);
 static const double PI = atan(1)*4.;
 
 template <size_t D>
-inline std::ostream& operator<< (std::ostream& in, const std::array<size_t, D> arr){ 
-    in << "{";  std::copy(arr.begin(), arr.end()-1, std::ostream_iterator<size_t>(in, ",")); in << *(arr.end()-1) << "}";
+inline std::ostream& operator<< (std::ostream& in, std::array<int, D> arr){ 
+    in << "{";  std::copy(arr.begin(), arr.end()-1, std::ostream_iterator<int>(in, ",")); in << *(arr.end()-1) << "}";
     return in;
 };
 

@@ -18,9 +18,9 @@ hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
 };
 
 template <size_t D>
-std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index) const
+std::array<int, D> hypercubic_lattice<D>::index_to_pos(size_t index) const
 {
-    std::array<size_t, D> out;
+    std::array<int, D> out;
     for (int i=D-1; i>=0; i--) {
         out[i]=index%dims[i];
         index/=dims[i];
@@ -29,7 +29,7 @@ std::array<size_t, D> hypercubic_lattice<D>::index_to_pos(size_t index) const
 }
 
 template <size_t D>
-size_t hypercubic_lattice<D>::pos_to_index(std::array<size_t, D> pos) const
+size_t hypercubic_lattice<D>::pos_to_index(std::array<int, D> pos) const
 {
     size_t out=0;
     size_t mult = 1;

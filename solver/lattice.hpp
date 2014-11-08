@@ -38,7 +38,6 @@ inline lattice_base::lattice_base(sparse_m in):
     if (hopping_m_.rows() != hopping_m_.cols() || hopping_m_.rows() == 0) TRIQS_RUNTIME_ERROR << "Failed to initalize lattice. ";
 }
 
-
 }; // end of namespace FK
 
 //#include "lattice/hypercubic.hpp"

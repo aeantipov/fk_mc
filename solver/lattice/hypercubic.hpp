@@ -16,8 +16,8 @@ template <size_t D>
 struct hypercubic_lattice : lattice_base
 {
 
-    std::array<size_t, D> index_to_pos(size_t index) const;
-    size_t pos_to_index(std::array<size_t, D> pos) const;
+    std::array<int, D> index_to_pos(size_t index) const;
+    size_t pos_to_index(std::array<int, D> pos) const;
 
     struct BZPoint { std::array<double, D> val_; 
                      size_t ind_; 
@@ -30,7 +30,7 @@ struct hypercubic_lattice : lattice_base
                         for (size_t i=0; i<D; i++) { val_[i] = double(pos[i])*2.0*PI/l.dims[i]; };
                         };
                      BZPoint(std::array<double, D> v, const hypercubic_lattice<D> &l, double prec = 1e-12){ 
-                        std::array<size_t, D> pos;
+                        std::array<int, D> pos;
                         for (size_t i=0; i<D; i++) { pos[i] = std::round(v[i]/2.0/PI*l.dims[i]); };
                         size_t i = l.pos_to_index(pos); 
                         (*this) = BZPoint(i,l); 

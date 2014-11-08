@@ -39,8 +39,8 @@ TEST(lattice, spectrum)
     configuration_t config(l1, beta, U, mu, mu+e_f);
     // checkerboard
     Eigen::ArrayXi my_config(l1.get_msize()); my_config.setZero();
-    for (size_t x=0; x<L; x+=1)
-        for (size_t y=0; y<L; y+=2) {
+    for (int x=0; x<L; x+=1)
+        for (int y=0; y<L; y+=2) {
             my_config(l1.pos_to_index({{x,y+x%2}}))=1;
         }
     config.f_config_ = my_config;
