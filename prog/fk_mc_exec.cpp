@@ -85,6 +85,7 @@ try {
 
     TCLAP::ValueArg<bool>     calc_history_switch("","calc_history","Calculate data history (for errorbars)", false, false, "bool", cmd);
     TCLAP::ValueArg<bool>     calc_ipr_switch("","calc_ipr","Calculate inverse participation ratio", false, false, "bool", cmd);
+    TCLAP::ValueArg<bool>     calc_stiffness_switch("","calc_stiffness","Calculate inverse participation ratio", false, false, "bool", cmd);
     // dos-related args
     TCLAP::ValueArg<double>   dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
     TCLAP::ValueArg<int>      dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
@@ -132,6 +133,7 @@ try {
     p["cheb_moves"] = chebyshev_switch.getValue(); 
     p["cheb_prefactor"] = chebyshev_prefactor.getValue();
     p["measure_ipr"] = calc_ipr_switch.getValue();
+    p["measure_stiffness"] = calc_stiffness_switch.getValue();
     p["measure_history"] = (calc_history_switch.getValue() && !bool(p["cheb_moves"])) || bool(p["measure_ipr"]);
     p["dos_width"] = dos_width_arg.getValue();
     p["dos_npts"] = dos_npts_arg.getValue();

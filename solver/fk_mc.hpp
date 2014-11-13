@@ -18,11 +18,12 @@ struct observables_t {
     std::vector<double> nf0;
     std::vector<double> nfpi;
     std::vector<double> spectrum;
-    std::vector<std::vector<double>> spectrum_history; // L^D x n_measures size
-    std::vector<std::vector<double>> ipr_history; // L^D x n_measures size
-    std::vector<std::vector<double>> focc_history;     // L^D x n_measures size
+    std::vector<std::vector<double>> spectrum_history;  // L^D x n_measures size
+    std::vector<std::vector<double>> ipr_history;       // L^D x n_measures size
+    std::vector<double> stiffness; // n_measures size
+    std::vector<std::vector<double>> focc_history;      // L^D x n_measures size
     std::vector<std::vector<std::complex<double>>> nq_history;       // nqpts x n_measures size
-    std::vector<std::vector<double>> fsuscq_history;   // nqpts x n_measures size
+    std::vector<std::vector<double>> fsuscq_history;    // nqpts x n_measures size
 
     void merge(observables_t& rhs);
 

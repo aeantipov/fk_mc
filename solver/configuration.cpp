@@ -25,7 +25,7 @@ void configuration_t::swap(configuration_t &rhs)
 {
     f_config_.swap(rhs.f_config_); 
     cached_spectrum.swap(rhs.cached_spectrum);
-    cached_weights.swap(rhs.cached_weights);
+    cached_exp.swap(rhs.cached_exp);
     hamilt_.swap(rhs.hamilt_);
 }*/
 
@@ -200,18 +200,14 @@ void configuration_t::calc_ed(bool calc_evecs)
     double logw0 = beta * e0;
     double weight0 = exp(logw0);
 
-    ed_data_.cached_weights.resize(cached_spectrum.size());
+    ed_data_.cached_exp.resize(cached_spectrum.size());
     double logz = 0.0;
     for (size_t i=0; i<cached_spectrum.size(); ++i) { 
         double e = cached_spectrum[i]; 
         double w = exp(-beta*(e-e0)); 
-        ed_data_.cached_weights[i] = w;
+        ed_data_.cached_exp[i] = exp(beta * e);
+        assert(!std::isnan(ed_data_.cached_exp[i]));
         logz += std::log(weight0 + w) - logw0;
-        };
-
-    double Z = ed_data_.cached_weights.sum();
-    for (size_t i=0; i<cached_spectrum.size(); ++i) { 
-        ed_data_.cached_weights[i]/=Z;
         };
 
     ed_data_.logZ = logz; 

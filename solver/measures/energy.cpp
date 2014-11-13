@@ -6,13 +6,14 @@ namespace fk {
 void measure_energy::accumulate (double sign) 
 {
     config.calc_ed(false);
-    auto spectrum = config.ed_data_.cached_spectrum;
+    const auto& spectrum = config.ed_data_.cached_spectrum;
+    const auto& exp_e = config.ed_data().cached_exp;
     _Z++;
 
     real_array_t e_nf(spectrum.size()), d2e_nf(spectrum.size());
     for (size_t i=0; i<e_nf.size(); ++i) {
-        e_nf(i) = spectrum(i) / (1.0+exp(beta*(spectrum(i))));
-        d2e_nf(i) = spectrum(i)*spectrum(i) / (1.0+0.5*(exp(beta*(spectrum(i))) + exp(-beta*(spectrum(i))) ));
+        e_nf(i) = spectrum(i) / (1.0+exp_e[i]);
+        d2e_nf(i) = spectrum(i)*spectrum(i) / (1.0+0.5*(exp_e[i] + 1./exp_e[i]));
         };
     double e_val = e_nf.sum() - double(config.params_.mu_f)*config.get_nf();
     double d2e_val = d2e_nf.sum()/2.0;

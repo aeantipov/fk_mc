@@ -99,6 +99,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
     if (mc.observables.d2energies.size()) h5_write(h5_mc_data,"d2energies", mc.observables.d2energies);
     if (mc.observables.nf0.size()) h5_write(h5_mc_data,"nf0", mc.observables.nf0);
     if (mc.observables.nfpi.size()) h5_write(h5_mc_data,"nfpi", mc.observables.nfpi);
+    if (mc.observables.stiffness.size()) h5_write(h5_mc_data,"stiffness", mc.observables.stiffness);
 
     std::vector<double> spectrum(mc.observables.spectrum.size());
     if (spectrum.size()) { 
@@ -215,6 +216,19 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
         save_bin_data(binder_0,h5_stats,"binder_0",save_plaintext);
         save_bin_data(binder_pi,h5_stats,"binder_pi",save_plaintext);
     }
+
+    if (p["measure_stiffness"]) { // Stiffness
+            INFO("Stiffness");
+            const auto& stiffness = mc.observables.stiffness;
+            size_t size = stiffness.size();
+            auto stiffness_data = binning::accumulate_binning(stiffness.rbegin(), stiffness.rend(), maxbin); 
+            save_binning(stiffness_data,h5_binning,"stiffness",save_plaintext);
+
+            auto stiffness_bin = estimate_bin(stiffness_data);
+            INFO("Stiffness bin = " << stiffness_bin);
+            save_bin_data(stiffness_data[stiffness_bin],h5_stats,"stiffness",save_plaintext);
+        };
+        
 
 
     // Local green's functions

@@ -70,10 +70,15 @@ void fk_mc<L>::solve()
 
     bool calc_spectrum = !cheb_move; 
     this->add_measure(measure_nf0pi<lattice_type>(config, lattice, observables.nf0, observables.nfpi), "nf0pi");
+    if (p["measure_history"]) { if (!comm.rank()) std::cout << "Saving history" << std::endl; };
     if (p["measure_history"] && p["measure_ipr"]) {
         if (!comm.rank()) std::cout << "Measuring ipr" << std::endl;
         this->add_measure(measure_ipr<lattice_type>(config, lattice, observables.ipr_history),"ipr");
         }
+    if (p["measure_stiffness"]) {
+        if (!comm.rank()) std::cout << "Measuring stiffness" << std::endl;
+        this->add_measure(measure_stiffness<lattice_type>(config, lattice, observables.stiffness),"stiffness");
+        };
 
     calc_spectrum = calc_spectrum || p["measure_ipr"];
 

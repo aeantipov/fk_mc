@@ -41,13 +41,13 @@ void measure_polarization<Lattice>::accumulate(double sign)
     std::complex<double> pol = 0.0;
     double nc = 0.0;
 
-    for (size_t i=0; i<evals.size() && config_.ed_data().cached_weights[i]>=1e-5; i++) {
+    for (size_t i=0; i<evals.size() && config_.ed_data().cached_exp[i]>=1e-5; i++) {
         const auto &ev = evecs.col(i);
         std::complex<double> x = (ev.array()*ev.array()).matrix().transpose()*phase_v;
-        FKDEBUG(i << " " << config_.ed_data().cached_weights[i] << " : " << x << " -> " << x*config_.ed_data().cached_weights[i]);
+        FKDEBUG(i << " " << config_.ed_data().cached_exp[i] << " : " << x << " -> " << x*config_.ed_data().cached_exp[i]);
         FKDEBUG(ev.transpose() << std::endl);
         //FKDEBUG(phase_v.transpose());
-        pol+=x*config_.ed_data().cached_weights[i];
+        pol+=x*config_.ed_data().cached_exp[i];
     }
     FKDEBUG(pol);
     exit(0);
