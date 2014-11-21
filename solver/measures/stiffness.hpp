@@ -104,7 +104,7 @@ void measure_stiffness<lattice_t>::accumulate(double sign)
         V+=V_val;
         }
     double stiffness = V-T;
-    if (DEBUG_LEVEL > 0) FKDEBUG("T = " << T << "V = " << V << " stiffness = " << stiffness);
+    if (DEBUG_LEVEL > 0) FKDEBUG("T = " << T << "; V = " << V << "; stiffness = " << stiffness);
     stiffness_vals_.push_back(stiffness);
 }
 
