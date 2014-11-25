@@ -1,0 +1,14 @@
+#%Module1.0
+
+set     name        fk_mc
+set     root        @CMAKE_INSTALL_PREFIX@
+set     version     @FK_MC_VERSION@
+
+
+setenv      FK_MC_DIR    $root
+setenv      FK_MC_ROOT   $root
+setenv      FK_MC_LIB    $root/lib
+setenv      FK_MC_INC    $root/include
+setenv      FK_MC_BIN    $root/bin
+prepend-path      PATH      $root/bin
+prepend-path      LD_LIBRARY_PATH $root/lib

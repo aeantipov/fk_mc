@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 project(fk_mc CXX)
 
+set(FK_MC_VERSION 0.1)
+
 # Toggle debug mode on/off
 #option (Debug "Debug mode" OFF)
 #if (Debug)
@@ -76,3 +78,6 @@ if (Testing)
     enable_testing()
     add_subdirectory(test)
 endif (Testing)
+
+### Additional installation files
+configure_file("${CMAKE_SOURCE_DIR}/fk_mc.lmod.in" "${CMAKE_BINARY_DIR}/${FK_MC_VERSION}")
