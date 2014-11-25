@@ -27,36 +27,7 @@ triqs::utility::parameter_defaults save_defaults() {
 void savetxt (std::string fname, const triqs::arrays::array<double,1>& in);
 void savetxt (std::string fname, const triqs::arrays::array<double,2>& in);
 
-void save_bin_data(const binning::bin_stats_t& data, triqs::h5::group& h5_group, std::string name, bool save_plaintext = false)
-{
-    std::array<double, 4> tmp (
-        {{double(std::get<binning::_SIZE>(data)), std::get<binning::_MEAN>(data), std::get<binning::_DISP>(data), std::get<binning::_SQERROR>(data) }});
-    tqa::array<double, 1> data_arr(4);
-    std::copy(tmp.begin(),tmp.end(),data_arr(tqa::range()).begin());
-
-    std::cout << name << " = " << std::get<binning::_MEAN>(data) << " +/- " << std::get<binning::_SQERROR>(data) 
-              << " (" << std::get<binning::_SIZE>(data) << ") samples." << std::endl ;
-    h5_write(h5_group, name, data_arr);
-    if (save_plaintext) savetxt(name+"_error.dat",data_arr);
-}
-void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_group, std::string name, bool save_plaintext = false)
-{
-    auto cor_lens = binning::calc_cor_length(binning_data);
-    tqa::array<double, 2> data_arr(binning_data.size(),5);
-    //std::ofstream out; out.setf(std::ios::scientific); //out << std::setw(9);
-    //if (save_plaintext) out.open(name+"_binning.dat",std::ios::out);
-    for (size_t i=0; i<binning_data.size(); i++){
-        auto e = binning_data[i]; double c = cor_lens[i];
-        std::array<double, 5> t ({{double(std::get<binning::_SIZE>(e)), std::get<binning::_MEAN>(e), std::get<binning::_DISP>(e), std::get<binning::_SQERROR>(e), c }});
-        std::copy(t.begin(),t.end(),data_arr(i,tqa::range()).begin());
-        //if (save_plaintext) out << i << " " << std::get<binning::_SIZE>(e) << "  " << std::get<binning::_MEAN>(e) 
-            //<< "  " << std::get<binning::_DISP>(e) << "  " << std::get<binning::_SQERROR>(e) << "  " << c << "\n";
-       };
-    if (save_plaintext) savetxt(name+"_binning.dat",data_arr);
-    h5_write(h5_group,name, data_arr);
-}
-
-/** Estimate the bin, at which the error bar is saturated. */
+/// Estimate the bin, at which the error bar is saturated.
 size_t estimate_bin(const fk::binning::bin_data_t& data)
 {
     std::vector<double> errors(data.size());
@@ -71,6 +42,40 @@ size_t estimate_bin(const fk::binning::bin_data_t& data)
         if (f) ind--;
     }
     return ind;
+}
+
+
+
+void save_bin_data(const binning::bin_stats_t& data, triqs::h5::group& h5_group, std::string name, int bin, bool save_plaintext = false)
+{
+    std::array<double, 4> tmp (
+        {{double(std::get<binning::_SIZE>(data)), std::get<binning::_MEAN>(data), std::get<binning::_DISP>(data), std::get<binning::_SQERROR>(data) }});
+    tqa::array<double, 1> data_arr(4);
+    std::copy(tmp.begin(),tmp.end(),data_arr(tqa::range()).begin());
+
+    std::cout << name << " = " << std::get<binning::_MEAN>(data) << " +/- " << std::get<binning::_SQERROR>(data) 
+              << " (" << std::get<binning::_SIZE>(data) << ") samples [" << bin << "]." << std::endl;
+    h5_write(h5_group, name, data_arr);
+    if (save_plaintext) savetxt(name+"_error.dat",data_arr);
+}
+void save_binning(const binning::bin_data_t& binning_data, triqs::h5::group& h5_group, triqs::h5::group& h5_stats, std::string name, bool save_plaintext = false)
+{
+    auto cor_lens = binning::calc_cor_length(binning_data);
+    tqa::array<double, 2> data_arr(binning_data.size(),5);
+    //std::ofstream out; out.setf(std::ios::scientific); //out << std::setw(9);
+    //if (save_plaintext) out.open(name+"_binning.dat",std::ios::out);
+    for (size_t i=0; i<binning_data.size(); i++){
+        auto e = binning_data[i]; double c = cor_lens[i];
+        std::array<double, 5> t ({{double(std::get<binning::_SIZE>(e)), std::get<binning::_MEAN>(e), std::get<binning::_DISP>(e), std::get<binning::_SQERROR>(e), c }});
+        std::copy(t.begin(),t.end(),data_arr(i,tqa::range()).begin());
+        //if (save_plaintext) out << i << " " << std::get<binning::_SIZE>(e) << "  " << std::get<binning::_MEAN>(e) 
+            //<< "  " << std::get<binning::_DISP>(e) << "  " << std::get<binning::_SQERROR>(e) << "  " << c << "\n";
+       };
+    if (save_plaintext) savetxt(name+"_binning.dat",data_arr);
+    h5_write(h5_group,name, data_arr);
+            
+    int data_bin = estimate_bin(binning_data);
+    save_bin_data(binning_data[data_bin],h5_stats,name,data_bin,save_plaintext);
 }
 
 inline void print_section (const std::string& str)
@@ -152,14 +157,9 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
             size_t size = energies.size();
             INFO("Binning " << maxbin <<" times.");
             auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), maxbin); 
-            save_binning(energy_binning_data,h5_binning,"energies",save_plaintext);
+            save_binning(energy_binning_data,h5_binning,h5_stats,"energy",save_plaintext);
             auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), maxbin); 
-            save_binning(d2energy_binning_data,h5_binning,"d2energies",save_plaintext);
-
-            energy_bin = estimate_bin(energy_binning_data);
-            INFO("Average energy bin = " << energy_bin);
-            save_bin_data(energy_binning_data[energy_bin],h5_stats,"energy",save_plaintext);
-            save_bin_data(d2energy_binning_data[energy_bin],h5_stats,"d2energy",save_plaintext);
+            save_binning(d2energy_binning_data,h5_binning,h5_stats,"d2energy",save_plaintext);
         };
         
         std::vector<double> energies_square(energies.size());
@@ -176,8 +176,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                 std::make_pair(d2energies.rbegin(), d2energies.rend())
             }; 
             auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,maxbin);
-            save_binning(cv_stats,h5_binning,"cv",save_plaintext);
-            save_bin_data(cv_stats[energy_bin],h5_stats,"cv",save_plaintext);
+            save_binning(cv_stats,h5_binning,h5_stats,"cv",save_plaintext);
         };
     };
 
@@ -191,26 +190,21 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
         std::function<double(double,double)> disp_f = [](double x, double x2){return x2 - x*x;};
         
         auto nf0_stats = binning::accumulate_binning(nf0.rbegin(), nf0.rend(), maxbin);
-        save_binning( nf0_stats, h5_binning,"nf_0",save_plaintext);
+        save_binning( nf0_stats,h5_binning,h5_stats,"nf_0",save_plaintext);
         auto nfpi_stats = binning::accumulate_binning(nfpi.rbegin(), nfpi.rend(), maxbin);
-        save_binning( nfpi_stats, h5_binning,"nf_pi",save_plaintext);
+        save_binning( nfpi_stats,h5_binning,h5_stats,"nf_pi",save_plaintext);
         auto fsusc0_stats = jackknife::accumulate_jackknife(disp_f,std::vector<std::vector<double>>({nf0,nn_0}),maxbin);
-        save_binning(fsusc0_stats,h5_binning,"fsusc_0",save_plaintext);
+        save_binning(fsusc0_stats,h5_binning,h5_stats,"fsusc_0",save_plaintext);
         auto fsuscpi_stats = jackknife::accumulate_jackknife(disp_f,std::vector<std::vector<double>>({nfpi,nn_pi}),maxbin);
-        save_binning(fsuscpi_stats,h5_binning,"fsusc_pi",save_plaintext);
+        save_binning(fsuscpi_stats,h5_binning,h5_stats,"fsusc_pi",save_plaintext);
 
-        auto nf_bin = estimate_bin(fsusc0_stats);
-        INFO("Average fsusc0 bin = " << nf_bin);
-        save_bin_data(nf0_stats[nf_bin],h5_stats,"nf_0",save_plaintext);
-        save_bin_data(fsusc0_stats[nf_bin],h5_stats,"fsusc_0",save_plaintext);
-        save_bin_data(nfpi_stats[nf_bin],h5_stats,"nf_pi",save_plaintext);
-        save_bin_data(fsuscpi_stats[nf_bin],h5_stats,"fsusc_pi",save_plaintext);
     
         /* Binder cumulant (q=0, pi). */
         std::vector<double> nnnn_0(nf0.size()), nnnn_pi(nfpi.size());
         std::transform(nf0.begin(), nf0.end(), nnnn_0.begin(), [](double x){return x*x*x*x;});
         std::transform(nfpi.begin(), nfpi.end(), nnnn_pi.begin(), [](double x){return x*x*x*x;});
         std::function<double(double,double)> binder_f = [](double x2, double x4){return 1. - x4/3./x2/x2;};
+        auto nf_bin = estimate_bin(fsusc0_stats);
         auto binder_0 = jackknife::jack(binder_f, std::vector<std::vector<double>>({nn_0, nnnn_0}), nf_bin);
         auto binder_pi = jackknife::jack(binder_f, std::vector<std::vector<double>>({nn_pi, nnnn_pi}), nf_bin);
         save_bin_data(binder_0,h5_stats,"binder_0",save_plaintext);
@@ -222,11 +216,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
             const auto& stiffness = mc.observables.stiffness;
             size_t size = stiffness.size();
             auto stiffness_data = binning::accumulate_binning(stiffness.rbegin(), stiffness.rend(), maxbin); 
-            save_binning(stiffness_data,h5_binning,"stiffness",save_plaintext);
-
-            auto stiffness_bin = estimate_bin(stiffness_data);
-            INFO("Stiffness bin = " << stiffness_bin);
-            save_bin_data(stiffness_data[stiffness_bin],h5_stats,"stiffness",save_plaintext);
+            save_binning(stiffness_data,h5_binning,h5_stats,"stiffness",save_plaintext);
         };
         
 
@@ -286,11 +276,8 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
             std::function<double(std::vector<double>)> 
             (std::bind(dos0_f, std::placeholders::_1, 0.0, p["dos_offset"], mc.lattice.get_msize()))
             ,spectrum_history,maxbin);
-        save_binning(dos0_stats,h5_stats,"dos0",save_plaintext);
-
+        save_binning(dos0_stats,h5_binning,h5_stats,"dos0",save_plaintext);
         size_t dos_bin = estimate_bin(dos0_stats);
-        INFO("DOS(0) bin = " << dos_bin);
-        save_bin_data(dos0_stats[dos_bin],h5_stats,"dos0",save_plaintext);
         // dos(w)
         {
             INFO("Saving local DOS w errorbars");
@@ -352,10 +339,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
 
                     ipr0_binning[i] = ipr0_stats;
                 }
-            save_binning(ipr0_binning,h5_binning,"ipr0",save_plaintext);
-            int ipr0_bin = estimate_bin(ipr0_binning);;
-            INFO("IPR(0) bin = " << ipr0_bin);
-            save_bin_data(ipr0_binning[ipr0_bin],h5_stats,"ipr0",save_plaintext);
+            save_binning(ipr0_binning,h5_binning,h5_stats,"ipr0",save_plaintext);
 
             // ipr - thermal
             typename binning::bin_data_t ipr_thermal_binning(maxbin);
@@ -368,11 +352,9 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
 
                     ipr_thermal_binning[i] = ipr_th_stats;
                 }
-            save_binning(ipr_thermal_binning,h5_binning,"ipr_thermal",save_plaintext);
-            int ipr_thermal_bin = estimate_bin(ipr_thermal_binning);;
-            INFO("IPR (thermal) bin = " << ipr_thermal_bin);
-            save_bin_data(ipr_thermal_binning[ipr_thermal_bin],h5_stats,"ipr_thermal",save_plaintext);
+            save_binning(ipr_thermal_binning,h5_binning,h5_stats,"ipr_thermal",save_plaintext);
 
+            auto ipr0_bin=estimate_bin(ipr0_binning);
             triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
             for (size_t i=0; i<grid_real.size(); i++) {
                 std::complex<double> z = grid_real[i];
