@@ -31,7 +31,7 @@ using triqs::arrays::sum;
 #define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;
 #define ERROR(MSG)            std::cerr << MSG_PREFIX << MSG << std::endl;
 
-typedef triqs::utility::parameters parameters;
+typedef triqs::utility::parameters parameters_t;
 typedef std::complex<double> complex_t;
 static const complex_t I (0.0,1.0); 
 static const double PI = atan(1)*4.;

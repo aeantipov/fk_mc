@@ -10,8 +10,6 @@
 
 namespace fk {
 
-using triqs::utility::parameters;
-
 struct observables_t {
     std::vector<double> energies;
     std::vector<double> d2energies;
@@ -40,7 +38,7 @@ class fk_mc : public triqs::mc_tools::mc_generic<double>
 public:
     typedef configuration_t config_t;
     typedef LatticeType lattice_type;
-    parameters p;
+    parameters_t p;
     lattice_type lattice;
     configuration_t config;
     //mc_tools::mc_generic<double> mc;
@@ -50,9 +48,9 @@ public:
 
     static triqs::utility::parameter_defaults solve_defaults();
 
-    fk_mc(lattice_type l, parameters p, bool randomize_config = true);
+    fk_mc(lattice_type l, parameters_t p, bool randomize_config = true);
     void solve();
-    parameters& parameters() { return p; } 
+    parameters_t& parameters() { return p; } 
 };
 
 
