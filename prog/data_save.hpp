@@ -313,8 +313,8 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                 double ipr_state, state_weight;
                 for (size_t i=0; i<Volume; i++) {
                     ipr_state = ipr_spec[i+Volume];
-                    state_weight = (1. + std::exp(beta*ipr_spec[i]));
-                    out += ipr_state / state_weight / Volume;  
+                    state_weight = beta / (1. + std::exp(beta*ipr_spec[i])) / (1. + std::exp(-beta*ipr_spec[i]));
+                    out += ipr_state * state_weight / Volume;  
                     };
                 return out; 
                 };
