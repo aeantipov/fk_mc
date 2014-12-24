@@ -15,11 +15,11 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
 
 triqs::utility::parameter_defaults save_defaults() {
   triqs::utility::parameter_defaults pdef;
-  pdef.optional
-   ("dos_npts", int(100), "Number of points for dos")
-   ("dos_width", double(6), "Energy window to save dos")
-   ("dos_offset", double(0.05), "dos offset from the real axis")
-   ("measure_ipr", bool(false), "Measure inverse participation ratio")
+  pdef
+   .optional("dos_npts", int(100), "Number of points for dos")
+   .optional("dos_width", double(6), "Energy window to save dos")
+   .optional("dos_offset", double(0.05), "dos offset from the real axis")
+   .optional("measure_ipr", bool(false), "Measure inverse participation ratio")
    ;
   return pdef;
  }

@@ -105,26 +105,26 @@ template <typename L>
 
   pdef.required
    ("beta", double(), "Inverse temperature")
-   ("U", double(1.0), "FK U")
-   ("n_cycles", int(), "Number of QMC cycles")
-   ("mu_c", double(0.5), "Chemical potential of c electrons")
-   ("mu_f", double(0.5), "Chemical potential of f electrons")
+   .required("U", double(1.0), "FK U")
+   .required("n_cycles", int(), "Number of QMC cycles")
+   .required("mu_c", double(0.5), "Chemical potential of c electrons")
+   .required("mu_f", double(0.5), "Chemical potential of f electrons")
    ;
 
   pdef.optional
    ("mc_flip", double(0.0), "Make flip moves")
-   ("mc_add_remove", double(1.0), "Make add/remove moves")
-   ("mc_reshuffle", double(0.0), "Make reshuffle moves")
-   ("cheb_moves", bool(false), "Allow moves using Chebyshev sampling")
-   ("cheb_prefactor", double(2.2), "Prefactor for number of Chebyshev polynomials = #ln(Volume)")
-   ("measure_history", bool(true), "Measure the history")
-   ("random_name", std::string(""), "Name of random number generator")
-   ("Nf_start", size_t(5), "Starting number of f-electrons")
-   ("length_cycle", int(50), "Length of a single QMC cycle")
-   ("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
-   ("random_seed", int(34788), "Seed for random number generator")
-   ("max_time",int(600000), "Maximum running time")
-   ("measure_ipr", bool(false), "Measure inverse participation ratio")
+   .optional("mc_add_remove", double(1.0), "Make add/remove moves")
+   .optional("mc_reshuffle", double(0.0), "Make reshuffle moves")
+   .optional("cheb_moves", bool(false), "Allow moves using Chebyshev sampling")
+   .optional("cheb_prefactor", double(2.2), "Prefactor for number of Chebyshev polynomials = #ln(Volume)")
+   .optional("measure_history", bool(true), "Measure the history")
+   .optional("random_name", std::string(""), "Name of random number generator")
+   .optional("Nf_start", size_t(5), "Starting number of f-electrons")
+   .optional("length_cycle", int(50), "Length of a single QMC cycle")
+   .optional("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
+   .optional("random_seed", int(34788), "Seed for random number generator")
+   .optional("max_time",int(600000), "Maximum running time")
+   .optional("measure_ipr", bool(false), "Measure inverse participation ratio")
    ;
 
   return pdef;
