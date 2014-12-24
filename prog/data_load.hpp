@@ -31,7 +31,7 @@ triqs::utility::parameters load_parameters(std::string output_file, triqs::utili
         double(pnew["cheb_prefactor"]) == double(pold["cheb_prefactor"]);
 
     if (!success) { 
-            if (!world.rank()) std::cout << "Parameters mismatch" << std::endl << "old: " << pold << std::endl << "new: " << pnew << std::endl; 
+            if (!world.rank()) std::cerr << "Parameters mismatch" << std::endl << "old: " << pold << std::endl << "new: " << pnew << std::endl; 
             TRIQS_RUNTIME_ERROR << "Parameters mismatch";
             };
 
