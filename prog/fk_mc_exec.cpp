@@ -147,6 +147,7 @@ try {
     catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() << std::endl; exit(1); }
 
     int n_cycles_new = std::max(int(p["n_cycles"]), 0);
+    int n_cycles_old = 0; 
 
 // Now we construct and run mc 
 try{
@@ -154,8 +155,9 @@ try{
     observables_t obs_old;
     if (resume) {
         p = load_parameters(h5fname, p);
+        n_cycles_old = p["n_cycles"]; // this is old + new number of cycles
         if (!world.rank()) {
-             std::cout << "Resuming calculation" << std::endl;
+             std::cout << "Resuming calculation from " << n_cycles_old << " cycles. "<< std::endl;
              obs_old = load_observables(h5fname, p);
              std::cout << "parameters for run : " << p << std::endl;
         };
@@ -165,8 +167,9 @@ try{
         //exit(0);
         }
 
-    int n_cycles_total = p["n_cycles"]; // this is old + new number of cycles
-    p["n_cycles"] = n_cycles_new; // do a calc with only new number of cycles
+    int n_cycles_total = std::max(n_cycles_new, n_cycles_old);
+    p["n_cycles"] = std::max(n_cycles_total - n_cycles_old, 0); // do a calc with only new number of cycles
+    if (!world.rank()) std::cout << n_cycles_old << " -> " << n_cycles_total << " cycles" << std::endl; 
     size_t L = p["L"];
     double U = p["U"]; 
     double t = p["t"]; 

@@ -39,7 +39,7 @@ triqs::utility::parameters load_parameters(std::string output_file, triqs::utili
     p.update(pold);
     p.update(pnew);
     // update ncycles and max_time but keep old cycle length
-    p["n_cycles"] = std::max(int(pnew["n_cycles"]) + int(pold["n_cycles"]),0); 
+    p["n_cycles"] = std::max(0, int(pold["n_cycles"]));
     p["length_cycle"] = pold["length_cycle"];
     if (!world.rank()) std::cout << "params : " << p << std::endl;
 
