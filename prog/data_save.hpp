@@ -318,6 +318,17 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                     };
                 return out; 
                 };
+            auto dos_thermal_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
+                double out = 0.0;
+                double energy_state, state_weight;
+                for (size_t i=0; i<Volume; i++) {
+                    energy_state = ipr_spec[i];
+                    state_weight = beta / (1. + std::exp(beta*ipr_spec[i])) / (1. + std::exp(-beta*ipr_spec[i]));
+                    out += state_weight / Volume;  
+                    };
+                return out; 
+                };
+
 
             const auto& ipr_vals = mc.observables.ipr_history;
 
@@ -353,6 +364,20 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                     ipr_thermal_binning[i] = ipr_th_stats;
                 }
             save_binning(ipr_thermal_binning,h5_binning,h5_stats,"ipr_thermal",save_plaintext);
+
+            // dos - thermal
+            typename binning::bin_data_t dos_thermal_binning(maxbin);
+            for (int i=0; i<maxbin; i++) 
+                { // save ipr at w=0
+                    auto dos_th_stats = jackknife::jack(
+                        std::function<double(std::vector<double>)>( 
+                        std::bind(dos_thermal_f, std::placeholders::_1, 0.0, p["dos_offset"]))
+                        ,ipr_and_spectrum,i);
+
+                    dos_thermal_binning[i] = dos_th_stats;
+                }
+            save_binning(dos_thermal_binning,h5_binning,h5_stats,"dos_thermal",save_plaintext);
+
 
             auto ipr0_bin=estimate_bin(ipr0_binning);
             triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);

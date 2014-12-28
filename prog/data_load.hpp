@@ -28,7 +28,7 @@ triqs::utility::parameters load_parameters(std::string output_file, triqs::utili
         bool(pnew["measure_history"]) == bool(pold["measure_history"]) && 
         bool(pnew["measure_ipr"]) == bool(pold["measure_ipr"]) && 
         bool(pnew["cheb_moves"]) == bool(pold["cheb_moves"]) &&
-        double(pnew["cheb_prefactor"]) == double(pold["cheb_prefactor"]);
+        (!bool(pnew["cheb_moves"]) || double(pnew["cheb_prefactor"]) == double(pold["cheb_prefactor"]));
 
     if (!success) { 
             if (!world.rank()) std::cerr << "Parameters mismatch" << std::endl << "old: " << pold << std::endl << "new: " << pnew << std::endl; 
