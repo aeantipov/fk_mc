@@ -75,6 +75,7 @@ try {
     TCLAP::ValueArg<int>      nwarmup_arg("","nwarmup","Number of warmup cycles (no measure)",false,1,"int",cmd);
     TCLAP::ValueArg<int>      cycle_len_arg("l","cyclelen","Number of steps in one cycle",false,100,"int",cmd);
     TCLAP::SwitchArg          random_seed_switch("s","seed","Make a random or fixed seed?", cmd, false);
+    TCLAP::ValueArg<int>      rnd_seed_arg("","rndseed","Random seed value",false,34788,"int",cmd);
 
     TCLAP::ValueArg<double>   move_flips_switch("","flip","Make flip (conserving)", false, 0.0, "double", cmd);
     TCLAP::ValueArg<double>   move_add_remove_switch("","addremove","Make add/remove step (non conserving)", false, 1.0, "double", cmd);
@@ -123,7 +124,7 @@ try {
     double mu_f = (U_arg.isSet() && (!eps_f_arg.isSet())?mu_c:mu_c + eps_f_arg.getValue()); 
     p["mu_f"] = mu_f;
     //p["random_name"] = ""; 
-    p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(32167+world.rank()));
+    p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(rnd_seed_arg.getValue()+world.rank()));
     p["verbosity"] = (!world.rank()?1:0);
     p["length_cycle"] = cycle_len_arg.getValue(); 
     p["n_warmup_cycles"] = nwarmup_arg.getValue();
