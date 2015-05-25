@@ -201,11 +201,13 @@ void configuration_t::calc_ed(bool calc_evecs)
     double weight0 = exp(logw0);
 
     ed_data_.cached_exp.resize(cached_spectrum.size());
+    ed_data_.cached_fermi.resize(cached_spectrum.size());
     double logz = 0.0;
     for (size_t i=0; i<cached_spectrum.size(); ++i) { 
         double e = cached_spectrum[i]; 
         double w = exp(-beta*(e-e0)); 
         ed_data_.cached_exp[i] = exp(beta * e);
+        ed_data_.cached_fermi[i] = 1.0 / (1.0 + ed_data_.cached_exp[i]);
         assert(!std::isnan(ed_data_.cached_exp[i]));
         logz += std::log(weight0 + w) - logw0;
         };

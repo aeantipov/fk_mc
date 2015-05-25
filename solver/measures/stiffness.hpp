@@ -31,6 +31,9 @@ struct measure_stiffness {
     std::vector<double>& stiffness_vals_;
     double t_ = 1.; // fix for nontrivial lattices
     static constexpr int DEBUG_LEVEL = 2;
+    typedef Eigen::MatrixXcd matrix_type;
+protected:
+    matrix_type Tm_, Jm_;
 
 };
 
@@ -39,8 +42,33 @@ template <typename lattice_t>
 measure_stiffness<lattice_t>::measure_stiffness(configuration_t& in, const lattice_t& lattice, std::vector<double>& stiffness_vals): 
     config_(in), 
     lattice_(lattice),
-    stiffness_vals_(stiffness_vals)
+    stiffness_vals_(stiffness_vals),
+    Tm_(matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize())),
+    Jm_(matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize()))
 {
+    auto dims = lattice_.dims;
+    size_t Lx = dims[0];
+    auto pos0(dims),pos_left(dims), pos_right(dims);
+    for (size_t i=0; i<lattice_.get_msize();i++) { 
+        pos0 = lattice_.index_to_pos(i);
+        pos_left = pos0; pos_right = pos0;
+        pos_left[0] = ((pos0[0] - 1)+Lx)%Lx; // pos_left = |r-x>
+        pos_right[0] = ((pos0[0] + 1)+Lx)%Lx; // pos_right = |r+x>
+        auto index0 = lattice_.pos_to_index(pos0);
+        assert(lattice_.pos_to_index(pos0) == i);
+        auto index_left = lattice_.pos_to_index(pos_left);
+        auto index_right = lattice_.pos_to_index(pos_right);
+        //FKDEBUG(pos_left << " <- " << pos0 << " -> " << pos_right); 
+        //FKDEBUG(index_left << " <- " << index0 << " -> " << index_right);
+        Tm_(i, index_left) = -t_;
+        Tm_(i, index_right) = -t_;
+
+        Jm_(i, index_left) = -I;
+        Jm_(i, index_right) = I;
+    }
+
+    FKDEBUG("T = " << Tm_, DEBUG_LEVEL, 3);
+    FKDEBUG("J = " << Jm_, DEBUG_LEVEL, 3);
 }
 
 template <typename lattice_t>
@@ -51,60 +79,31 @@ void measure_stiffness<lattice_t>::accumulate(double sign)
     const auto& evecs = config_.ed_data().cached_evecs;
     const auto& evals = config_.ed_data().cached_spectrum;
     const auto& dims = lattice_.dims;
+    const auto& fermi = config_.ed_data().cached_fermi;
+    int m_size = evals.size(); 
+    double Volume = m_size;
+    assert(m_size == lattice_.get_msize());
 
     assert(dims.size() >= 2); // no stiffness in 
+
+    //auto fermi[](double e){return 1.0/(1.0 + e); }
+
+    //size_t Lx = dims[0];
     
-    auto pos0(dims);
-    pos0.fill(0);
-    auto pos1(pos0);
-    pos0[0] = 1;
-
-    double Lx = dims[0];
-
     double T = 0, V = 0;
 
-    //Eigen::MatrixXd Vvals(evals.size(),evals.size());
-    //Vvals.setZero();
-
-    // loop over eigenvectors
-    for (size_t i=0; i<evals.size(); i++) {
-        const auto &alpha = evecs.col(i);
-        double Te = 0;
-        double Ve = 0;
-        for (size_t j=0; j<evals.size(); j++) {
-            if (std::abs(evals[i] - evals[j]) < 1e-12 && i!=j) continue; 
-            const auto &alpha_p = evecs.col(j);
-
-            double T_val = 0;
-            std::complex<double> curr_val = 0;
-            // loop over y
-            for (int y=0; y<dims[1]; y++) { 
-                pos0[1] = y; // pos0 = <r|
-                pos1[1] = y; // pos1 = |r-x>
-                // index0 - r
-                auto index0 = lattice_.pos_to_index(pos0);
-                // index1 - r-x
-                auto index1 = lattice_.pos_to_index(pos1);
-                //FKDEBUG(index0 << " " << index1);
-                T_val += -t_*std::real(std::conj(alpha[index0]) * alpha_p[index1] + std::conj(alpha[index1]) * alpha_p[index0]);
-                curr_val += t_*(std::conj(alpha[index0])*alpha_p[index1] - std::conj(alpha[index1])*alpha_p[index0]);
-                };
-
-            double V_val = (i!=j)?2.0*0.5*std::abs(curr_val * curr_val) / (evals[i] - evals[j]):0.0;
-            if (i==j) Te = 0.5*T_val;
-            Ve+=V_val; 
-            //Vvals(i,j)=Ve;
-            };
-        if (DEBUG_LEVEL > 1) FKDEBUG("-T = " << -Te << " V = " << Ve << " weight = " << 1./(1.0+config_.ed_data().cached_exp(i)) );
-        //FKDEBUG(Vvals);
-        auto T_val = 1.0/(1.0+config_.ed_data().cached_exp(i)) * Te;
-        auto V_val = 1.0/(1.0+config_.ed_data().cached_exp(i)) * Ve;
-        if (DEBUG_LEVEL > 1) FKDEBUG("T_val : " << T_val << " V_val : " << V_val);
+    for (size_t i=0; i<evals.size(); i++) { 
+        double T_val = (-M_PI) * (evecs.col(i).transpose()*Tm_*evecs.col(i) * fermi(i)).real()(0,0);
         T+=T_val;
-        V+=V_val;
+        for (size_t j=0; j<evals.size(); j++) { 
+            bool neq = std::abs(evals[i] - evals[j]) > 1e-12;
+            double V_val = neq ? M_PI * (fermi(i) - fermi(j)) / (evals(i) - evals(j)) * (evecs.col(j).transpose() * Jm_ * evecs.col(i)).squaredNorm() : 0.0;
+            V+=V_val;
+            }
         }
-    double stiffness = V-T;
-    if (DEBUG_LEVEL > 0) FKDEBUG("T = " << T << "; V = " << V << "; stiffness = " << stiffness);
+
+    double stiffness = (V + T)/Volume;
+    FKDEBUG("T = " << T << "; V = " << V << "; stiffness = " << stiffness, DEBUG_LEVEL, 2);
     stiffness_vals_.push_back(stiffness);
 }
 

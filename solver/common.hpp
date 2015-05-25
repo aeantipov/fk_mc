@@ -20,12 +20,31 @@ namespace tqa = triqs::arrays;
 using triqs::arrays::prod;
 using triqs::arrays::sum;
 
-#define MSG_PREFIX            __FILE__ << ":" << __LINE__ << ": "
+// FKDEBUG messages with custom verbosity.
+// Adapted from http://efesx.com/2010/08/31/overloading-macros/
 #ifndef NDEBUG
-#define FKDEBUG(MSG)            std::cout << std::boolalpha << MSG_PREFIX << MSG << std::endl; 
-#else 
-#define FKDEBUG(MSG)
+#define MSG_PREFIX            __FILE__ << ":" << __LINE__ << ": "
+#define FKDEBUG3(MSG,VERBOSITY,VERB_LEVEL)            if (VERBOSITY >= VERB_LEVEL) std::cerr << MSG_PREFIX << MSG << std::endl;
+#else
+#define FKDEBUG3(MSG,VERBOSITY,VERB_LEVEL)            ;
 #endif
+
+#define FKDEBUG1(MSG) FKDEBUG3(MSG,3,3)
+#define FKDEBUG2(MSG,VERBOSITY) FKDEBUG3(MSG,VERBOSITY,3)
+
+#define VA_NUM_ARGS_IMPL(_1,_2,_3,_4,_5,N,...) N
+#define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 5,4,3,2,1)
+#define macro_dispatcher(func, ...) \
+            macro_dispatcher_(func, VA_NUM_ARGS(__VA_ARGS__))
+#define macro_dispatcher_(func, nargs) \
+            macro_dispatcher__(func, nargs)
+#define macro_dispatcher__(func, nargs) \
+            func ## nargs
+
+#define FKDEBUG(...) macro_dispatcher(FKDEBUG, __VA_ARGS__)(__VA_ARGS__)
+
+
+
 #define INFO(MSG)             std::cout << std::boolalpha << MSG << std::endl;
 #define INFO2(MSG)            std::cout << "    " << std::boolalpha << MSG << std::endl;
 #define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;

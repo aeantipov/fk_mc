@@ -26,6 +26,7 @@ struct ed_cache {
     status_eval status;
     real_array_t cached_spectrum;
     real_array_t cached_exp;
+    real_array_t cached_fermi;
     dense_m cached_evecs;
 
     double logZ = 0.0;
