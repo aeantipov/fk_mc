@@ -59,7 +59,8 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
     if (h5_mc_data.has_key("d2energies")) h5_read(h5_mc_data,"d2energies", obs.d2energies);
     h5_read(h5_mc_data,"nf0", obs.nf0);
     h5_read(h5_mc_data,"nfpi", obs.nfpi);
-    if (h5_mc_data.has_key("specteum")) h5_read(h5_mc_data,"spectrum", obs.spectrum);
+    if (h5_mc_data.has_key("spectrum")) h5_read(h5_mc_data,"spectrum", obs.spectrum);
+    if (h5_mc_data.has_key("stiffness") && p["measure_stiffness"]) h5_read(h5_mc_data,"stiffness", obs.stiffness);
 
     if (p["measure_history"]) { 
         std::cout << "spectrum_history... " << std::flush;
