@@ -17,8 +17,7 @@ struct measure_stiffness {
     typedef typename configuration_t::real_array_t  real_array_t;
 
 
-    measure_stiffness(configuration_t& in, const lattice_t& lattice, 
-                  std::vector<double>& stiffness_vals); 
+    measure_stiffness(configuration_t& in, const lattice_t& lattice, std::vector<double>& stiffness_vals); 
  
     void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);
@@ -34,12 +33,13 @@ struct measure_stiffness {
     typedef Eigen::MatrixXcd matrix_type;
 protected:
     matrix_type Tm_, Jm_;
-
 };
 
 
 template <typename lattice_t>
-measure_stiffness<lattice_t>::measure_stiffness(configuration_t& in, const lattice_t& lattice, std::vector<double>& stiffness_vals): 
+measure_stiffness<lattice_t>::measure_stiffness(configuration_t& in, const lattice_t& lattice, 
+        std::vector<double>& stiffness_vals
+        ): 
     config_(in), 
     lattice_(lattice),
     stiffness_vals_(stiffness_vals),
@@ -91,13 +91,14 @@ void measure_stiffness<lattice_t>::accumulate(double sign)
     //size_t Lx = dims[0];
     
     double T = 0, V = 0;
-
+    
     for (size_t i=0; i<evals.size(); i++) { 
         double T_val = (-M_PI) * (evecs.col(i).transpose()*Tm_*evecs.col(i) * fermi(i)).real()(0,0);
         T+=T_val;
         for (size_t j=0; j<evals.size(); j++) { 
             bool neq = std::abs(evals[i] - evals[j]) > 1e-12;
-            double V_val = neq ? M_PI * (fermi(i) - fermi(j)) / (evals(i) - evals(j)) * (evecs.col(j).transpose() * Jm_ * evecs.col(i)).squaredNorm() : 0.0;
+            double sigma_v = M_PI * (fermi(i) - fermi(j)) * (evecs.col(j).transpose() * Jm_ * evecs.col(i)).squaredNorm();
+            double V_val = neq ? sigma_v / (evals(i) - evals(j)) : 0.0;
             V+=V_val;
             }
         }
