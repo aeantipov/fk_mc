@@ -86,11 +86,14 @@ try {
 
     TCLAP::ValueArg<bool>     calc_history_switch("","calc_history","Calculate data history (for errorbars)", false, false, "bool", cmd);
     TCLAP::ValueArg<bool>     calc_ipr_switch("","calc_ipr","Calculate inverse participation ratio", false, false, "bool", cmd);
-    TCLAP::ValueArg<bool>     calc_stiffness_switch("","calc_stiffness","Calculate inverse participation ratio", false, false, "bool", cmd);
     // dos-related args
     TCLAP::ValueArg<double>   dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
     TCLAP::ValueArg<int>      dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
     TCLAP::ValueArg<double>   dos_offset_arg("","dos_offset","offset of dos from real axis", false, 0.05, "double", cmd);
+    // stiffness args
+    TCLAP::ValueArg<bool>     calc_stiffness_switch("","calc_stiffness","Calculate inverse participation ratio", false, false, "bool", cmd);
+    TCLAP::ValueArg<double>   cond_offset_arg("","cond_offset","offset of conductivity from real axis", false, 0.05, "double", cmd);
+    TCLAP::ValueArg<int>      cond_npoints_arg("","cond_npoints","number of points to sample conductivity", false, 150, "int", cmd);
 
     // chebyshev flags
     TCLAP::SwitchArg          chebyshev_switch("c","chebyshev","Make chebyshev moves?", cmd, false);
@@ -139,6 +142,8 @@ try {
     p["dos_width"] = dos_width_arg.getValue();
     p["dos_npts"] = dos_npts_arg.getValue();
     p["dos_offset"] = dos_offset_arg.getValue();
+    p["cond_offset"] = cond_offset_arg.getValue();
+    p["cond_npoints"] = cond_npoints_arg.getValue();
     
     p["mc_flip"] = move_flips_switch.getValue();
     p["mc_add_remove"] = move_add_remove_switch.getValue();
@@ -217,6 +222,20 @@ try{
     #endif
 
     if (!world.rank()) std::cout << "All parameters: " << p << std::endl;
+    
+    // create a log grid for conductivity
+    int nw_size = p["cond_npoints"];
+    double wmax = std::max(8.0, 2*double(p["U"]));
+    double base = M_E;
+    int min_power = -15;
+    Eigen::VectorXd wgrid1 (2*nw_size + 1);
+    { 
+        Eigen::VectorXd wgrid2 = Eigen::VectorXd::LinSpaced(nw_size, min_power, 0);
+        for (int i=0; i<wgrid2.size(); i++) { wgrid2[i] = wmax * std::pow(base, wgrid2[i]); }
+        wgrid1 << -wgrid2.reverse(), Eigen::VectorXd::Zero(1), wgrid2;
+    }
+        
+    std::vector<double> wgrid_conductivity ({wgrid1.data(), wgrid1.data() + wgrid1.size()});
 
     fk_mc<lattice_t> mc(lattice, p);
 
@@ -226,14 +245,14 @@ try{
         
     steady_clock::time_point start, end;
     start = steady_clock::now();
-    mc.solve();
+    mc.solve(wgrid_conductivity);
     end = steady_clock::now();
 
     world.barrier();
     if (world.rank() == 0) {
         mc.observables.merge(obs_old);
         p["n_cycles"] = n_cycles_total;
-        save_data(mc,p,h5fname,save_plaintext);
+        save_data(mc,p,h5fname,save_plaintext,wgrid_conductivity);
         std::cout << "Calculation lasted : " 
             << duration_cast<hours>(end-start).count() << "h " 
             << duration_cast<minutes>(end-start).count()%60 << "m " 

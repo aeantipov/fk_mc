@@ -26,6 +26,9 @@ triqs::utility::parameters load_parameters(std::string output_file, triqs::utili
         std::abs(double(pnew["U"]) - double(pold["U"])) < 1e-4 && 
         std::abs(double(pnew["beta"]) - double(pold["beta"])) < 1e-4 && 
         bool(pnew["measure_history"]) == bool(pold["measure_history"]) && 
+        bool(pnew["measure_stiffness"]) == bool(pold["measure_stiffness"]) && 
+        (!bool(pnew["measure_stiffness"]) || std::abs(double(pnew["cond_offset"]) - double(pold["cond_offset"]))<1e-12) &&
+        (!bool(pnew["measure_stiffness"]) || int(pold["cond_npoints"]) == int(pnew["cond_npoints"])) &&
         bool(pnew["measure_ipr"]) == bool(pold["measure_ipr"]) && 
         bool(pnew["cheb_moves"]) == bool(pold["cheb_moves"]) &&
         (!bool(pnew["cheb_moves"]) || double(pnew["cheb_prefactor"]) == double(pold["cheb_prefactor"]));
@@ -96,6 +99,20 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
                 obs.ipr_history[i][j] = t_ipr_history(i,j); 
             };
         };
+
+    // Inverse participation ratio
+    if (p["measure_stiffness"]) {
+        std::cout << "conductivity..." << std::flush;
+        triqs::arrays::array<double, 2> t_cond_history;
+        h5_read(h5_mc_data,"cond_history", t_cond_history);
+        obs.cond_history.resize(t_cond_history.shape()[0]);
+        for (int i=0; i<obs.cond_history.size(); i++) { 
+            obs.cond_history[i].resize(t_cond_history.shape()[1]);
+            for (int j=0; j< obs.cond_history[0].size(); j++)
+                obs.cond_history[i][j] = t_cond_history(i,j); 
+            };
+        };
+
     std::cout << "done." << std::endl;
     return std::move(obs);
 }

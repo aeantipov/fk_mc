@@ -77,6 +77,7 @@ measure_stiffness<lattice_t>::measure_stiffness(configuration_t& in, const latti
     stiffness_vals_(stiffness_vals),
     cond_history_(cond_history),
     wgrid_(wgrid),
+    offset_(offset),
     Tm_(lattice_.get_msize(), lattice_.get_msize()), //matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize())),
     Jm_(lattice_.get_msize(), lattice_.get_msize()) //matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize()))
     //Tm_(matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize())),
@@ -176,7 +177,12 @@ void measure_stiffness<lattice_t>::accumulate(double sign)
     stiffness_vals_.push_back(stiffness);
 
     for (int wn = 0; wn < wgrid_.size(); wn++) { 
-        cond_history_[wn].push_back(std::accumulate(cond_terms.begin(), cond_terms.end(), 0.0, [&](double s, resonant_term d)->double{return s+d(wgrid_[wn], offset_);})); 
+        cond_history_[wn].push_back(std::accumulate(cond_terms.begin(), cond_terms.end(), 0.0, 
+                                     [&](double s, resonant_term const& d)->double { 
+                                        //FKDEBUG(wgrid_[wn] << " : " << s << " + " << d << " " << offset_ << " : " << d(wgrid_[wn], offset_)); 
+                                        return s+d(wgrid_[wn], offset_);
+                                        }
+                                    )); 
         }
 }
 
