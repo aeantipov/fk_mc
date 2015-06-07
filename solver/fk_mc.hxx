@@ -32,7 +32,7 @@ fk_mc<L>::fk_mc(lattice_type l, triqs::utility::parameters p1, bool randomize_co
 }
 
 template <typename L>
-void fk_mc<L>::solve()
+void fk_mc<L>::solve(std::vector<double> wgrid_conductivity)
 {
     if (int(p["n_cycles"]) == 0) return;
     if (comm.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
@@ -77,7 +77,7 @@ void fk_mc<L>::solve()
         }
     if (p["measure_stiffness"]) {
         if (!comm.rank()) std::cout << "Measuring stiffness" << std::endl;
-        this->add_measure(measure_stiffness<lattice_type>(config, lattice, observables.stiffness),"stiffness");
+        this->add_measure(measure_stiffness<lattice_type>(config, lattice, observables.stiffness, observables.cond_history, wgrid_conductivity, p["dos_offset"]),"stiffness");
         };
 
     calc_spectrum = calc_spectrum || p["measure_ipr"];
@@ -125,6 +125,7 @@ template <typename L>
    .optional("random_seed", int(34788), "Seed for random number generator")
    .optional("max_time",int(600000), "Maximum running time")
    .optional("measure_ipr", bool(false), "Measure inverse participation ratio")
+   .optional("dos_offset", double(0.05), "dos offset from the real axis")
    ;
 
   return pdef;

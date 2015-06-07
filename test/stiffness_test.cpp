@@ -14,6 +14,7 @@ void test_stiffness(double U, double beta, std::vector<int> f_config, double com
     boost::mpi::communicator comm;
     typedef hypercubic_lattice<2> lattice_t;
     int L = std::lround(sqrt(f_config.size()));
+    std::cout << "L = " << L << std::endl;
     double mu = U/2;
     double e_f = 0.0;
     double t = 1.0;
@@ -33,7 +34,9 @@ void test_stiffness(double U, double beta, std::vector<int> f_config, double com
     std::cout << "Spectrum : " << config.ed_data().cached_spectrum.transpose() << std::endl;
     
     std::vector<double> stiffness_vals;
-    auto st_m = measure_stiffness<lattice_t>(config,lattice,stiffness_vals);
+    std::vector<double> wgrid = {0.0};
+    std::vector<std::vector<double>> cond_history;
+    auto st_m = measure_stiffness<lattice_t>(config,lattice,stiffness_vals,cond_history,wgrid,0.05);
 
     st_m.accumulate(1.0);
     st_m.collect_results(comm);

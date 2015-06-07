@@ -19,6 +19,7 @@ struct observables_t {
     std::vector<std::vector<double>> spectrum_history;  // L^D x n_measures size
     std::vector<std::vector<double>> ipr_history;       // L^D x n_measures size
     std::vector<double> stiffness; // n_measures size
+    std::vector<std::vector<double>> cond_history;
     std::vector<std::vector<double>> focc_history;      // L^D x n_measures size
     std::vector<std::vector<std::complex<double>>> nq_history;       // nqpts x n_measures size
     std::vector<std::vector<double>> fsuscq_history;    // nqpts x n_measures size
@@ -49,7 +50,7 @@ public:
     static triqs::utility::parameter_defaults solve_defaults();
 
     fk_mc(lattice_type l, parameters_t p, bool randomize_config = true);
-    void solve();
+    void solve(std::vector<double> wgrid_conductivity = {0.0});
     parameters_t& parameters() { return p; } 
 };
 

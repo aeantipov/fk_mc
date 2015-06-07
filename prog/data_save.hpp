@@ -18,7 +18,6 @@ triqs::utility::parameter_defaults save_defaults() {
   pdef
    .optional("dos_npts", int(100), "Number of points for dos")
    .optional("dos_width", double(6), "Energy window to save dos")
-   .optional("dos_offset", double(0.05), "dos offset from the real axis")
    .optional("measure_ipr", bool(false), "Measure inverse participation ratio")
    ;
   return pdef;
