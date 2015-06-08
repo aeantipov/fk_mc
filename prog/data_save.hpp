@@ -233,7 +233,8 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
             std::vector<double> const& wgrid = wgrid_cond; 
 
             // cond(w)
-            int cond_bin = estimate_bin(binning::accumulate_binning(cond_history[wgrid.size()/2].begin(), cond_history[wgrid.size()/2].end(), maxbin)); 
+            auto cond_stats0 = binning::accumulate_binning(cond_history[wgrid.size()/2].begin(), cond_history[wgrid.size()/2].end(), maxbin);
+            int cond_bin = estimate_bin(cond_stats0); 
             {
                 INFO("Saving w*conductivity (w)");
                 triqs::arrays::array<double, 2> wcond_ev(wgrid.size(),3);
@@ -256,7 +257,11 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                 double cond0_err = wcond_ev(index_zero + 1, 2)/wgrid[index_zero + 1];
 
                 // save dc conductivity
-                triqs::arrays::array<double, 1> t_cond0(2); t_cond0(0) = cond0; t_cond0(1)=cond0_err;
+                triqs::arrays::array<double, 1> t_cond0(4); 
+                t_cond0(binning::bin_m::_SIZE) = std::get<binning::bin_m::_SIZE>(cond_stats0[cond_bin]); 
+                t_cond0(binning::bin_m::_MEAN) = cond0; 
+                t_cond0(binning::bin_m::_DISP) = t_cond0(binning::bin_m::_SIZE)*cond0_err*cond0_err; 
+                t_cond0(binning::bin_m::_SQERROR)=cond0_err;
                 h5_write(h5_stats,"cond0",t_cond0);
                 if (save_plaintext) savetxt("cond0.dat",t_cond0);
 
