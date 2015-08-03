@@ -83,7 +83,7 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
         for (int i=0; i<obs.focc_history.size(); i++) { 
             obs.focc_history[i].resize(focc_history.shape()[1]);
             for (int j=0; j< obs.focc_history[0].size(); j++)
-                focc_history(i,j) =  obs.focc_history[i][j];
+                obs.focc_history[i][j] = focc_history(i,j);
             }
         };
 
