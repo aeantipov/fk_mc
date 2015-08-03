@@ -457,6 +457,66 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
             if (save_plaintext) savetxt("ipr_err.dat",ipr_ev);
 
         } // end measure_ipr
+
+    // f-electron correlation functions
+    // assuming x <-> y symmetry
+    const auto& fhistory = mc.observables.focc_history;
+    const auto dims = mc.lattice.dims;
+
+    int nf_bin = estimate_bin(binning::accumulate_binning(fhistory[0].rbegin(), fhistory[0].rend(), maxbin));
+
+    std::vector<double> nf_mean(Volume, 0);
+    for (int i = 0; i < Volume; i++) { 
+        auto nf_stats = binning::bin(fhistory[i].rbegin(), fhistory[i].rend(), nf_bin); 
+        nf_mean[i] = std::get<binning::_MEAN>(nf_stats);
+        }
+        
+
+    auto fcorrel_f = [&](const std::vector<double> focc_history, int l)->double { 
+        double out = 0.0;
+        for (size_t i=0; i<Volume; i++) {
+            double nf_i = focc_history[i];
+            double nf_i_mean = nf_mean[i];
+            auto current_pos = mc.lattice.index_to_pos(i); 
+            for (int d = 0; d < mc.lattice.Ndim; d++) { 
+                auto pos_l(current_pos), pos_r(current_pos);
+                pos_l[d]=(current_pos[d] - l + dims[d]) % dims[d];
+                pos_r[d]=(current_pos[d] + l + dims[d]) % dims[d];
+                size_t index_l = mc.lattice.pos_to_index(pos_l);
+                size_t index_r = mc.lattice.pos_to_index(pos_r);
+
+                double nf_l = focc_history[index_l]; 
+                double nf_r = focc_history[index_r]; 
+                double nf_l_mean = nf_mean[index_l];
+                double nf_r_mean = nf_mean[index_r];
+                out += (nf_i - nf_i_mean) * (nf_l - nf_l_mean);
+                out += (nf_i - nf_i_mean) * (nf_r - nf_r_mean);
+                };
+            }
+            return out / Volume / (2.0 * mc.lattice.Ndim); 
+        };
+
+        auto fcorrel0_stats = jackknife::accumulate_jackknife(std::function<double(std::vector<double>)>(std::bind(fcorrel_f, std::placeholders::_1, 0)),fhistory,maxbin);
+        nf_bin = estimate_bin(fcorrel0_stats);
+        double fcorrel0_mean = std::get<binning::_MEAN>(fcorrel0_stats[nf_bin]);
+        double fcorrel0_error = std::get<binning::_SQERROR>(fcorrel0_stats[nf_bin]);
+
+        triqs::arrays::array<double, 2> fcorrel_out(mc.lattice.dims[0] / 2, 5);
+        for (int l = 0; l < mc.lattice.dims[0] / 2; l++) { 
+            auto fcorrel_stats = jackknife::jack(std::function<double(std::vector<double>)>(std::bind(fcorrel_f, std::placeholders::_1, l)),fhistory,nf_bin);
+            save_bin_data(fcorrel_stats,h5_stats,"fcorrel_" + std::to_string(l),save_plaintext);
+            double fcorrel_mean = std::get<binning::_MEAN>(fcorrel_stats);
+            double fcorrel_error = std::get<binning::_SQERROR>(fcorrel_stats);
+            fcorrel_out(l,0) = l;
+            fcorrel_out(l,1) = fcorrel_mean;
+            fcorrel_out(l,2) = fcorrel_error;
+            fcorrel_out(l,3) = fcorrel_mean / fcorrel0_mean;
+            fcorrel_out(l,4) = std::sqrt(std::pow(fcorrel_error / fcorrel0_mean, 2) + std::pow(fcorrel_mean / (fcorrel0_mean * fcorrel0_mean) * fcorrel0_error, 2));
+            }
+
+        h5_write(h5_stats,"fcorrel",fcorrel_out);
+        if (save_plaintext) savetxt("fcorrel.dat",fcorrel_out);
+
     } // end measure_history
 }
 
