@@ -11,6 +11,7 @@
 namespace fk {
 
 struct observables_t {
+    typedef configuration_t::dense_m dense_m;
     std::vector<double> energies;
     std::vector<double> d2energies;
     std::vector<double> nf0;
@@ -23,6 +24,7 @@ struct observables_t {
     std::vector<std::vector<double>> focc_history;      // L^D x n_measures size
     std::vector<std::vector<std::complex<double>>> nq_history;       // nqpts x n_measures size
     std::vector<std::vector<double>> fsuscq_history;    // nqpts x n_measures size
+    std::vector<dense_m> eigenfunctions_history;
 
     void merge(observables_t& rhs);
 

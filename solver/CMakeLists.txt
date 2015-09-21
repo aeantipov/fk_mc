@@ -15,6 +15,7 @@ set (fk_mc_src
     measures/focc_history.cpp
     measures/ipr.hpp
     measures/stiffness.hpp
+    measures/eigenfunctions.cpp
     fk_mc.hpp fk_mc.cpp
 )
 add_library(fk_mc STATIC ${fk_mc_src})

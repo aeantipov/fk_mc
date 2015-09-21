@@ -95,6 +95,9 @@ try {
     TCLAP::ValueArg<double>   cond_offset_arg("","cond_offset","offset of conductivity from real axis", false, 0.05, "double", cmd);
     TCLAP::ValueArg<int>      cond_npoints_arg("","cond_npoints","number of points to sample conductivity", false, 150, "int", cmd);
 
+    // eigenfunctions storage
+    TCLAP::ValueArg<bool>     calc_eigenfunctions_switch("","calc_eigenfunctions","Store eigenfunctions?", false, false, "bool", cmd);
+
     // chebyshev flags
     TCLAP::SwitchArg          chebyshev_switch("c","chebyshev","Make chebyshev moves?", cmd, false);
     TCLAP::ValueArg<double>   chebyshev_prefactor("","cheb_prefactor","Prefactor of log(N) chebyshev polynomials", false, 2.35, "double", cmd);
@@ -138,12 +141,15 @@ try {
     p["cheb_prefactor"] = chebyshev_prefactor.getValue();
     p["measure_ipr"] = calc_ipr_switch.getValue();
     p["measure_stiffness"] = calc_stiffness_switch.getValue();
-    p["measure_history"] = (calc_history_switch.getValue() && !bool(p["cheb_moves"])) || bool(p["measure_ipr"]);
+    p["measure_eigenfunctions"] = calc_eigenfunctions_switch.getValue();
+
+    p["measure_history"] = (calc_history_switch.getValue() && !bool(p["cheb_moves"])) || bool(p["measure_ipr"]) || bool(p["measure_eigenfunctions"]);
     p["dos_width"] = dos_width_arg.getValue();
     p["dos_npts"] = dos_npts_arg.getValue();
     p["dos_offset"] = dos_offset_arg.getValue();
     p["cond_offset"] = cond_offset_arg.getValue();
     p["cond_npoints"] = cond_npoints_arg.getValue();
+
     
     p["mc_flip"] = move_flips_switch.getValue();
     p["mc_add_remove"] = move_add_remove_switch.getValue();

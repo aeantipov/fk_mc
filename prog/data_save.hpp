@@ -146,6 +146,17 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
         h5_write(h5_mc_data,"cond_history", t_cond_history);
         };
 
+    if (p["measure_eigenfunctions"]) {
+        std::cout << "Eigenfunctions" << std::endl;
+        const auto& eig_hist = mc.observables.eigenfunctions_history;
+        triqs::arrays::array<double, 3> t_eig_history(eig_hist.size(), eig_hist[0].rows(), eig_hist[0].cols() );
+        for (int i=0; i<eig_hist.size(); i++)
+            for (int j=0; j< eig_hist[0].rows(); j++) 
+                for (int k=0; k< eig_hist[0].cols(); k++) 
+                    t_eig_history(i,j,k) =  eig_hist[i](j,k);
+        h5_write(h5_mc_data,"eig_history", t_eig_history);
+        }
+
 
     //===== save statistics ===== //
     top.create_group("stats");

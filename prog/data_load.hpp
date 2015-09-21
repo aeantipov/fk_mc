@@ -113,6 +113,21 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
             };
         };
 
+    // Eigenfunctions
+    if (p["measure_eigenfunctions"]) {
+        std::cout << "eigenfunctions..." << std::flush;
+        triqs::arrays::array<double, 3> t_eig_history;
+        h5_read(h5_mc_data,"eig_history", t_eig_history);
+        obs.eigenfunctions_history.resize(t_eig_history.shape()[0]);
+        for (int i=0; i<t_eig_history.shape()[0]; i++) { 
+            obs.eigenfunctions_history[i] = observables_t::dense_m(t_eig_history.shape()[1], t_eig_history.shape()[2]);
+            for (int j=0; j< t_eig_history.shape()[1]; j++)
+                for (int k=0; k<t_eig_history.shape()[2]; k++)
+                    obs.eigenfunctions_history[i](j,k) = t_eig_history(i,j,k); 
+            };
+        };
+
+
     std::cout << "done." << std::endl;
     return std::move(obs);
 }

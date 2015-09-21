@@ -23,6 +23,7 @@ void observables_t::reserve(int n)
     focc_history.reserve(n);     // L^D x n_measures size
     nq_history.reserve(n);       // nqpts x n_measures size
     fsuscq_history.reserve(n);   // nqpts x n_measures size
+    eigenfunctions_history.reserve(n);   // L^D * L^D * n_measures size (huge)
 }
 
 template<typename T>
@@ -50,6 +51,7 @@ void observables_t::merge(observables_t& rhs)
     auto_merge(nf0, rhs.nf0);
     auto_merge(nfpi, rhs.nfpi);
     auto_merge(spectrum, rhs.spectrum);
+    auto_merge(eigenfunctions_history, rhs.eigenfunctions_history);
 
     auto_merge_vv(spectrum_history, rhs.spectrum_history);
     auto_merge_vv(ipr_history, rhs.ipr_history);
