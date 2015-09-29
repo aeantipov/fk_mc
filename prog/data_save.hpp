@@ -13,6 +13,10 @@ namespace fk {
 template <typename MC>
 void save_data(const MC& mc, triqs::utility::parameters p, std::string output_file, bool save_plaintext = false, std::vector<double> wgrid_cond = {0.0});
 
+// save g(w,r) and g(w,k)
+template <typename LATTICE>
+void save_gwr(observables_t const& obs, LATTICE const& lattice, triqs::utility::parameters const& p, std::vector<std::complex<double>> wgrid);
+
 triqs::utility::parameter_defaults save_defaults() {
   triqs::utility::parameter_defaults pdef;
   pdef
@@ -340,75 +344,8 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
 
 
     // G(w,k)
-    if (p["measure_eigenfunctions"]) { 
-        typedef observables_t::dense_m dense_m;
-        const std::vector<dense_m>& eigs = mc.observables.eigenfunctions_history;
-        std::cout << "Saving G(w,k)" << std::endl;
-
-        // create a grid for gw
-        std::vector<double> grid_real2; 
-        grid_real2.push_back(0);
-
-        dense_m gwr_re(eigs[0].rows(), eigs[0].cols()); 
-        dense_m gwr_im(eigs[0].rows(), eigs[0].cols()); 
-        //Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> evals(eigs[0].rows());
-        //Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> ident_v(eigs[0].rows());
-        dense_m evals(eigs[0].rows(), eigs[0].cols()); evals.setZero();
-        dense_m ident_v(eigs[0].rows(), eigs[0].cols());
-        ident_v.setIdentity();
-
-        double xi = p["dos_offset"];
-        dense_m xi_m = ident_v * xi;
-
-        for (auto w : grid_real2) { 
-            gwr_re.setZero();
-            gwr_im.setZero();
-            for (int m = 0; m < eigs.size(); ++m) { 
-                for (int i = 0; i < eigs[0].rows(); ++i) { evals.diagonal()(i) = mc.observables.spectrum_history[i][m]; }
-                auto wminuseps = ident_v * w - evals;
-                std::cout << evals.diagonal().transpose() << std::endl;// wminuseps*wminuseps + xi_m*xi_m << std::endl;
-                // eigenvalues are in columns
-                std::cout << "norm = " << eigs[0].row(0) * eigs[0].row(0).transpose() << std::endl;
-                std::cout << "norm2 = " << eigs[0].col(0).transpose() * eigs[0].col(0) << std::endl;
-                gwr_im -= eigs[m].transpose() * xi * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / eigs.size();
-                gwr_re += eigs[m].transpose() * wminuseps * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / eigs.size();
-                }
-
-            std::ofstream gwr_re_str("gr_full_w"+std::to_string(w)+"_re.dat");
-            std::ofstream gwr_im_str("gr_full_w"+std::to_string(w)+"_im.dat");
-            gwr_re_str << gwr_re << std::endl;
-            gwr_im_str << gwr_im << std::endl;
-            gwr_re_str.close();
-            gwr_im_str.close();
-
-            // now gwr_re, gwr_im contain Gw(r1,r2)
-            // let's now convert it to Gw(r1 - r2)
-            auto dims = mc.lattice.dims;
-            dense_m gwr_im2 = dense_m::Zero(dims[0], dims[1]);
-            dense_m gwr_re2 = dense_m::Zero(dims[0], dims[1]);
-            for (int i=0; i<gwr_im.rows(); ++i) { 
-                auto pos_i = mc.lattice.index_to_pos(i);
-                for (int j =0; j < gwr_im.cols(); ++j) { 
-                    auto pos_j = mc.lattice.index_to_pos(j);
-                    //std::cout << " i = " << pos_i << " j = " << pos_j << std::endl;
-            
-                    int p0 = (dims[0] + pos_j[0] - pos_i[0]) % dims[0];
-                    int p1 = (dims[1] + pos_j[1] - pos_i[1]) % dims[1];
-
-                    gwr_im2(p0,p1) += gwr_im(i, j) / gwr_im.cols();
-                    gwr_re2(p0,p1) += gwr_re(i, j) / gwr_im.cols();
-                    }
-                }
-
-            gwr_re_str.open("gr_w"+std::to_string(w)+"_re.dat");
-            gwr_im_str.open("gr_w"+std::to_string(w)+"_im.dat");
-            gwr_re_str << gwr_re2 << std::endl;
-            gwr_im_str << gwr_im2 << std::endl;
-            gwr_re_str.close();
-            gwr_im_str.close();
-            }
-        }
-
+    if (p["measure_eigenfunctions"]) { save_gwr(mc.observables, mc.lattice, p, {std::complex<double>(0,0)}); } 
+    
     if (p["measure_history"])
     { // dos(w=0)
         const auto &spectrum_history = mc.observables.spectrum_history;
@@ -600,6 +537,81 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
         if (save_plaintext) savetxt("fcorrel.dat",fcorrel_out);
 
     } // end measure_history
+}
+
+
+// Save G(w,r) and G(w,k) to plaintext files
+// Warning: only works for 2d
+template <typename LATTICE>
+void save_gwr(observables_t const& obs, LATTICE const& lattice, triqs::utility::parameters const& p, std::vector<std::complex<double>> wgrid) 
+{ 
+    typedef observables_t::dense_m dense_m;
+    const std::vector<dense_m>& eigs = obs.eigenfunctions_history;
+    std::cout << "Saving G(w,k)" << std::endl;
+
+    // create a grid for gw
+    std::vector<double> grid_real2; 
+    grid_real2.push_back(0);
+
+    dense_m gwr_re(eigs[0].rows(), eigs[0].cols()); 
+    dense_m gwr_im(eigs[0].rows(), eigs[0].cols()); 
+    //Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> evals(eigs[0].rows());
+    //Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> ident_v(eigs[0].rows());
+    dense_m evals(eigs[0].rows(), eigs[0].cols()); evals.setZero();
+    dense_m ident_v(eigs[0].rows(), eigs[0].cols());
+    ident_v.setIdentity();
+
+    double xi = p["dos_offset"];
+    dense_m xi_m = ident_v * xi;
+
+    for (std::complex<double> w : wgrid) { 
+        std::string wstring = std::to_string(float(w.real())) + "_" + std::to_string(float(w.imag()));
+        gwr_re.setZero();
+        gwr_im.setZero();
+        for (int m = 0; m < eigs.size(); ++m) { 
+            for (int i = 0; i < eigs[0].rows(); ++i) { evals.diagonal()(i) = obs.spectrum_history[i][m]; }
+            auto wminuseps = ident_v * w.real() - evals;
+            std::cout << (wminuseps * wminuseps + (xi_m + w.imag() * ident_v)*(xi_m + w.imag() * ident_v)).inverse() << std::endl;// wminuseps*wminuseps + xi_m*xi_m << std::endl;
+            // eigenvalues are in columns
+            std::cout << "norm = " << eigs[0].row(0) * eigs[0].row(0).transpose() << std::endl;
+            std::cout << "norm2 = " << eigs[0].col(0).transpose() * eigs[0].col(0) << std::endl;
+            gwr_im -= eigs[m].transpose() * xi * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / eigs.size();
+            gwr_re += eigs[m].transpose() * wminuseps * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / eigs.size();
+            }
+
+        std::ofstream gwr_re_str("gr_full_w"+wstring+"_re.dat");
+        std::ofstream gwr_im_str("gr_full_w"+wstring+"_im.dat");
+        gwr_re_str << gwr_re << std::endl;
+        gwr_im_str << gwr_im << std::endl;
+        gwr_re_str.close();
+        gwr_im_str.close();
+
+        // now gwr_re, gwr_im contain Gw(r1,r2)
+        // let's now convert it to Gw(r1 - r2)
+        auto dims = lattice.dims;
+        dense_m gwr_im2 = dense_m::Zero(dims[0], dims[1]);
+        dense_m gwr_re2 = dense_m::Zero(dims[0], dims[1]);
+        for (int i=0; i<gwr_im.rows(); ++i) { 
+            auto pos_i = lattice.index_to_pos(i);
+            for (int j =0; j < gwr_im.cols(); ++j) { 
+                auto pos_j = lattice.index_to_pos(j);
+                //std::cout << " i = " << pos_i << " j = " << pos_j << std::endl;
+        
+                int p0 = (dims[0] + pos_j[0] - pos_i[0]) % dims[0];
+                int p1 = (dims[1] + pos_j[1] - pos_i[1]) % dims[1];
+
+                gwr_im2(p0,p1) += gwr_im(i, j) / gwr_im.cols();
+                gwr_re2(p0,p1) += gwr_re(i, j) / gwr_im.cols();
+                }
+            }
+
+        gwr_re_str.open("gr_w"+wstring+"_re.dat");
+        gwr_im_str.open("gr_w"+wstring+"_im.dat");
+        gwr_re_str << gwr_re2 << std::endl;
+        gwr_im_str << gwr_im2 << std::endl;
+        gwr_re_str.close();
+        gwr_im_str.close();
+        }
 }
 
 void savetxt (std::string fname, const triqs::arrays::array<double,1>& in)
