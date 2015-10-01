@@ -382,7 +382,8 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                 std::complex<double> nom = 0.0, denom = 0.0;
                 for (size_t i=0; i<Volume; i++) {
                     denom+=1./(z - ipr_spec[i] + I*offset); 
-                    nom+=1./(z - ipr_spec[i] + I*offset)*ipr_spec[i+Volume]; 
+                    // as norm4 is measured -> take the power of 4 to extract ipr
+                    nom+=1./(z - ipr_spec[i] + I*offset)*std::pow(ipr_spec[i+Volume],4); 
                     };
                 return imag(nom)/imag(denom);
                 };
@@ -391,7 +392,7 @@ void save_data(const MC& mc, triqs::utility::parameters p, std::string output_fi
                 double out = 0.0;
                 double ipr_state, state_weight;
                 for (size_t i=0; i<Volume; i++) {
-                    ipr_state = ipr_spec[i+Volume];
+                    ipr_state = std::pow(ipr_spec[i+Volume],4);
                     state_weight = beta / (1. + std::exp(beta*ipr_spec[i])) / (1. + std::exp(-beta*ipr_spec[i]));
                     out += ipr_state * state_weight / Volume;  
                     };
