@@ -53,40 +53,8 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     h5_binning_ = top_.open_group("binning");
 
     std::vector<double> const& spectrum = observables_.spectrum;
-
-    if (observables_.energies.size()) { 
-        const std::vector<double>& energies = observables_.energies;
-        const std::vector<double>& d2energies = observables_.d2energies;
-        size_t energy_bin = 0;
-
-        { /* Energy binning */
-            INFO("Energy binning");
-            size_t size = energies.size();
-            INFO("Binning " << max_bin_ <<" times.");
-            auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), max_bin_); 
-            save_binning(energy_binning_data,h5_binning_,h5_stats_,"energy",save_plaintext);
-            auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), max_bin_); 
-            save_binning(d2energy_binning_data,h5_binning_,h5_stats_,"d2energy",save_plaintext);
-        };
-        
-        std::vector<double> energies_square(energies.size());
-        std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
-        { /* Specific heat */
-            typedef std::function<double(double, double, double)> cf_t;
-
-            cf_t cv_function = [beta, this](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/volume_;}; 
-
-            typedef decltype(energies.rbegin()) it_t;
-            std::vector<std::pair<it_t,it_t>> c_data = {
-                std::make_pair(energies.rbegin(), energies.rend()), 
-                std::make_pair(energies_square.rbegin(), energies_square.rend()), 
-                std::make_pair(d2energies.rbegin(), d2energies.rend())
-            }; 
-            auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,max_bin_);
-            save_binning(cv_stats,h5_binning_,h5_stats_,"cv",save_plaintext);
-        };
-    };
-
+    if (observables_.energies.size()) { save_energy(); }
+    
     if (observables_.nf0.size() && observables_.nfpi.size()) { 
           /* Save nf(q=0), nf(q=pi) */
         const std::vector<double>& nf0 = observables_.nf0;
@@ -324,6 +292,45 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
 }
 
 template <typename MC>
+void data_saver<MC>::save_energy()
+{
+    double beta = mc_.config.params().beta;
+
+    if (observables_.energies.size()) { 
+        const std::vector<double>& energies = observables_.energies;
+        const std::vector<double>& d2energies = observables_.d2energies;
+        size_t energy_bin = 0;
+
+        { /* Energy binning */
+            INFO("Energy binning");
+            size_t size = energies.size();
+            INFO("Binning " << max_bin_ <<" times.");
+            auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), max_bin_); 
+            save_binning(energy_binning_data,h5_binning_,h5_stats_,"energy",p_["save_plaintext"]);
+            auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), max_bin_); 
+            save_binning(d2energy_binning_data,h5_binning_,h5_stats_,"d2energy",p_["save_plaintext"]);
+        };
+        
+        std::vector<double> energies_square(energies.size());
+        std::transform(energies.begin(), energies.end(), energies_square.begin(), [](double x){ return x*x; });
+        { /* Specific heat */
+            typedef std::function<double(double, double, double)> cf_t;
+
+            cf_t cv_function = [beta, this](double e, double e2, double de2){return beta*beta*(e2 - de2 - e*e)/volume_;}; 
+
+            typedef decltype(energies.rbegin()) it_t;
+            std::vector<std::pair<it_t,it_t>> c_data = {
+                std::make_pair(energies.rbegin(), energies.rend()), 
+                std::make_pair(energies_square.rbegin(), energies_square.rend()), 
+                std::make_pair(d2energies.rbegin(), d2energies.rend())
+            }; 
+            auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,max_bin_);
+            save_binning(cv_stats,h5_binning_,h5_stats_,"cv",p_["save_plaintext"]);
+        };
+    };
+}
+
+template <typename MC>
 void data_saver<MC>::save_observables()
 {
     //===== save direct measures ===== //
@@ -333,9 +340,8 @@ void data_saver<MC>::save_observables()
     if (observables_.nfpi.size()) h5_write(h5_mc_data_,"nfpi", observables_.nfpi);
     if (observables_.stiffness.size()) h5_write(h5_mc_data_,"stiffness", observables_.stiffness);
 
-    std::vector<double> spectrum(observables_.spectrum.size());
+    std::vector<double> const& spectrum = observables_.spectrum;
     if (spectrum.size()) { 
-        std::copy(observables_.spectrum.data(), observables_.spectrum.data()+spectrum.size(), spectrum.begin());
         h5_write(h5_mc_data_,"spectrum", spectrum);
         };
 

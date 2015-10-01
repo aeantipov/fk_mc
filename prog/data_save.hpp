@@ -39,6 +39,7 @@ protected:
 
     /// Save measured observables, no postprocessing
     void save_observables();
+    void save_energy();
     /// Save Inverse Participation Ratio
     void save_ipr(std::vector<double> grid_real);
     /// Save G(w,r) and G(w,k) to plaintext files
