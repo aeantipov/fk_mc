@@ -13,7 +13,7 @@ include_directories(../solver ${TRIQS_INCLUDE_ALL} ${TCLAP_INCLUDE_DIRS})
 #lattices
 foreach (lattice ${lattices})
     message(STATUS "Lattice: ${lattice}")
-    set (prog_src fk_mc_exec.cpp data_save.hpp data_load.hpp)
+    set (prog_src data_save.hpp data_save.hxx data_load.hpp fk_mc_exec.cpp)
     set (prog fk_mc_${lattice})
     add_executable(${prog} ${prog_src})
     set_target_properties(${prog} PROPERTIES COMPILE_DEFINITIONS "LATTICE_${lattice}") 

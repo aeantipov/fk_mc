@@ -162,7 +162,7 @@ static bin_data_t accumulate_binning(const container_t& in, size_t bin_depth) {
 }
 
 
-std::vector<double> calc_cor_length(const bin_data_t& in)
+inline std::vector<double> calc_cor_length(const bin_data_t& in)
 {
     double sigma = std::get<_DISP>(in[0]);
     std::vector<double> out; out.reserve(in.size());
