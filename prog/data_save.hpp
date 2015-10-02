@@ -39,7 +39,7 @@ protected:
     triqs::h5::group h5_binning_; 
 
     /// Save measured observables, no postprocessing.
-    void save_observables();
+    void save_measurements();
     /// Save the mean energy and the specific heat.
     void save_energy();
     /// Save f-electron stats.

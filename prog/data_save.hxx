@@ -43,7 +43,7 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     // save measurement to "/mc_data" group
     top_.create_group("mc_data");
     h5_mc_data_ = top_.open_group("mc_data");
-    save_observables();
+    save_measurements();
     
     // save final statistics to "/stats" group
     top_.create_group("stats");
@@ -72,8 +72,185 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     if (p_["measure_stiffness"]) { this->save_conductivity(wgrid_cond); };
     // G(w,k)
     if (p_["measure_eigenfunctions"]) { save_gwr({std::complex<double>(0,0)}); } 
-    
-} // end measure_history
+}
+
+template <typename MC>
+void data_saver<MC>::save_measurements()
+{
+    //===== save direct measures ===== //
+    if (observables_.energies.size()) h5_write(h5_mc_data_,"energies", observables_.energies);
+    if (observables_.d2energies.size()) h5_write(h5_mc_data_,"d2energies", observables_.d2energies);
+    if (observables_.nf0.size()) h5_write(h5_mc_data_,"nf0", observables_.nf0);
+    if (observables_.nfpi.size()) h5_write(h5_mc_data_,"nfpi", observables_.nfpi);
+    if (observables_.stiffness.size()) h5_write(h5_mc_data_,"stiffness", observables_.stiffness);
+
+    std::vector<double> const& spectrum = observables_.spectrum;
+    if (spectrum.size()) { 
+        h5_write(h5_mc_data_,"spectrum", spectrum);
+        };
+
+    if (p_["measure_history"]) { 
+        triqs::arrays::array<double, 2> t_spectrum_history(observables_.spectrum_history.size(), observables_.spectrum_history[0].size());
+        for (int i=0; i<observables_.spectrum_history.size(); i++)
+            for (int j=0; j< observables_.spectrum_history[0].size(); j++)
+                t_spectrum_history(i,j) =  observables_.spectrum_history[i][j];
+        h5_write(h5_mc_data_,"spectrum_history", t_spectrum_history);
+
+        triqs::arrays::array<double, 2> focc_history(observables_.focc_history.size(), observables_.focc_history[0].size());
+        for (int i=0; i<observables_.focc_history.size(); i++)
+            for (int j=0; j< observables_.focc_history[0].size(); j++)
+                focc_history(i,j) =  observables_.focc_history[i][j];
+        h5_write(h5_mc_data_,"focc_history", focc_history);
+        };
+
+    // Inverse participation ratio
+    if (p_["measure_ipr"] && p_["measure_history"]) {
+        std::cout << "Inverse participation ratio" << std::endl;
+        triqs::arrays::array<double, 2> t_ipr_history(observables_.ipr_history.size(), observables_.ipr_history[0].size());
+        for (int i=0; i<observables_.ipr_history.size(); i++)
+            for (int j=0; j< observables_.ipr_history[0].size(); j++)
+                t_ipr_history(i,j) =  observables_.ipr_history[i][j];
+        h5_write(h5_mc_data_,"ipr_history", t_ipr_history);
+        };
+
+    // Conductivity
+    if (p_["measure_stiffness"]) {
+        std::cout << "Conductivity" << std::endl;
+        triqs::arrays::array<double, 2> t_cond_history(observables_.cond_history.size(), observables_.cond_history[0].size());
+        for (int i=0; i<observables_.cond_history.size(); i++)
+            for (int j=0; j< observables_.cond_history[0].size(); j++)
+                t_cond_history(i,j) =  observables_.cond_history[i][j];
+        h5_write(h5_mc_data_,"cond_history", t_cond_history);
+        };
+
+    if (p_["measure_eigenfunctions"]) {
+        std::cout << "Eigenfunctions" << std::endl;
+        const auto& eig_hist = observables_.eigenfunctions_history;
+        triqs::arrays::array<double, 3> t_eig_history(eig_hist.size(), eig_hist[0].rows(), eig_hist[0].cols() );
+        for (int i=0; i<eig_hist.size(); i++)
+            for (int j=0; j< eig_hist[0].rows(); j++) 
+                for (int k=0; k< eig_hist[0].cols(); k++) 
+                    t_eig_history(i,j,k) =  eig_hist[i](j,k);
+        h5_write(h5_mc_data_,"eig_history", t_eig_history);
+        }
+}
+
+template <typename MC>
+void data_saver<MC>::save_ipr(std::vector<double> grid_real) 
+{
+    double beta = mc_.config.params().beta;
+    const auto &spectrum_history = observables_.spectrum_history;
+    auto ipr_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
+        std::complex<double> nom = 0.0, denom = 0.0;
+        for (size_t i=0; i<volume_; i++) {
+            // as norm4 is measured -> take the power of 4 to extract ipr
+            double ipr_state = std::pow(ipr_spec[i+volume_],4);
+            denom+=1./(z - ipr_spec[i] + I*offset); 
+            nom+=1./(z - ipr_spec[i] + I*offset)*ipr_state; 
+            };
+        return imag(nom)/imag(denom);
+        };
+
+    auto ipr_thermal_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
+        double out = 0.0;
+        double ipr_state, state_weight;
+        for (size_t i=0; i<volume_; i++) {
+            ipr_state = std::pow(ipr_spec[i+volume_],4);
+            state_weight = beta / (1. + std::exp(beta*ipr_spec[i])) / (1. + std::exp(-beta*ipr_spec[i]));
+            out += ipr_state * state_weight / volume_;  
+            };
+        return out; 
+        };
+    auto dos_thermal_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
+        double out = 0.0;
+        double energy_state, state_weight;
+        for (size_t i=0; i<volume_; i++) {
+            energy_state = ipr_spec[i];
+            state_weight = beta / (1. + std::exp(beta*ipr_spec[i])) / (1. + std::exp(-beta*ipr_spec[i]));
+            out += state_weight / volume_;  
+            };
+        return out; 
+        };
+
+    auto ipr2_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
+        std::complex<double> nom = 0.0, denom = 0.0;
+        for (size_t i=0; i<volume_; i++) {
+            double e = ipr_spec[i];
+            // as norm4 is measured -> take the power of 4 to extract ipr
+            double ipr = std::pow(ipr_spec[i+volume_],4);
+            denom+=1./(z - ipr_spec[i] + I*offset); 
+            nom+=1./(z - ipr_spec[i] + I*offset)*ipr;
+            };
+        return boost::math::pow<2>(imag(nom)/imag(denom));
+        };
+
+
+    const auto& ipr_vals = mc_.observables.ipr_history;
+
+    typedef std::vector<double>::const_iterator iter_t;
+    assert(volume_ == ipr_vals.size());
+    std::vector<std::pair<iter_t,iter_t>> ipr_and_spectrum(2*volume_); // create a vector of pair of 2*volume_ size
+    for (size_t i=0; i<volume_; ++i) { 
+        ipr_and_spectrum[i]=std::make_pair(spectrum_history[i].begin(),spectrum_history[i].end());
+        ipr_and_spectrum[i+volume_]=std::make_pair(ipr_vals[i].begin(),ipr_vals[i].end());
+    }
+
+    typename binning::bin_data_t ipr0_binning(max_bin_);
+    for (int i=0; i<max_bin_; i++) 
+        { // save ipr at w=0
+            auto ipr0_stats = jackknife::jack(
+                std::function<double(std::vector<double>)>( 
+                std::bind(ipr_f, std::placeholders::_1, 0.0, p_["dos_offset"]))
+                ,ipr_and_spectrum,i);
+
+            ipr0_binning[i] = ipr0_stats;
+        }
+    save_binning(ipr0_binning,h5_binning_,h5_stats_,"ipr0",p_["save_plaintext"]);
+
+    // ipr - thermal
+    typename binning::bin_data_t ipr_thermal_binning(max_bin_);
+    for (int i=0; i<max_bin_; i++) 
+        { // save ipr at w=0
+            auto ipr_th_stats = jackknife::jack(
+                std::function<double(std::vector<double>)>( 
+                std::bind(ipr_thermal_f, std::placeholders::_1, 0.0, p_["dos_offset"]))
+                ,ipr_and_spectrum,i);
+
+            ipr_thermal_binning[i] = ipr_th_stats;
+        }
+    save_binning(ipr_thermal_binning,h5_binning_,h5_stats_,"ipr_thermal",p_["save_plaintext"]);
+
+    // dos - thermal
+    typename binning::bin_data_t dos_thermal_binning(max_bin_);
+    for (int i=0; i<max_bin_; i++) 
+        { // save ipr at w=0
+            auto dos_th_stats = jackknife::jack(
+                std::function<double(std::vector<double>)>( 
+                std::bind(dos_thermal_f, std::placeholders::_1, 0.0, p_["dos_offset"]))
+                ,ipr_and_spectrum,i);
+
+            dos_thermal_binning[i] = dos_th_stats;
+        }
+    save_binning(dos_thermal_binning,h5_binning_,h5_stats_,"dos_thermal",p_["save_plaintext"]);
+
+    auto ipr0_bin=estimate_bin(ipr0_binning);
+    triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
+    for (size_t i=0; i<grid_real.size(); i++) {
+        std::complex<double> z = grid_real[i];
+        auto ipr_data = jackknife::jack(
+            std::function<double(std::vector<double>)>( 
+            std::bind(ipr_f, std::placeholders::_1, z, p_["dos_offset"]))
+            ,ipr_and_spectrum,ipr0_bin);
+        ipr_ev(i,0) = std::real(z); 
+            ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_data);
+            ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_data); 
+
+            };
+
+        h5_write(h5_stats_,"ipr_err",ipr_ev);
+        if (p_["save_plaintext"]) savetxt("ipr_err.dat",ipr_ev);
+}
+
 
 template <typename MC>
 void data_saver<MC>::save_fstats()
@@ -358,187 +535,6 @@ void data_saver<MC>::save_energy()
     };
 }
 
-template <typename MC>
-void data_saver<MC>::save_observables()
-{
-    //===== save direct measures ===== //
-    if (observables_.energies.size()) h5_write(h5_mc_data_,"energies", observables_.energies);
-    if (observables_.d2energies.size()) h5_write(h5_mc_data_,"d2energies", observables_.d2energies);
-    if (observables_.nf0.size()) h5_write(h5_mc_data_,"nf0", observables_.nf0);
-    if (observables_.nfpi.size()) h5_write(h5_mc_data_,"nfpi", observables_.nfpi);
-    if (observables_.stiffness.size()) h5_write(h5_mc_data_,"stiffness", observables_.stiffness);
-
-    std::vector<double> const& spectrum = observables_.spectrum;
-    if (spectrum.size()) { 
-        h5_write(h5_mc_data_,"spectrum", spectrum);
-        };
-
-    if (p_["measure_history"]) { 
-        triqs::arrays::array<double, 2> t_spectrum_history(observables_.spectrum_history.size(), observables_.spectrum_history[0].size());
-        for (int i=0; i<observables_.spectrum_history.size(); i++)
-            for (int j=0; j< observables_.spectrum_history[0].size(); j++)
-                t_spectrum_history(i,j) =  observables_.spectrum_history[i][j];
-        h5_write(h5_mc_data_,"spectrum_history", t_spectrum_history);
-
-        triqs::arrays::array<double, 2> focc_history(observables_.focc_history.size(), observables_.focc_history[0].size());
-        for (int i=0; i<observables_.focc_history.size(); i++)
-            for (int j=0; j< observables_.focc_history[0].size(); j++)
-                focc_history(i,j) =  observables_.focc_history[i][j];
-        h5_write(h5_mc_data_,"focc_history", focc_history);
-        };
-
-    // Inverse participation ratio
-    if (p_["measure_ipr"] && p_["measure_history"]) {
-        std::cout << "Inverse participation ratio" << std::endl;
-        triqs::arrays::array<double, 2> t_ipr_history(observables_.ipr_history.size(), observables_.ipr_history[0].size());
-        for (int i=0; i<observables_.ipr_history.size(); i++)
-            for (int j=0; j< observables_.ipr_history[0].size(); j++)
-                t_ipr_history(i,j) =  observables_.ipr_history[i][j];
-        h5_write(h5_mc_data_,"ipr_history", t_ipr_history);
-        };
-
-    // Conductivity
-    if (p_["measure_stiffness"]) {
-        std::cout << "Conductivity" << std::endl;
-        triqs::arrays::array<double, 2> t_cond_history(observables_.cond_history.size(), observables_.cond_history[0].size());
-        for (int i=0; i<observables_.cond_history.size(); i++)
-            for (int j=0; j< observables_.cond_history[0].size(); j++)
-                t_cond_history(i,j) =  observables_.cond_history[i][j];
-        h5_write(h5_mc_data_,"cond_history", t_cond_history);
-        };
-
-    if (p_["measure_eigenfunctions"]) {
-        std::cout << "Eigenfunctions" << std::endl;
-        const auto& eig_hist = observables_.eigenfunctions_history;
-        triqs::arrays::array<double, 3> t_eig_history(eig_hist.size(), eig_hist[0].rows(), eig_hist[0].cols() );
-        for (int i=0; i<eig_hist.size(); i++)
-            for (int j=0; j< eig_hist[0].rows(); j++) 
-                for (int k=0; k< eig_hist[0].cols(); k++) 
-                    t_eig_history(i,j,k) =  eig_hist[i](j,k);
-        h5_write(h5_mc_data_,"eig_history", t_eig_history);
-        }
-}
-
-template <typename MC>
-void data_saver<MC>::save_ipr(std::vector<double> grid_real) 
-{
-    double beta = mc_.config.params().beta;
-    const auto &spectrum_history = observables_.spectrum_history;
-    auto ipr_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
-            std::complex<double> nom = 0.0, denom = 0.0;
-            for (size_t i=0; i<volume_; i++) {
-                // as norm4 is measured -> take the power of 4 to extract ipr
-                double ipr_state = std::pow(ipr_spec[i+volume_],4);
-                denom+=1./(z - ipr_spec[i] + I*offset); 
-                nom+=1./(z - ipr_spec[i] + I*offset)*ipr_state; 
-                };
-            return imag(nom)/imag(denom);
-            };
-
-        auto ipr_thermal_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
-            double out = 0.0;
-            double ipr_state, state_weight;
-            for (size_t i=0; i<volume_; i++) {
-                ipr_state = std::pow(ipr_spec[i+volume_],4);
-                state_weight = beta / (1. + std::exp(beta*ipr_spec[i])) / (1. + std::exp(-beta*ipr_spec[i]));
-                out += ipr_state * state_weight / volume_;  
-                };
-            return out; 
-            };
-        auto dos_thermal_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
-            double out = 0.0;
-            double energy_state, state_weight;
-            for (size_t i=0; i<volume_; i++) {
-                energy_state = ipr_spec[i];
-                state_weight = beta / (1. + std::exp(beta*ipr_spec[i])) / (1. + std::exp(-beta*ipr_spec[i]));
-                out += state_weight / volume_;  
-                };
-            return out; 
-            };
-
-        auto ipr2_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
-            std::complex<double> nom = 0.0, denom = 0.0;
-            for (size_t i=0; i<volume_; i++) {
-                double e = ipr_spec[i];
-                // as norm4 is measured -> take the power of 4 to extract ipr
-                double ipr = std::pow(ipr_spec[i+volume_],4);
-                denom+=1./(z - ipr_spec[i] + I*offset); 
-                nom+=1./(z - ipr_spec[i] + I*offset)*ipr;
-                };
-            return boost::math::pow<2>(imag(nom)/imag(denom));
-            };
-
-
-        const auto& ipr_vals = mc_.observables.ipr_history;
-
-        typedef std::vector<double>::const_iterator iter_t;
-        assert(volume_ == ipr_vals.size());
-        std::vector<std::pair<iter_t,iter_t>> ipr_and_spectrum(2*volume_); // create a vector of pair of 2*volume_ size
-        for (size_t i=0; i<volume_; ++i) { 
-            ipr_and_spectrum[i]=std::make_pair(spectrum_history[i].begin(),spectrum_history[i].end());
-            ipr_and_spectrum[i+volume_]=std::make_pair(ipr_vals[i].begin(),ipr_vals[i].end());
-        }
-
-        typename binning::bin_data_t ipr0_binning(max_bin_);
-        for (int i=0; i<max_bin_; i++) 
-            { // save ipr at w=0
-                auto ipr0_stats = jackknife::jack(
-                    std::function<double(std::vector<double>)>( 
-                    std::bind(ipr_f, std::placeholders::_1, 0.0, p_["dos_offset"]))
-                    ,ipr_and_spectrum,i);
-
-                ipr0_binning[i] = ipr0_stats;
-            }
-        save_binning(ipr0_binning,h5_binning_,h5_stats_,"ipr0",p_["save_plaintext"]);
-
-        // ipr - thermal
-        typename binning::bin_data_t ipr_thermal_binning(max_bin_);
-        for (int i=0; i<max_bin_; i++) 
-            { // save ipr at w=0
-                auto ipr_th_stats = jackknife::jack(
-                    std::function<double(std::vector<double>)>( 
-                    std::bind(ipr_thermal_f, std::placeholders::_1, 0.0, p_["dos_offset"]))
-                    ,ipr_and_spectrum,i);
-
-                ipr_thermal_binning[i] = ipr_th_stats;
-            }
-        save_binning(ipr_thermal_binning,h5_binning_,h5_stats_,"ipr_thermal",p_["save_plaintext"]);
-
-        // dos - thermal
-        typename binning::bin_data_t dos_thermal_binning(max_bin_);
-        for (int i=0; i<max_bin_; i++) 
-            { // save ipr at w=0
-                auto dos_th_stats = jackknife::jack(
-                    std::function<double(std::vector<double>)>( 
-                    std::bind(dos_thermal_f, std::placeholders::_1, 0.0, p_["dos_offset"]))
-                    ,ipr_and_spectrum,i);
-
-                dos_thermal_binning[i] = dos_th_stats;
-            }
-        save_binning(dos_thermal_binning,h5_binning_,h5_stats_,"dos_thermal",p_["save_plaintext"]);
-
-
-        auto ipr0_bin=estimate_bin(ipr0_binning);
-        triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
-        for (size_t i=0; i<grid_real.size(); i++) {
-            std::complex<double> z = grid_real[i];
-            auto ipr_data = jackknife::jack(
-                std::function<double(std::vector<double>)>( 
-                std::bind(ipr_f, std::placeholders::_1, z, p_["dos_offset"]))
-                ,ipr_and_spectrum,ipr0_bin);
-            ipr_ev(i,0) = std::real(z); 
-                ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_data);
-                ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_data); 
-
-                };
-
-            h5_write(h5_stats_,"ipr_err",ipr_ev);
-            if (p_["save_plaintext"]) savetxt("ipr_err.dat",ipr_ev);
-
-
-
-}
-
 
 template <typename MC>
 void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid) 
@@ -611,7 +607,5 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid)
         gwr_im_str.close();
         }
 }
-
-
 
 } // end namespace fk
