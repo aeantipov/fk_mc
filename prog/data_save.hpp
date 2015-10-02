@@ -15,6 +15,7 @@ inline void print_section (const std::string& str)
   std::cout << str << std::endl;
 }
 
+/** A static class to handle data saving + data postprocessing and saving. */
 template<typename MC>
 class data_saver { 
     typedef MC mc_t;
@@ -37,13 +38,22 @@ protected:
     /// h5 group with binned data
     triqs::h5::group h5_binning_; 
 
-    /// Save measured observables, no postprocessing
+    /// Save measured observables, no postprocessing.
     void save_observables();
+    /// Save the mean energy and the specific heat.
     void save_energy();
-    /// Save Inverse Participation Ratio
-    void save_ipr(std::vector<double> grid_real);
-    /// Save G(w,r) and G(w,k) to plaintext files
-    // Warning: only works for 2d
+    /// Save f-electron stats.
+    void save_fstats();
+    /// Save f-f correlation functions.
+    void save_fcorrel();
+    /// Save the c-electron conductivity.
+    void save_conductivity(std::vector<double> wgrid);
+    /// Save Inverse Participation Ratio.
+    void save_ipr(std::vector<double> wgrid);
+    /// Save the local gf.
+    void save_glocal(std::vector<double> wgrid_real);
+    /// Save G(w,r) and G(w,k) to plaintext files.
+    // Warning: only works for 2d.
     void save_gwr(std::vector<std::complex<double>> wgrid);
     
 public:

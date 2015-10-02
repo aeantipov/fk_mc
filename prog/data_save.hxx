@@ -53,8 +53,32 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     h5_binning_ = top_.open_group("binning");
 
     std::vector<double> const& spectrum = observables_.spectrum;
-    if (observables_.energies.size()) { save_energy(); }
+    // save energy and the specific heat
+    if (observables_.energies.size()) { this->save_energy(); }
+    // save f-electron susc and binder cumulant
+    if (observables_.nf0.size() && observables_.nfpi.size()) { this->save_fstats(); }
+    // f-electron correlation functions
+    if (p_["measure_history"]) { this->save_fcorrel(); }
+
+    size_t dos_npts = p_["dos_npts"];
+    double dos_width = p_["dos_width"];
+    std::vector<double> grid_real(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real[i] = -dos_width+2.*dos_width*i/(1.*dos_npts);
+
+    // Save glocal
+    this->save_glocal(grid_real);
+    // Inverse participation ratio
+    if (p_["measure_ipr"]) { this->save_ipr(grid_real); }
+    // Conductivity and Drude weight
+    if (p_["measure_stiffness"]) { this->save_conductivity(wgrid_cond); };
+    // G(w,k)
+    if (p_["measure_eigenfunctions"]) { save_gwr({std::complex<double>(0,0)}); } 
     
+} // end measure_history
+
+template <typename MC>
+void data_saver<MC>::save_fstats()
+{
+    bool save_plaintext = p_["save_plaintext"];
     if (observables_.nf0.size() && observables_.nfpi.size()) { 
           /* Save nf(q=0), nf(q=pi) */
         const std::vector<double>& nf0 = observables_.nf0;
@@ -85,67 +109,14 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
         save_bin_data(binder_0,h5_stats_,"binder_0",save_plaintext);
         save_bin_data(binder_pi,h5_stats_,"binder_pi",save_plaintext);
     }
+}
 
-    if (p_["measure_stiffness"]) { // Stiffness
-            INFO("Stiffness");
-            const auto& stiffness = observables_.stiffness;
-            size_t size = stiffness.size();
-            auto stiffness_data = binning::accumulate_binning(stiffness.rbegin(), stiffness.rend(), max_bin_); 
-            save_binning(stiffness_data,h5_binning_,h5_stats_,"stiffness",save_plaintext);
-
-            // conductivity
-            std::vector<std::vector<double>> const& cond_history = observables_.cond_history;
-            std::vector<double> const& wgrid = wgrid_cond; 
-
-            // cond(w)
-            auto cond_stats0 = binning::accumulate_binning(cond_history[wgrid.size()/2].begin(), cond_history[wgrid.size()/2].end(), max_bin_);
-            int cond_bin = estimate_bin(cond_stats0); 
-            {
-                INFO("Saving w*conductivity (w)");
-                triqs::arrays::array<double, 2> wcond_ev(wgrid.size(),3);
-                for (size_t i=0; i<wgrid.size(); i++) {
-                    std::complex<double> z = wgrid[i];
-                    auto cond_binning_data = binning::bin(cond_history[i].begin(), cond_history[i].end(), cond_bin);
-                    wcond_ev(i,0) = std::real(z); 
-                    wcond_ev(i,1) = std::get<binning::bin_m::_MEAN>(cond_binning_data);
-                    wcond_ev(i,2) = std::get<binning::bin_m::_SQERROR>(cond_binning_data); 
-                    }
-                h5_write(h5_stats_,"wcond_err",wcond_ev);
-                if (save_plaintext) savetxt("wcond_err.dat",wcond_ev);
-
-                int index_zero = (wgrid.size() - 1)/2;
-                std::cout << "wgrid center = " << wgrid[index_zero] << std::endl;
-                //if (std::abs(wgrid[index_zero]) > std::numeric_limits<double>::epsilon()) index_zero = std::distance(wgrid.begin(), wgrid
-                double cond_left = -wcond_ev(index_zero - 1,1)/wgrid[index_zero - 1];
-                double cond_right = -wcond_ev(index_zero + 1,1)/wgrid[index_zero + 1];
-                double cond0 = (cond_left + cond_right)/2;
-                double cond0_err = wcond_ev(index_zero + 1, 2)/wgrid[index_zero + 1];
-
-                // save dc conductivity
-                triqs::arrays::array<double, 1> t_cond0(4); 
-                t_cond0(binning::bin_m::_SIZE) = std::get<binning::bin_m::_SIZE>(cond_stats0[cond_bin]); 
-                t_cond0(binning::bin_m::_MEAN) = cond0; 
-                t_cond0(binning::bin_m::_DISP) = t_cond0(binning::bin_m::_SIZE)*cond0_err*cond0_err; 
-                t_cond0(binning::bin_m::_SQERROR)=cond0_err;
-                h5_write(h5_stats_,"cond0",t_cond0);
-                if (save_plaintext) savetxt("cond0.dat",t_cond0);
-
-                triqs::arrays::array<double, 2> cond_ev(wcond_ev), cond_ev_subtract(wcond_ev);
-                for (size_t i=0; i<wgrid.size(); i++) { 
-                    cond_ev(i,1) = -wcond_ev(i,1) / wgrid[i];
-                    cond_ev(i,2) = -wcond_ev(i,2) / wgrid[i];
-                    cond_ev_subtract(i,1) = cond_ev(i,1) - cond0;
-                    cond_ev_subtract(i,2) = cond_ev(i,2);
-                    }
-                
-                h5_write(h5_stats_,"cond_err",cond_ev);
-                if (save_plaintext) savetxt("cond_err.dat",cond_ev);
-                h5_write(h5_stats_,"cond_dynamic",cond_ev_subtract);
-                if (save_plaintext) savetxt("cond_dynamic.dat",cond_ev_subtract);
-
-                }
-        };
-        
+template <typename MC>
+void data_saver<MC>::save_glocal(std::vector<double> grid_real)
+{
+    bool save_plaintext = p_["save_plaintext"];
+    double beta = mc_.config.params().beta;
+    std::vector<double> const& spectrum = observables_.spectrum;
     // Local green's functions
     auto gf_im_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double {
         std::complex<double> d = 0.0;
@@ -161,9 +132,6 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     auto dos0_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double { 
         return -gf_im_f(spec, z, offset, norm)/PI; };
 
-    size_t dos_npts = p_["dos_npts"];
-    double dos_width = p_["dos_width"];
-    std::vector<double> grid_real(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real[i] = -dos_width+2.*dos_width*i/(1.*dos_npts);
     std::vector<double> grid_imag(std::max(int(beta)*10,1024)); for (size_t i=0; i<grid_imag.size(); i++) grid_imag[i] = PI/beta*(2.*i + 1);
 
     if (observables_.energies.size()){ // gf_matsubara - no errorbars
@@ -192,10 +160,7 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
         if (save_plaintext) { savetxt("dos.dat",dos_v); savetxt("gf_refreq.dat", gf_re_v); };
     };
 
-
-    // G(w,k)
-    if (p_["measure_eigenfunctions"]) { save_gwr({std::complex<double>(0,0)}); } 
-    
+    /// Save glocal with error-bars
     if (p_["measure_history"])
     { // dos(w=0)
         const auto &spectrum_history = observables_.spectrum_history;
@@ -224,14 +189,17 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
             h5_write(h5_stats_,"dos_err",dos_ev);
             if (save_plaintext) savetxt("dos_err.dat",dos_ev);
             }
-    
-    
-    // Inverse participation ratio
-    if (p_["measure_ipr"]) { this->save_ipr(grid_real); }
- 
+      }
+}
+
+template <typename MC>
+void data_saver<MC>::save_fcorrel()
+{
+    bool save_plaintext = p_["save_plaintext"];
     // f-electron correlation functions
     // assuming x <-> y symmetry
     const auto& fhistory = observables_.focc_history;
+    if (fhistory.size()==0) return;
     const auto dims = lattice_.dims;
 
     int nf_bin = estimate_bin(binning::accumulate_binning(fhistory[0].rbegin(), fhistory[0].rend(), max_bin_));
@@ -287,8 +255,68 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
 
         h5_write(h5_stats_,"fcorrel",fcorrel_out);
         if (save_plaintext) savetxt("fcorrel.dat",fcorrel_out);
+}
 
-    } // end measure_history
+
+template <typename MC>
+void data_saver<MC>::save_conductivity(std::vector<double> wgrid_cond)
+{
+    bool save_plaintext = p_["save_plaintext"];
+    INFO("Stiffness");
+    const auto& stiffness = observables_.stiffness;
+    size_t size = stiffness.size();
+    auto stiffness_data = binning::accumulate_binning(stiffness.rbegin(), stiffness.rend(), max_bin_); 
+    save_binning(stiffness_data,h5_binning_,h5_stats_,"stiffness",save_plaintext);
+
+    // conductivity
+    std::vector<std::vector<double>> const& cond_history = observables_.cond_history;
+    std::vector<double> const& wgrid = wgrid_cond; 
+
+    // cond(w)
+    auto cond_stats0 = binning::accumulate_binning(cond_history[wgrid.size()/2].begin(), cond_history[wgrid.size()/2].end(), max_bin_);
+    int cond_bin = estimate_bin(cond_stats0); 
+
+    INFO("Saving w*conductivity (w)");
+    triqs::arrays::array<double, 2> wcond_ev(wgrid.size(),3);
+    for (size_t i=0; i<wgrid.size(); i++) {
+        std::complex<double> z = wgrid[i];
+        auto cond_binning_data = binning::bin(cond_history[i].begin(), cond_history[i].end(), cond_bin);
+        wcond_ev(i,0) = std::real(z); 
+        wcond_ev(i,1) = std::get<binning::bin_m::_MEAN>(cond_binning_data);
+        wcond_ev(i,2) = std::get<binning::bin_m::_SQERROR>(cond_binning_data); 
+        }
+    h5_write(h5_stats_,"wcond_err",wcond_ev);
+    if (save_plaintext) savetxt("wcond_err.dat",wcond_ev);
+
+    int index_zero = (wgrid.size() - 1)/2;
+    std::cout << "wgrid center = " << wgrid[index_zero] << std::endl;
+    //if (std::abs(wgrid[index_zero]) > std::numeric_limits<double>::epsilon()) index_zero = std::distance(wgrid.begin(), wgrid
+    double cond_left = -wcond_ev(index_zero - 1,1)/wgrid[index_zero - 1];
+    double cond_right = -wcond_ev(index_zero + 1,1)/wgrid[index_zero + 1];
+    double cond0 = (cond_left + cond_right)/2;
+    double cond0_err = wcond_ev(index_zero + 1, 2)/wgrid[index_zero + 1];
+
+    // save dc conductivity
+    triqs::arrays::array<double, 1> t_cond0(4); 
+    t_cond0(binning::bin_m::_SIZE) = std::get<binning::bin_m::_SIZE>(cond_stats0[cond_bin]); 
+    t_cond0(binning::bin_m::_MEAN) = cond0; 
+    t_cond0(binning::bin_m::_DISP) = t_cond0(binning::bin_m::_SIZE)*cond0_err*cond0_err; 
+    t_cond0(binning::bin_m::_SQERROR)=cond0_err;
+    h5_write(h5_stats_,"cond0",t_cond0);
+    if (save_plaintext) savetxt("cond0.dat",t_cond0);
+
+    triqs::arrays::array<double, 2> cond_ev(wcond_ev), cond_ev_subtract(wcond_ev);
+    for (size_t i=0; i<wgrid.size(); i++) { 
+        cond_ev(i,1) = -wcond_ev(i,1) / wgrid[i];
+        cond_ev(i,2) = -wcond_ev(i,2) / wgrid[i];
+        cond_ev_subtract(i,1) = cond_ev(i,1) - cond0;
+        cond_ev_subtract(i,2) = cond_ev(i,2);
+        }
+    
+    h5_write(h5_stats_,"cond_err",cond_ev);
+    if (save_plaintext) savetxt("cond_err.dat",cond_ev);
+    h5_write(h5_stats_,"cond_dynamic",cond_ev_subtract);
+    if (save_plaintext) savetxt("cond_dynamic.dat",cond_ev_subtract);
 }
 
 template <typename MC>
