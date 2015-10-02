@@ -80,6 +80,7 @@ void data_saver<MC>::save_measurements()
     //===== save direct measures ===== //
     if (observables_.energies.size()) h5_write(h5_mc_data_,"energies", observables_.energies);
     if (observables_.d2energies.size()) h5_write(h5_mc_data_,"d2energies", observables_.d2energies);
+    if (observables_.c_energies.size()) h5_write(h5_mc_data_,"c_energies", observables_.c_energies);
     if (observables_.nf0.size()) h5_write(h5_mc_data_,"nf0", observables_.nf0);
     if (observables_.nfpi.size()) h5_write(h5_mc_data_,"nfpi", observables_.nfpi);
     if (observables_.stiffness.size()) h5_write(h5_mc_data_,"stiffness", observables_.stiffness);
@@ -508,6 +509,7 @@ void data_saver<MC>::save_energy()
     if (observables_.energies.size()) { 
         const std::vector<double>& energies = observables_.energies;
         const std::vector<double>& d2energies = observables_.d2energies;
+        const std::vector<double>& c_energies = observables_.c_energies;
         size_t energy_bin = 0;
 
         { /* Energy binning */
@@ -518,6 +520,8 @@ void data_saver<MC>::save_energy()
             save_binning(energy_binning_data,h5_binning_,h5_stats_,"energy",p_["save_plaintext"]);
             auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), max_bin_); 
             save_binning(d2energy_binning_data,h5_binning_,h5_stats_,"d2energy",p_["save_plaintext"]);
+            auto c_energy_binning_data = binning::accumulate_binning(c_energies.rbegin(),c_energies.rend(), max_bin_); 
+            save_binning(c_energy_binning_data,h5_binning_,h5_stats_,"c_energy",p_["save_plaintext"]);
         };
         
         std::vector<double> energies_square(energies.size());

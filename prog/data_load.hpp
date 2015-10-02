@@ -60,6 +60,7 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
     std::cout << "Loading observables... " << std::flush;
     if (h5_mc_data.has_key("energies")) h5_read(h5_mc_data,"energies", obs.energies);
     if (h5_mc_data.has_key("d2energies")) h5_read(h5_mc_data,"d2energies", obs.d2energies);
+    if (h5_mc_data.has_key("c_energies")) h5_read(h5_mc_data,"c_energies", obs.c_energies);
     h5_read(h5_mc_data,"nf0", obs.nf0);
     h5_read(h5_mc_data,"nfpi", obs.nfpi);
     if (h5_mc_data.has_key("spectrum")) h5_read(h5_mc_data,"spectrum", obs.spectrum);

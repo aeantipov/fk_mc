@@ -13,6 +13,7 @@ namespace fk {
 struct observables_t {
     typedef configuration_t::dense_m dense_m;
     std::vector<double> energies;
+    std::vector<double> c_energies;
     std::vector<double> d2energies;
     std::vector<double> nf0;
     std::vector<double> nfpi;

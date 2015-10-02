@@ -18,9 +18,10 @@ struct measure_energy {
     double _average_d2energy = 0.0;
     std::vector<double>& _energies;
     std::vector<double>& _d2energies;
+    std::vector<double>& _c_energies;
 
-    measure_energy(double beta, configuration_t& in, std::vector<double>& energies, std::vector<double>& d2energies):
-        beta(beta),config(in), _energies(energies),_d2energies(d2energies){};
+    measure_energy(double beta, configuration_t& in, std::vector<double>& energies, std::vector<double>& d2energies, std::vector<double>& c_energies):
+        beta(beta),config(in), _energies(energies),_d2energies(d2energies),_c_energies(c_energies){};
  
     void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);

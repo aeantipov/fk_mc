@@ -89,7 +89,7 @@ void fk_mc<L>::solve(std::vector<double> wgrid_conductivity)
     calc_spectrum = calc_spectrum || p["measure_ipr"];
 
     if (!cheb_move || calc_spectrum) {
-        this->add_measure(measure_energy(beta,config,observables.energies, observables.d2energies), "energy");
+        this->add_measure(measure_energy(beta,config,observables.energies, observables.d2energies, observables.c_energies), "energy");
         this->add_measure(measure_spectrum(config,observables.spectrum), "spectrum");
         if (p["measure_history"]) 
             this->add_measure(measure_spectrum_history(config,observables.spectrum_history), "spectrum_history");
