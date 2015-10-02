@@ -136,21 +136,25 @@ void data_saver<MC>::save_measurements()
 }
 
 template <typename MC>
+template <int N>
+double data_saver<MC>::ipr_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume)
+{
+    std::complex<double> nom = 0.0, denom = 0.0;
+    for (size_t i=0; i<volume; i++) {
+        // as norm4 is measured -> take the power of 4 to extract ipr
+        double ipr_state = boost::math::pow<4>(ipr_spec[i+volume]);
+        denom+=1./(z - ipr_spec[i] + I*offset); 
+        nom+=1./(z - ipr_spec[i] + I*offset)*ipr_state; 
+        };
+    return boost::math::pow<N>(imag(nom)/imag(denom));
+}
+
+template <typename MC>
 void data_saver<MC>::save_ipr(std::vector<double> grid_real) 
 {
     double beta = mc_.config.params().beta;
     const auto &spectrum_history = observables_.spectrum_history;
-    auto ipr_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
-        std::complex<double> nom = 0.0, denom = 0.0;
-        for (size_t i=0; i<volume_; i++) {
-            // as norm4 is measured -> take the power of 4 to extract ipr
-            double ipr_state = std::pow(ipr_spec[i+volume_],4);
-            denom+=1./(z - ipr_spec[i] + I*offset); 
-            nom+=1./(z - ipr_spec[i] + I*offset)*ipr_state; 
-            };
-        return imag(nom)/imag(denom);
-        };
-
+    
     auto ipr_thermal_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
         double out = 0.0;
         double ipr_state, state_weight;
@@ -200,7 +204,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
         { // save ipr at w=0
             auto ipr0_stats = jackknife::jack(
                 std::function<double(std::vector<double>)>( 
-                std::bind(ipr_f, std::placeholders::_1, 0.0, p_["dos_offset"]))
+                std::bind(this->ipr_moment_f<1>, std::placeholders::_1, 0.0, p_["dos_offset"], this->lattice_.get_msize()))
                 ,ipr_and_spectrum,i);
 
             ipr0_binning[i] = ipr0_stats;
@@ -239,7 +243,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
         std::complex<double> z = grid_real[i];
         auto ipr_data = jackknife::jack(
             std::function<double(std::vector<double>)>( 
-            std::bind(ipr_f, std::placeholders::_1, z, p_["dos_offset"]))
+            std::bind(this->ipr_moment_f<1>, std::placeholders::_1, z, p_["dos_offset"], this->lattice_.get_msize()))
             ,ipr_and_spectrum,ipr0_bin);
         ipr_ev(i,0) = std::real(z); 
             ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_data);
