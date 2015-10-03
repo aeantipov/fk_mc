@@ -57,7 +57,9 @@ protected:
     void save_gwr(std::vector<std::complex<double>> wgrid);
 
     template <int N>
-    static double ipr_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume);
+    static double ipr_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume, double mean);
+    template <int N>
+    static double dos_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume, double mean);
     
 public:
     triqs::utility::parameter_defaults save_defaults() {

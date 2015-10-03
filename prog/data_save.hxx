@@ -138,16 +138,27 @@ void data_saver<MC>::save_measurements()
 
 template <typename MC>
 template <int N>
-double data_saver<MC>::ipr_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume)
+double data_saver<MC>::ipr_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume, double ipr_mean)
 {
     std::complex<double> nom = 0.0, denom = 0.0;
     for (size_t i=0; i<volume; i++) {
-        // as norm4 is measured -> take the power of 4 to extract ipr
+        // as Eigen::Matrix::norm(4) was used to measure ipr -> take the power of 4 to extract ipr
         double ipr_state = boost::math::pow<4>(ipr_spec[i+volume]);
         denom+=1./(z - ipr_spec[i] + I*offset); 
         nom+=1./(z - ipr_spec[i] + I*offset)*ipr_state; 
         };
-    return boost::math::pow<N>(imag(nom)/imag(denom));
+    return boost::math::pow<N>(imag(nom)/imag(denom) - ipr_mean);
+}
+
+template <typename MC>
+template <int N>
+double data_saver<MC>::dos_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume, double dos_mean)
+{
+    std::complex<double> nom = 0.0, denom = 0.0;
+    for (size_t i=0; i<volume; i++) {
+        nom+=1./(z - ipr_spec[i] + I*offset); 
+        };
+    return boost::math::pow<N>(-imag(nom)/M_PI - dos_mean);
 }
 
 template <typename MC>
@@ -177,19 +188,6 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
         return out; 
         };
 
-    auto ipr2_f = [&](const std::vector<double> ipr_spec, std::complex<double> z, double offset)->double { 
-        std::complex<double> nom = 0.0, denom = 0.0;
-        for (size_t i=0; i<volume_; i++) {
-            double e = ipr_spec[i];
-            // as norm4 is measured -> take the power of 4 to extract ipr
-            double ipr = std::pow(ipr_spec[i+volume_],4);
-            denom+=1./(z - ipr_spec[i] + I*offset); 
-            nom+=1./(z - ipr_spec[i] + I*offset)*ipr;
-            };
-        return boost::math::pow<2>(imag(nom)/imag(denom));
-        };
-
-
     const auto& ipr_vals = mc_.observables.ipr_history;
 
     typedef std::vector<double>::const_iterator iter_t;
@@ -205,7 +203,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
         { // save ipr at w=0
             auto ipr0_stats = jackknife::jack(
                 std::function<double(std::vector<double>)>( 
-                std::bind(this->ipr_moment_f<1>, std::placeholders::_1, 0.0, p_["dos_offset"], this->lattice_.get_msize()))
+                std::bind(this->ipr_moment_f<1>, std::placeholders::_1, 0.0, p_["dos_offset"], this->lattice_.get_msize(), 0.0))
                 ,ipr_and_spectrum,i);
 
             ipr0_binning[i] = ipr0_stats;
@@ -244,16 +242,85 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
         std::complex<double> z = grid_real[i];
         auto ipr_data = jackknife::jack(
             std::function<double(std::vector<double>)>( 
-            std::bind(this->ipr_moment_f<1>, std::placeholders::_1, z, p_["dos_offset"], this->lattice_.get_msize()))
+            std::bind(this->ipr_moment_f<1>, std::placeholders::_1, z, p_["dos_offset"], this->lattice_.get_msize(), 0.0))
             ,ipr_and_spectrum,ipr0_bin);
         ipr_ev(i,0) = std::real(z); 
-            ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_data);
-            ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_data); 
+        ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_data);
+        ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_data); 
 
-            };
+        };
 
-        h5_write(h5_stats_,"ipr_err",ipr_ev);
-        if (p_["save_plaintext"]) savetxt("ipr_err.dat",ipr_ev);
+    h5_write(h5_stats_,"ipr_err",ipr_ev);
+    if (p_["save_plaintext"]) savetxt("ipr_err.dat",ipr_ev);
+
+/*
+    auto dos0_stats = jackknife::jack(
+            std::function<double(std::vector<double>)>( 
+            std::bind(this->dos_moment_f<1>, std::placeholders::_1, 0.0, p_["dos_offset"], this->lattice_.get_msize(), 0.0))
+            ,ipr_and_spectrum,ipr0_bin);
+
+    // accumulate central moments and binder cumulant of ipr and dos
+    std::vector<double> ipr1(nmeasures_);
+    std::vector<double> ipr2(nmeasures_);
+    std::vector<double> ipr3(nmeasures_);
+    std::vector<double> ipr4(nmeasures_);
+
+    std::vector<double> dos1(nmeasures_);
+    std::vector<double> dos2(nmeasures_);
+    std::vector<double> dos3(nmeasures_);
+    std::vector<double> dos4(nmeasures_);
+        
+    std::vector<double> ipr_dos_config(2*volume_);
+
+    for (int i=0; i<nmeasures_; i++) { 
+        for (int v =0; v<volume_; ++v) { 
+            ipr_dos_config[v] = spectrum_history[v][i];
+            ipr_dos_config[v+volume_]=ipr_vals[v][i];
+            }
+        ipr1[i] = this->ipr_moment_f<1>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), 0);
+        dos1[i] = this->dos_moment_f<1>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), 0); 
+    }
+
+    double ipr0_mean = std::get<binning::bin_m::_MEAN>(binning::bin(ipr1.begin(), ipr1.end(), ipr0_bin));
+    double dos0_mean = std::get<binning::bin_m::_MEAN>(binning::bin(dos1.begin(), dos1.end(), ipr0_bin));
+
+    for (int i=0; i<nmeasures_; i++) { 
+        for (int v =0; v<volume_; ++v) { 
+            ipr_dos_config[v] = spectrum_history[v][i];
+            ipr_dos_config[v+volume_]=ipr_vals[v][i];
+            }
+        ipr1[i] = this->ipr_moment_f<1>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), ipr0_mean); 
+        ipr2[i] = this->ipr_moment_f<2>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), ipr0_mean); 
+        ipr3[i] = this->ipr_moment_f<3>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), ipr0_mean); 
+        ipr4[i] = this->ipr_moment_f<4>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), ipr0_mean); 
+
+        dos1[i] = this->dos_moment_f<1>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), dos0_mean); 
+        dos2[i] = this->dos_moment_f<2>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), dos0_mean); 
+        dos3[i] = this->dos_moment_f<3>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), dos0_mean); 
+        dos4[i] = this->dos_moment_f<4>(ipr_dos_config, 0.0, p_["dos_offset"], this->lattice_.get_msize(), dos0_mean); 
+    }
+
+    auto ipr0_m1_stats = binning::bin(ipr1.begin(), ipr1.end(), ipr0_bin);
+    auto ipr0_m2_stats = binning::bin(ipr2.begin(), ipr2.end(), ipr0_bin);
+    auto ipr0_m3_stats = binning::bin(ipr3.begin(), ipr3.end(), ipr0_bin);
+    auto ipr0_m4_stats = binning::bin(ipr4.begin(), ipr4.end(), ipr0_bin);
+    auto dos0_m1_stats = binning::bin(dos1.begin(), dos1.end(), ipr0_bin);
+    auto dos0_m2_stats = binning::bin(dos2.begin(), dos2.end(), ipr0_bin);
+    auto dos0_m3_stats = binning::bin(dos3.begin(), dos3.end(), ipr0_bin);
+    auto dos0_m4_stats = binning::bin(dos4.begin(), dos4.end(), ipr0_bin);
+    save_bin_data(ipr0_m1_stats,h5_stats_,"ipr0_m1",p_["save_plaintext"]);
+    save_bin_data(ipr0_m2_stats,h5_stats_,"ipr0_m2",p_["save_plaintext"]);
+    save_bin_data(ipr0_m3_stats,h5_stats_,"ipr0_m3",p_["save_plaintext"]);
+    save_bin_data(ipr0_m4_stats,h5_stats_,"ipr0_m4",p_["save_plaintext"]);
+    save_bin_data(dos0_m1_stats,h5_stats_,"dos0_m1",p_["save_plaintext"]);
+    save_bin_data(dos0_m2_stats,h5_stats_,"dos0_m2",p_["save_plaintext"]);
+    save_bin_data(dos0_m3_stats,h5_stats_,"dos0_m3",p_["save_plaintext"]);
+    save_bin_data(dos0_m4_stats,h5_stats_,"dos0_m4",p_["save_plaintext"]);
+
+    std::function<double(double,double)> binder_f = [](double x2, double x4){return 1. - x4/3./x2/x2;};
+    auto ipr0_binder=jackknife::jack(binder_f,std::vector<std::vector<double>>({ipr2, ipr4}),ipr0_bin);
+    save_bin_data(ipr0_binder,h5_stats_,"ipr0_binder",p_["save_plaintext"]);
+*/
 }
 
 
