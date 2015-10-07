@@ -640,12 +640,12 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid)
         for (int m = 0; m < eigs.size(); ++m) { 
             for (int i = 0; i < eigs[0].rows(); ++i) { evals.diagonal()(i) = observables_.spectrum_history[i][m]; }
             auto wminuseps = ident_v * w.real() - evals;
-            std::cout << (wminuseps * wminuseps + (xi_m + w.imag() * ident_v)*(xi_m + w.imag() * ident_v)).inverse() << std::endl;// wminuseps*wminuseps + xi_m*xi_m << std::endl;
+       //     std::cout << (wminuseps * wminuseps + (xi_m + w.imag() * ident_v)*(xi_m + w.imag() * ident_v)).inverse() << std::endl;// wminuseps*wminuseps + xi_m*xi_m << std::endl;
             // eigenvalues are in columns
             std::cout << "norm = " << eigs[0].row(0) * eigs[0].row(0).transpose() << std::endl;
             std::cout << "norm2 = " << eigs[0].col(0).transpose() * eigs[0].col(0) << std::endl;
-            gwr_im -= eigs[m].transpose() * xi * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / eigs.size();
-            gwr_re += eigs[m].transpose() * wminuseps * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / eigs.size();
+            gwr_im -= eigs[m] * xi * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m].transpose() / eigs.size();
+            gwr_re += eigs[m] * wminuseps * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m].transpose() / eigs.size();
             }
 
         std::ofstream gwr_re_str("gr_full_w"+wstring+"_re.dat");
