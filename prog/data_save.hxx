@@ -587,8 +587,10 @@ void data_saver<MC>::save_energy()
             save_binning(energy_binning_data,h5_binning_,h5_stats_,"energy",p_["save_plaintext"]);
             auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), max_bin_); 
             save_binning(d2energy_binning_data,h5_binning_,h5_stats_,"d2energy",p_["save_plaintext"]);
-            auto c_energy_binning_data = binning::accumulate_binning(c_energies.rbegin(),c_energies.rend(), max_bin_); 
-            save_binning(c_energy_binning_data,h5_binning_,h5_stats_,"c_energy",p_["save_plaintext"]);
+            if (observables_.c_energies.size()) { 
+                auto c_energy_binning_data = binning::accumulate_binning(c_energies.rbegin(),c_energies.rend(), max_bin_); 
+                save_binning(c_energy_binning_data,h5_binning_,h5_stats_,"c_energy",p_["save_plaintext"]);
+            }
         };
         
         std::vector<double> energies_square(energies.size());

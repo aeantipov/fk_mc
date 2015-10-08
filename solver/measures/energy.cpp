@@ -50,7 +50,7 @@ void measure_energy::collect_results(boost::mpi::communicator const &c)
     if (c.rank() == 0) {
     INFO("Total energy: " << sum_E / sum_Z);
     INFO("Total d2energy: " << sum_d2E / sum_Z);
-    INFO("Total c_energy: " << std::accumulate(_c_energies.begin(), _c_energies.end(), 0.0, std::plus<double>()) / sum_Z);
+    //INFO("Total c_energy: " << std::accumulate(_c_energies.begin(), _c_energies.end(), 0.0, std::plus<double>()) / sum_Z);
     }
 }
 
