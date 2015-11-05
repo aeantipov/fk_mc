@@ -26,7 +26,7 @@ protected:
     lattice_t const& lattice_;
     const observables_t& observables_;
     triqs::utility::parameters p_;
-    double volume_;
+    size_t volume_;
     long nmeasures_;
     int max_bin_;
     /// top of the archive
