@@ -399,14 +399,15 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
         triqs::arrays::array<double, 2> dos_v(grid_real.size(),2), gf_re_v(grid_real.size(),3);
         for (size_t i=0; i<grid_real.size(); i++) { 
             std::complex<double> z = grid_real[i]; 
-            dos_v(i,0) = std::real(z); gf_re_v(i,0) = std::real(z); 
+            dos_v(i,0) = std::real(z); 
+            gf_re_v(i,0) = std::real(z); 
             gf_re_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
-            gf_re_v(i,2) = std::bind(gf_re_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
+            gf_re_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
             dos_v(i,1) = std::bind(dos0_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum);
             };
         h5_write(h5_stats_,"dos",dos_v);
-        h5_write(h5_stats_,"gf_re",gf_re_v);
-        if (save_plaintext) { savetxt("dos.dat",dos_v); savetxt("gf_refreq.dat", gf_re_v); };
+        h5_write(h5_stats_,"gw_re",gf_re_v);
+        if (save_plaintext) { savetxt("dos.dat",dos_v); savetxt("gw_refreq.dat", gf_re_v); };
     };
 
     /// Save glocal with error-bars
@@ -628,26 +629,66 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid)
     dense_m gwr_im(eigs[0].rows(), eigs[0].cols()); 
     //Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> evals(eigs[0].rows());
     //Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> ident_v(eigs[0].rows());
-    dense_m evals(eigs[0].rows(), eigs[0].cols()); evals.setZero();
+    dense_m evals(eigs[0].rows(), eigs[0].cols()); 
+    evals.setZero();
     dense_m ident_v(eigs[0].rows(), eigs[0].cols());
     ident_v.setIdentity();
+    int volume = lattice_.get_msize();
+    Eigen::ArrayXi fconf(volume); 
+    fconf.setZero(); 
 
     double xi = p_["dos_offset"];
     dense_m xi_m = ident_v * xi;
+
+    std::cout << "measurements : " << nmeasures_ << std::endl;
 
     for (std::complex<double> w : wgrid) { 
         std::string wstring = std::to_string(float(w.real())) + "_" + std::to_string(float(w.imag()));
         gwr_re.setZero();
         gwr_im.setZero();
-        for (int m = 0; m < eigs.size(); ++m) { 
-            for (int i = 0; i < eigs[0].rows(); ++i) { evals.diagonal()(i) = observables_.spectrum_history[i][m]; }
+        double gw0 = 0.0;
+        for (int m = 0; m < nmeasures_; ++m) { 
+            for (int i = 0; i < volume; ++i) { 
+                evals.diagonal()(i) = observables_.spectrum_history[i][m]; 
+                fconf[i] = observables_.focc_history[i][m];
+                }
+
+
+  //          #ifndef NDEBUG 
+            configuration_t config1(lattice_,p_["beta"],p_["U"],p_["mu_c"],p_["mu_f"]);
+            config1.f_config_=fconf;
+            config1.calc_hamiltonian();
+            config1.calc_ed(true);
+            //std::cout << (Eigen::VectorXd(config1.ed_data().cached_spectrum - Eigen::ArrayXd(evals.diagonal()))).squaredNorm() << std::endl;
+ //           #endif
+            //std::cout << Eigen::MatrixXd(config1.hamilt_) - config1.ed_data().cached_evecs * evals *config1.ed_data().cached_evecs.transpose() << std::endl;
+            //std::cout << Eigen::MatrixXd(config1.hamilt_) - eigs[m] * evals * eigs[m].transpose() << std::endl; //config1.ed_data().cached_evecs.transpose() << std::endl;
+
+            //std::cout << fconf.transpose() << std::endl;
+
+
+            // H = Evecs * Evals * Evecs^T
+
+
+            //std::cout << config1.ed_data().cached_spectrum.transpose() << " == " << evals.diagonal().transpose() << std::endl;
+
             auto wminuseps = ident_v * w.real() - evals;
+
        //     std::cout << (wminuseps * wminuseps + (xi_m + w.imag() * ident_v)*(xi_m + w.imag() * ident_v)).inverse() << std::endl;// wminuseps*wminuseps + xi_m*xi_m << std::endl;
             // eigenvalues are in columns
-            std::cout << "norm = " << eigs[0].row(0) * eigs[0].row(0).transpose() << std::endl;
-            std::cout << "norm2 = " << eigs[0].col(0).transpose() * eigs[0].col(0) << std::endl;
-            gwr_im -= eigs[m] * xi * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m].transpose() / eigs.size();
-            gwr_re += eigs[m] * wminuseps * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m].transpose() / eigs.size();
+            //std::cout << "norm = " << eigs[0].row(0) * eigs[0].row(0).transpose() << std::endl;
+            //std::cout << "norm2 = " << eigs[0].col(0).transpose() * eigs[0].col(0) << std::endl;
+
+            // [w - H]^-1 = Evecs^+ * [w - Evals]^-1 * Evecs
+
+            Eigen::MatrixXd gw_add = (Eigen::MatrixXcd(evals.cast<std::complex<double>>())*0.0 + I*Eigen::MatrixXcd(xi_m.cast<std::complex<double>>()) -
+                                      Eigen::MatrixXcd(config1.hamilt_.cast<std::complex<double>>())).inverse().imag().cast<double>();
+            std::cout << gw_add(0,0) << std::endl;
+            std::cout << (Eigen::MatrixXcd(wminuseps.cast<std::complex<double>>()) + I*Eigen::MatrixXcd(xi_m.cast<std::complex<double>>())).inverse().sum() / volume_; 
+            gwr_im -= gw_add / nmeasures_;
+            gw0 += gw_add.sum() / volume / nmeasures_;
+            //gwr_im -= eigs[m].transpose() * xi * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / volume / nmeasures_;
+            gwr_re += eigs[m].transpose() * wminuseps * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / volume / nmeasures_;
             }
 
         std::ofstream gwr_re_str("gr_full_w"+wstring+"_re.dat");
@@ -656,6 +697,7 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid)
         gwr_im_str << gwr_im << std::endl;
         gwr_re_str.close();
         gwr_im_str.close();
+        std::cout << "gw0 = " << gw0 << std::endl;
 
         // now gwr_re, gwr_im contain Gw(r1,r2)
         // let's now convert it to Gw(r1 - r2)
