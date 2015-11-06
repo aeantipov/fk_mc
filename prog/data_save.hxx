@@ -269,34 +269,6 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
         return -gf_im_f(spec, z, offset, norm)/PI; };
 
     std::cout << "DOS imag offset = " << p_["dos_offset"] << std::endl; 
-/*
-    if (observables_.energies.size()){ // gf_matsubara - no errorbars
-        triqs::arrays::array<double, 2> gf_im_v(grid_imag.size(),3);
-        for (size_t i=0; i<grid_imag.size(); i++) { 
-            std::complex<double> z = I*grid_imag[i]; 
-            gf_im_v(i,0) = std::imag(z); 
-            gf_im_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, 0.0, lattice_.get_msize())(spectrum); 
-            gf_im_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, 0.0, lattice_.get_msize())(spectrum); 
-            };
-        h5_write(h5_stats_,"gw_imfreq",gf_im_v);
-        if (save_plaintext) savetxt("gw_imfreq.dat",gf_im_v);
-    };
-
-    if (observables_.energies.size()) { // gf_refreq - no errorbars
-        triqs::arrays::array<double, 2> dos_v(grid_real.size(),2), gf_re_v(grid_real.size(),3);
-        for (size_t i=0; i<grid_real.size(); i++) { 
-            std::complex<double> z = grid_real[i]; 
-            dos_v(i,0) = std::real(z); 
-            gf_re_v(i,0) = std::real(z); 
-            gf_re_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
-            gf_re_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
-            dos_v(i,1) = std::bind(dos0_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum);
-            };
-        h5_write(h5_stats_,"dos",dos_v);
-        h5_write(h5_stats_,"gw_re",gf_re_v);
-        if (save_plaintext) { savetxt("dos.dat",dos_v); savetxt("gw_refreq.dat", gf_re_v); };
-    };
-*/
 
     /// Save glocal with error-bars
     if (p_["measure_history"])
@@ -306,15 +278,15 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
 
         std::vector<std::vector<double>> spec_hist_transposed(nmeasures_, std::vector<double>(volume_, 0.0));
         for (size_t m=0; m<nmeasures_; ++m) for (int i=0; i<volume_; ++i) spec_hist_transposed[m][i] = observables_.spectrum_history[i][m];
-        //const auto &spectrum_history = observables_.spectrum_history;
-        const auto &spectrum_history = spec_hist_transposed; //observables_.spectrum_history;
+        const auto &spectrum_history = observables_.spectrum_history;
+        //const auto &spectrum_history = spec_hist_transposed; //observables_.spectrum_history;
         size_t norm1 = spectrum_history.size();
-        
-        auto dos0_stats = jackknife::accumulate_jackknife(
 
-            std::function<double(std::vector<double>)> 
-            (std::bind(dos0_f, std::placeholders::_1, 0.0, p_["dos_offset"], norm1))
-            ,spectrum_history,max_bin_);
+        std::vector<double> dos_data(nmeasures_,0.0);
+        for (size_t m =0; m<nmeasures_; ++m) { 
+            dos_data[m] = dos0_f(spec_hist_transposed[m], 0.0, p_["dos_offset"], volume_);
+        }
+        auto dos0_stats = binning::accumulate_binning(dos_data.rbegin(), dos_data.rend(), max_bin_);
         save_binning(dos0_stats,h5_binning_,h5_stats_,"dos0",save_plaintext);
         size_t dos_bin = estimate_bin(dos0_stats);
         // dos(w)
@@ -323,10 +295,10 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
             triqs::arrays::array<double, 2> dos_ev(grid_real.size(),3);
             for (size_t i=0; i<grid_real.size(); i++) {
                 std::complex<double> z = grid_real[i];
-                auto dosz_data = jackknife::jack(
-                    std::function<double(std::vector<double>)>( 
-                    std::bind(dos0_f, std::placeholders::_1, z, p_["dos_offset"], norm1))
-                    ,spectrum_history,dos_bin);
+                for (size_t m=0; m<nmeasures_; ++m) { 
+                    dos_data[m] = dos0_f(spec_hist_transposed[m], z, p_["dos_offset"], volume_);
+                }
+                auto dosz_data = binning::bin(dos_data.rbegin(), dos_data.rend(), dos_bin);
                 dos_ev(i,0) = std::real(z); 
                 dos_ev(i,1) = std::get<binning::bin_m::_MEAN>(dosz_data);
                 dos_ev(i,2) = std::get<binning::bin_m::_SQERROR>(dosz_data); 
@@ -334,10 +306,9 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
             h5_write(h5_stats_,"dos_err",dos_ev);
             if (save_plaintext) savetxt("dos_err.dat",dos_ev);
             }
-
-        double gw0 = 0.0;
-        for (auto spec : spectrum_history) for (auto e : spec) gw0+=std::imag(1.0/(I*double(p_["dos_offset"]) - e)) / double(volume_) / double(nmeasures_); 
-        std::cout << "Gw0 = " << gw0 << std::endl;
+        //double gw0 = 0.0;
+        //for (auto spec : spectrum_history) for (auto e : spec) gw0+=std::imag(1.0/(I*double(p_["dos_offset"]) - e)) / double(volume_) / double(nmeasures_); 
+        //std::cout << "Gw0 = " << gw0 << std::endl;
       }
 }
 
@@ -757,4 +728,111 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid)
         }
 }
 
+/* old incorrect stuff
+template <typename MC>
+void data_saver<MC>::save_glocal(std::vector<double> grid_real)
+{
+    bool save_plaintext = p_["save_plaintext"];
+    double beta = mc_.config.params().beta;
+    std::vector<double> const& spectrum = observables_.spectrum;
+    // Local green's functions
+    auto gf_im_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double {
+        std::complex<double> d = 0.0;
+        for (size_t i=0; i<spec.size(); i++) d+=1./(z - spec[i] + I*offset); 
+            return imag(d)/norm;
+        };
+
+    auto gf_re_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double {
+            std::complex<double> d = 0.0;
+            for (size_t i=0; i<spec.size(); i++) d+=1./(z - spec[i] + I*offset); 
+            return real(d)/norm;
+            };
+    auto dos0_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double { 
+        return -gf_im_f(spec, z, offset, norm)/PI; };
+
+    std::cout << "DOS imag offset = " << p_["dos_offset"] << std::endl; 
+    if (observables_.energies.size()){ // gf_matsubara - no errorbars
+        triqs::arrays::array<double, 2> gf_im_v(grid_imag.size(),3);
+        for (size_t i=0; i<grid_imag.size(); i++) { 
+            std::complex<double> z = I*grid_imag[i]; 
+            gf_im_v(i,0) = std::imag(z); 
+            gf_im_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, 0.0, lattice_.get_msize())(spectrum); 
+            gf_im_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, 0.0, lattice_.get_msize())(spectrum); 
+            };
+        h5_write(h5_stats_,"gw_imfreq",gf_im_v);
+        if (save_plaintext) savetxt("gw_imfreq.dat",gf_im_v);
+    };
+
+    if (observables_.energies.size()) { // gf_refreq - no errorbars
+        triqs::arrays::array<double, 2> dos_v(grid_real.size(),2), gf_re_v(grid_real.size(),3);
+        for (size_t i=0; i<grid_real.size(); i++) { 
+            std::complex<double> z = grid_real[i]; 
+            dos_v(i,0) = std::real(z); 
+            gf_re_v(i,0) = std::real(z); 
+            gf_re_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
+            gf_re_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
+            dos_v(i,1) = std::bind(dos0_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum);
+            };
+        h5_write(h5_stats_,"dos",dos_v);
+        h5_write(h5_stats_,"gw_re",gf_re_v);
+        if (save_plaintext) { savetxt("dos.dat",dos_v); savetxt("gw_refreq.dat", gf_re_v); };
+    };
+
+    /// Save glocal with error-bars
+    if (p_["measure_history"])
+    { 
+        std::vector<double> grid_imag(std::max(int(beta)*10,1024)); for (size_t i=0; i<grid_imag.size(); i++) grid_imag[i] = PI/beta*(2.*i + 1);
+        // dos(w=0)
+
+        std::vector<std::vector<double>> spec_hist_transposed(nmeasures_, std::vector<double>(volume_, 0.0));
+        for (size_t m=0; m<nmeasures_; ++m) for (int i=0; i<volume_; ++i) spec_hist_transposed[m][i] = observables_.spectrum_history[i][m];
+        const auto &spectrum_history = observables_.spectrum_history;
+        //const auto &spectrum_history = spec_hist_transposed; //observables_.spectrum_history;
+        size_t norm1 = spectrum_history.size();
+
+        std::vector<double> dos0_data(nmeasures_,0.0);
+        for (size_t m =0; m<nmeasures_; ++m) { 
+            dos0_data[m] = dos0_f(spec_hist_transposed[m], 0.0, p_["dos_offset"], volume_);
+        }
+
+        auto dos0_stats = jackknife::accumulate_jackknife(
+
+            std::function<double(std::vector<double>)> 
+            (std::bind(dos0_f, std::placeholders::_1, 0.0, p_["dos_offset"], volume_))
+            ,spectrum_history,max_bin_);
+        save_binning(dos0_stats,h5_binning_,h5_stats_,"dos0_old",save_plaintext);
+
+
+        dos0_stats = binning::accumulate_binning(dos0_data.rbegin(), dos0_data.rend(), max_bin_);
+        save_binning(dos0_stats,h5_binning_,h5_stats_,"dos0",save_plaintext);
+
+
+        size_t dos_bin = estimate_bin(dos0_stats);
+        // dos(w)
+        {
+            INFO("Saving local DOS w errorbars");
+            triqs::arrays::array<double, 2> dos_ev(grid_real.size(),3);
+            for (size_t i=0; i<grid_real.size(); i++) {
+                std::complex<double> z = grid_real[i];
+                auto dosz_data = jackknife::jack(
+                    std::function<double(std::vector<double>)>( 
+                    std::bind(dos0_f, std::placeholders::_1, z, p_["dos_offset"], norm1))
+                    ,spectrum_history,dos_bin);
+                dos_ev(i,0) = std::real(z); 
+                dos_ev(i,1) = std::get<binning::bin_m::_MEAN>(dosz_data);
+                dos_ev(i,2) = std::get<binning::bin_m::_SQERROR>(dosz_data); 
+                }
+            h5_write(h5_stats_,"dos_err",dos_ev);
+            if (save_plaintext) savetxt("dos_err.dat",dos_ev);
+            }
+
+        double gw0 = 0.0;
+        for (auto spec : spectrum_history) for (auto e : spec) gw0+=std::imag(1.0/(I*double(p_["dos_offset"]) - e)) / double(volume_) / double(nmeasures_); 
+        std::cout << "Gw0 = " << gw0 << std::endl;
+      }
+}
+*/
+
+
 } // end namespace fk
+
