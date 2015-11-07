@@ -258,8 +258,17 @@ try{
     if (world.rank() == 0) {
         mc.observables.merge(obs_old);
         p["n_cycles"] = n_cycles_total;
-        save_all_data(mc,p,h5fname,save_plaintext,wgrid_conductivity);
         std::cout << "Calculation lasted : " 
+            << duration_cast<hours>(end-start).count() << "h " 
+            << duration_cast<minutes>(end-start).count()%60 << "m " 
+            << duration_cast<seconds>(end-start).count()%60 << "s " 
+            << duration_cast<milliseconds>(end-start).count()%1000 << "ms " 
+            << std::endl;
+
+        start = steady_clock::now();
+        save_all_data(mc,p,h5fname,save_plaintext,wgrid_conductivity);
+        end = steady_clock::now();
+        std::cout << "Saving lasted : " 
             << duration_cast<hours>(end-start).count() << "h " 
             << duration_cast<minutes>(end-start).count()%60 << "m " 
             << duration_cast<seconds>(end-start).count()%60 << "s " 
