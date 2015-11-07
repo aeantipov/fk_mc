@@ -88,7 +88,7 @@ try {
     TCLAP::ValueArg<bool>     calc_ipr_switch("","calc_ipr","Calculate inverse participation ratio", false, false, "bool", cmd);
     // dos-related args
     TCLAP::ValueArg<double>   dos_width_arg("","dos_width","width of dos", false, 6.0, "double", cmd);
-    TCLAP::ValueArg<int>      dos_npts_arg("","dos_npts","npts dos", false, 1000, "int", cmd);
+    TCLAP::ValueArg<int>      dos_npts_arg("","dos_npts","npts dos", false, 240, "int", cmd);
     TCLAP::ValueArg<double>   dos_offset_arg("","dos_offset","offset of dos from real axis", false, 0.05, "double", cmd);
     // stiffness args
     TCLAP::ValueArg<bool>     calc_stiffness_switch("","calc_stiffness","Calculate inverse participation ratio", false, false, "bool", cmd);
