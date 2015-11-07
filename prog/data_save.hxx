@@ -444,6 +444,19 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
 {
     double beta = mc_.config.params().beta;
 
+    auto ipr_f = [&](std::vector<double> const& ipr_spec, double z, double offset, int volume)->double  {
+        double nom = 0.0, denom = 0.0;
+        for (size_t i=0; i<volume; i++) {
+            // as Eigen::Matrix::norm(4) was used to measure ipr -> take the power of 4 to extract ipr
+            double ipr_state = boost::math::pow<4>(ipr_spec[i+volume]);
+            double wminuseps = z - ipr_spec[i]; 
+            double lorentz = offset / ( wminuseps * wminuseps + offset * offset);
+            denom+=lorentz;
+            nom+=lorentz*ipr_state; 
+            };
+        return nom/denom;
+        };
+
     std::vector<std::vector<double>> ipr_spec_tr(nmeasures_, std::vector<double>(2*volume_, 0.0));
     for (size_t m=0; m<nmeasures_; ++m) for (int i=0; i<volume_; ++i) { 
         ipr_spec_tr[m][i+volume_] = observables_.ipr_history[i][m];
@@ -452,7 +465,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
 
     std::vector<double> ipr_data(nmeasures_);
     for (size_t m=0; m<nmeasures_; ++m) for (int i=0; i<volume_; ++i) { 
-        ipr_data[m] = this->ipr_moment_f<1>(ipr_spec_tr[m], 0.0, p_["dos_offset"], this->lattice_.get_msize(), 0.0);
+        ipr_data[m] = ipr_f(ipr_spec_tr[m], 0.0, p_["dos_offset"], this->lattice_.get_msize());
         }
 
     auto ipr0_binning = binning::accumulate_binning(ipr_data.rbegin(), ipr_data.rend(), max_bin_);
@@ -460,12 +473,12 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
     auto ipr0_bin=estimate_bin(ipr0_binning);
     triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
     for (size_t i=0; i<grid_real.size(); i++) {
-        std::complex<double> z = grid_real[i];
+        double z = grid_real[i];
         for (size_t m=0; m<nmeasures_; ++m) for (int i=0; i<volume_; ++i) { 
-            ipr_data[m] = this->ipr_moment_f<1>(ipr_spec_tr[m], z, p_["dos_offset"], this->lattice_.get_msize(), 0.0);
+            ipr_data[m] = ipr_f(ipr_spec_tr[m], z, p_["dos_offset"], this->lattice_.get_msize());
             }
         auto ipr_bin_data = binning::bin(ipr_data.rbegin(), ipr_data.rend(), ipr0_bin);
-        ipr_ev(i,0) = std::real(z); 
+        ipr_ev(i,0) = z;
         ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_bin_data);
         ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_bin_data); 
         };
@@ -473,8 +486,6 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
     h5_write(h5_stats_,"ipr_err",ipr_ev);
     if (p_["save_plaintext"]) savetxt("ipr_err.dat",ipr_ev);
 }
-
-
 
 template <typename MC>
 void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid) 
