@@ -54,7 +54,7 @@ protected:
     void save_glocal(std::vector<double> wgrid_real);
     /// Save G(w,r) and G(w,k) to plaintext files.
     // Warning: only works for 2d.
-    void save_gwr(std::vector<std::complex<double>> wgrid);
+    void save_gwr(std::vector<std::complex<double>> wgrid, double imag_offset);
 
     template <int N>
     static double ipr_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume, double mean);

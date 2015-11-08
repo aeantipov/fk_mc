@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fftw3.h>
 #include "data_save.hpp"
 
 namespace fk {
@@ -65,7 +66,7 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     std::vector<double> grid_real(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real[i] = -dos_width+2.*dos_width*i/(1.*dos_npts);
 
     // G(w,k)
-    if (p_["measure_eigenfunctions"]) { save_gwr({std::complex<double>(0,0)}); } 
+    if (p_["measure_eigenfunctions"]) { save_gwr({std::complex<double>(0,0)}, p_["dos_offset"]); } 
     // Save glocal
     this->save_glocal(grid_real);
     // Inverse participation ratio
@@ -488,89 +489,83 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
 }
 
 template <typename MC>
-void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid) 
+void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double imag_offset) 
 {
     typedef observables_t::dense_m dense_m;
     const std::vector<dense_m>& eigs = observables_.eigenfunctions_history;
-    std::cout << "Saving G(w,k)" << std::endl;
+    std::cout << "Saving G(w,r)" << std::endl;
 
     // create a grid for gw
     std::vector<double> grid_real2; 
     grid_real2.push_back(0);
 
-    dense_m gwr_re(eigs[0].rows(), eigs[0].cols()); 
-    dense_m gwr_im(eigs[0].rows(), eigs[0].cols()); 
-    //Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> evals(eigs[0].rows());
-    //Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> ident_v(eigs[0].rows());
-    dense_m evals(eigs[0].rows(), eigs[0].cols()); 
-    evals.setZero();
-    dense_m ident_v(eigs[0].rows(), eigs[0].cols());
-    ident_v.setIdentity();
-    int volume = lattice_.get_msize();
-    Eigen::ArrayXi fconf(volume); 
+    dense_m gwr_re(volume_, volume_); 
+    dense_m gwr_im(volume_, volume_); 
+    typedef Eigen::DiagonalMatrix<double, Eigen::Dynamic, Eigen::Dynamic> diag_m;
+    diag_m wminuseps(volume_);
+    diag_m denom(volume_);
+    diag_m evals(volume_);
+    Eigen::ArrayXi fconf(volume_); 
     fconf.setZero(); 
 
-    double xi = p_["dos_offset"];
-    dense_m xi_m = ident_v * xi;
-
+    double xi = imag_offset;
     std::cout << "measurements : " << nmeasures_ << std::endl;
-    std::cout << "Gwr imag offset = " << p_["dos_offset"] << std::endl; 
+    std::cout << "Gwr imag offset = " << xi << std::endl;
 
     for (std::complex<double> w : wgrid) { 
         std::cout << "w = " << w << std::endl;
+        w+=I*xi;
         std::string wstring = std::to_string(float(w.real())) + "_" + std::to_string(float(w.imag()));
         gwr_re.setZero();
         gwr_im.setZero();
-        double gw0 = 0.0;
-        double gw1 = 0.0;
-        double gw2 = 0.0;
-        double gw3 = 0.0;
+        double gw_test = 0.0;
+        Eigen::ArrayXd evals1(volume_);
         for (int m = 0; m < nmeasures_; ++m) { 
-            for (int i = 0; i < volume; ++i) { 
-                evals.diagonal()(i) = observables_.spectrum_history[i][m]; 
+            for (int i = 0; i < volume_; ++i) { 
+                double eps = observables_.spectrum_history[i][m];
+                double wmeps = w.real() - eps;
+                evals.diagonal()(i) = eps;
+                denom.diagonal()(i) = 1.0 / ( (w.real() - eps)*(w.real() - eps) + w.imag()*w.imag()); 
+                wminuseps.diagonal()(i) = w.real() - eps;
                 fconf[i] = observables_.focc_history[i][m];
-                gw2 += std::imag(1.0 / (w - observables_.spectrum_history[i][m] + I * xi)) / double(volume) / double(nmeasures_);
+                gw_test += std::imag(1.0 / (w - observables_.spectrum_history[i][m])) / double(volume_) / double(nmeasures_);
                 }
 
-
-  //          #ifndef NDEBUG 
+            #ifndef NDEBUG
+            // below is a check that (w - H)^{-1} is summed correctly
             configuration_t config1(lattice_,p_["beta"],p_["U"],p_["mu_c"],p_["mu_f"]);
             config1.f_config_=fconf;
             config1.calc_hamiltonian();
             config1.calc_ed(true);
-            //std::cout << (Eigen::VectorXd(config1.ed_data().cached_spectrum - Eigen::ArrayXd(evals.diagonal()))).squaredNorm() << std::endl;
- //           #endif
-            //std::cout << Eigen::MatrixXd(config1.hamilt_) - config1.ed_data().cached_evecs * evals *config1.ed_data().cached_evecs.transpose() << std::endl;
-            //std::cout << Eigen::MatrixXd(config1.hamilt_) - eigs[m] * evals * eigs[m].transpose() << std::endl; //config1.ed_data().cached_evecs.transpose() << std::endl;
-
-            //std::cout << fconf.transpose() << std::endl;
-
-
+            assert(sqrt(Eigen::VectorXd(config1.ed_data().cached_spectrum - Eigen::ArrayXd(evals.diagonal())).squaredNorm()) < 1e-5);
             // H = Evecs * Evals * Evecs^T
+            assert(sqrt(Eigen::MatrixXd(config1.hamilt_) - eigs[m] * evals * eigs[m].transpose().squaredNorm()) < 1e-5);
 
+            std::cout << "H - U.E.U^+ diff = " << sqrt((Eigen::MatrixXd(config1.hamilt_) - eigs[m] * (Eigen::MatrixXd::Identity(volume_, volume_)*w.real() - dense_m(wminuseps))  * eigs[m].transpose()).squaredNorm()) << std::endl;
+            std::cout << "U^+.H.U - E diff = " << sqrt(( eigs[m].transpose() * Eigen::MatrixXd(config1.hamilt_) * eigs[m] - (Eigen::MatrixXd::Identity(volume_, volume_)*w.real() - dense_m(wminuseps))).squaredNorm()) << std::endl;
 
-            //std::cout << config1.ed_data().cached_spectrum.transpose() << " == " << evals.diagonal().transpose() << std::endl;
+            std::cout << "[w-H] - U.(w - E).U^+ diff = " << sqrt(( 
+                (Eigen::MatrixXcd::Identity(volume_, volume_) * (w) - Eigen::MatrixXcd(config1.hamilt_.cast<std::complex<double>>())) - 
+                eigs[m].cast<std::complex<double>>() * ( Eigen::MatrixXcd::Identity(volume_, volume_) * (w) - Eigen::MatrixXcd(Eigen::MatrixXd(evals).cast<std::complex<double>>()) ) * eigs[m].transpose().cast<std::complex<double>>()
+                ).squaredNorm()) << std::endl;
 
-            auto wminuseps = ident_v * w.real() - evals;
+            std::cout << "[w-H]^{-1} - [U.(w - E).U^+]^{-1} diff = " << sqrt(( 
+                (Eigen::MatrixXcd::Identity(volume_, volume_) * (w) - Eigen::MatrixXcd(config1.hamilt_.cast<std::complex<double>>())).inverse() - 
+                (eigs[m].cast<std::complex<double>>() * ( Eigen::MatrixXcd::Identity(volume_, volume_) * (w) - Eigen::MatrixXcd(Eigen::MatrixXd(evals).cast<std::complex<double>>()) ) * eigs[m].transpose().cast<std::complex<double>>()).inverse() ).squaredNorm()) << std::endl;
 
-       //     std::cout << (wminuseps * wminuseps + (xi_m + w.imag() * ident_v)*(xi_m + w.imag() * ident_v)).inverse() << std::endl;// wminuseps*wminuseps + xi_m*xi_m << std::endl;
-            // eigenvalues are in columns
-            //std::cout << "norm = " << eigs[0].row(0) * eigs[0].row(0).transpose() << std::endl;
-            //std::cout << "norm2 = " << eigs[0].col(0).transpose() * eigs[0].col(0) << std::endl;
+            std::cout << "[w-H]^{-1} - U.(w - E)^{-1}.U^+ diff = " << sqrt(( 
+                (Eigen::MatrixXcd::Identity(volume_, volume_) * (w) - Eigen::MatrixXcd(config1.hamilt_.cast<std::complex<double>>())).inverse() - 
+                eigs[m].cast<std::complex<double>>() * ( Eigen::MatrixXcd::Identity(volume_, volume_) * (w) - Eigen::MatrixXcd(Eigen::MatrixXd(evals).cast<std::complex<double>>()) ).inverse() * eigs[m].transpose().cast<std::complex<double>>() ).squaredNorm()) << std::endl;
 
-            // [w - H]^-1 = Evecs^+ * [w - Evals]^-1 * Evecs
-
-            Eigen::MatrixXd gw_add = (Eigen::MatrixXcd(evals.cast<std::complex<double>>())*0.0 + I*Eigen::MatrixXcd(xi_m.cast<std::complex<double>>()) -
-                                      Eigen::MatrixXcd(config1.hamilt_.cast<std::complex<double>>())).inverse().imag().cast<double>();
-            std::cout << gw_add(0,0) << " ==" ;
-            Eigen::MatrixXcd inv_evals = (Eigen::MatrixXcd(wminuseps.cast<std::complex<double>>()) + I*Eigen::MatrixXcd(xi_m.cast<std::complex<double>>())).inverse();
-            std::cout << inv_evals.diagonal().sum() / double(volume_) << std::endl; 
-            gwr_im -= gw_add / nmeasures_;
-            gw0 += gw_add.diagonal().sum() / volume / nmeasures_;
-            gw3 += gw_add(0,0) / nmeasures_;
-            gw1 += inv_evals.diagonal().sum().imag() / volume / nmeasures_;
-            //gwr_im -= eigs[m].transpose() * xi * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / volume / nmeasures_;
-            gwr_re += eigs[m].transpose() * wminuseps * (wminuseps * wminuseps + xi_m*xi_m).inverse() * eigs[m] / volume / nmeasures_;
+            Eigen::MatrixXd gw_add = (Eigen::MatrixXcd::Identity(volume_, volume_) * (w) -
+                                      Eigen::MatrixXcd(config1.hamilt_.cast<std::complex<double>>())).inverse().imag().template cast<double>();
+            std::cout << "Im[[w-H]^{-1}] - Im[U.(w - E)^{-1}.U^+] diff = " << sqrt(( 
+                gw_add - 
+                (eigs[m].cast<std::complex<double>>() * ( Eigen::MatrixXcd::Identity(volume_, volume_) * (w) - Eigen::MatrixXcd(Eigen::MatrixXd(evals).cast<std::complex<double>>()) ).inverse() * eigs[m].transpose().cast<std::complex<double>>()).imag().template cast<double>() ).squaredNorm()) << std::endl;
+            std::cout << "Im[(w-H)^{-1}] - U.(-Im[w]).(w - E)^{-1}.U^+ diff = " << sqrt((gw_add - eigs[m] * (-w.imag()) * denom * eigs[m].transpose()).squaredNorm()) << std::endl;
+            #endif
+            gwr_im += eigs[m] * (-w.imag()) * denom * eigs[m].transpose() / nmeasures_;
+            gwr_re += eigs[m] * wminuseps * denom * eigs[m].transpose() / nmeasures_;
             }
 
         std::ofstream gwr_re_str("gr_full_w"+wstring+"_re.dat");
@@ -579,10 +574,8 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid)
         gwr_im_str << gwr_im << std::endl;
         gwr_re_str.close();
         gwr_im_str.close();
-        std::cout << "gw0 = " << gw0 << std::endl;
-        std::cout << "gw1 = " << gw1 << std::endl;
-        std::cout << "gw2 = " << gw2 << std::endl;
-        std::cout << "gw3 = " << gw3 << std::endl;
+        std::cout << "test: = " << gw_test << " == " << gwr_im.diagonal().sum()/double(volume_) <<  std::endl;
+        std::cout << "test2: = " << gw_test << " == " << gwr_im(0,0) <<  std::endl;
 
         // now gwr_re, gwr_im contain Gw(r1,r2)
         // let's now convert it to Gw(r1 - r2)
@@ -607,6 +600,22 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid)
         gwr_im_str.open("gr_w"+wstring+"_im.dat");
         gwr_re_str << gwr_re2 << std::endl;
         gwr_im_str << gwr_im2 << std::endl;
+        gwr_re_str.close();
+        gwr_im_str.close();
+
+        Eigen::MatrixXcd gwr = gwr_re2.cast<std::complex<double>>() + I*gwr_im2.cast<std::complex<double>>();
+            
+        fftw_plan p;
+        p = fftw_plan_dft_2d(gwr.rows(), gwr.cols(),  
+                         reinterpret_cast<fftw_complex*>(gwr.data()),
+                         reinterpret_cast<fftw_complex*>(gwr.data()),
+                         FFTW_FORWARD, FFTW_ESTIMATE); 
+        fftw_execute(p);
+
+        gwr_re_str.open("gk_w"+wstring+"_re.dat");
+        gwr_im_str.open("gk_w"+wstring+"_im.dat");
+        gwr_re_str << gwr.real().cast<double>() << std::endl;
+        gwr_im_str << gwr.imag().cast<double>() << std::endl;
         gwr_re_str.close();
         gwr_im_str.close();
         }
