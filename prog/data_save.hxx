@@ -568,12 +568,22 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
             gwr_re += eigs[m] * wminuseps * denom * eigs[m].transpose() / nmeasures_;
             }
 
+        auto save_hdf5 = [&](Eigen::MatrixXd const& m, std::string name) {
+            triqs::arrays::array<double, 2> out(m.rows(),m.cols()); 
+            for (int i = 0; i < m.rows(); ++i) 
+                for (int j = 0; j < m.cols(); ++j) 
+                    out(i,j) = m(i,j);
+            h5_write(h5_stats_,name,out);
+        };
+
         std::ofstream gwr_re_str("gr_full_w"+wstring+"_re.dat");
         std::ofstream gwr_im_str("gr_full_w"+wstring+"_im.dat");
         gwr_re_str << gwr_re << std::endl;
         gwr_im_str << gwr_im << std::endl;
         gwr_re_str.close();
         gwr_im_str.close();
+        save_hdf5(gwr_re, "gr_full_w"+wstring+"_re.dat");
+        save_hdf5(gwr_im, "gr_full_w"+wstring+"_im.dat");
         std::cout << "test: = " << gw_test << " == " << gwr_im.diagonal().sum()/double(volume_) <<  std::endl;
         std::cout << "test2: = " << gw_test << " == " << gwr_im(0,0) <<  std::endl;
 
@@ -600,6 +610,8 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
         gwr_im_str.open("gr_w"+wstring+"_im.dat");
         gwr_re_str << gwr_re2 << std::endl;
         gwr_im_str << gwr_im2 << std::endl;
+        save_hdf5(gwr_re2, "gr_w"+wstring+"_re.dat");
+        save_hdf5(gwr_im2, "gr_w"+wstring+"_im.dat");
         gwr_re_str.close();
         gwr_im_str.close();
 
@@ -616,6 +628,8 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
         gwr_im_str.open("gk_w"+wstring+"_im.dat");
         gwr_re_str << gwr.real().cast<double>() << std::endl;
         gwr_im_str << gwr.imag().cast<double>() << std::endl;
+        save_hdf5(gwr.real().cast<double>(), "gk_w"+wstring+"_re.dat");
+        save_hdf5(gwr.imag().cast<double>(), "gk_w"+wstring+"_im.dat");
         gwr_re_str.close();
         gwr_im_str.close();
         }
