@@ -508,6 +508,8 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
     Eigen::ArrayXi fconf(volume_); 
     fconf.setZero(); 
 
+    bool save_plaintext = p_["save_plaintext"];
+
     double xi = imag_offset;
     std::cout << "measurements : " << nmeasures_ << std::endl;
     std::cout << "Gwr imag offset = " << xi << std::endl;
@@ -515,7 +517,13 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
     for (std::complex<double> w : wgrid) { 
         std::cout << "w = " << w << std::endl;
         w+=I*xi;
-        std::string wstring = std::to_string(float(w.real())) + "_" + std::to_string(float(w.imag()));
+        std::string wstr_re = std::to_string(float(w.real()));
+        std::string wstr_im = std::to_string(float(w.imag()));
+        std::string wstring = 
+            wstr_re.erase ( wstr_re.find_last_not_of("0") + 1, std::string::npos ) + "_" + 
+            wstr_im.erase ( wstr_im.find_last_not_of("0") + 1, std::string::npos ); 
+            
+
         gwr_re.setZero();
         gwr_im.setZero();
         double gw_test = 0.0;
@@ -569,23 +577,24 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
             }
 
         auto save_hdf5 = [&](Eigen::MatrixXd const& m, std::string name) {
+            std::cout << "Saving " << name << " ...";
             triqs::arrays::array<double, 2> out(m.rows(),m.cols()); 
             for (int i = 0; i < m.rows(); ++i) 
                 for (int j = 0; j < m.cols(); ++j) 
                     out(i,j) = m(i,j);
             h5_write(h5_stats_,name,out);
+            if (save_plaintext) { 
+                std::ofstream out_str(name + ".dat");
+                out_str << m << std::endl;
+                out_str.close();
+                }
+            std::cout << "done." << std::endl;
         };
 
-        std::ofstream gwr_re_str("gr_full_w"+wstring+"_re.dat");
-        std::ofstream gwr_im_str("gr_full_w"+wstring+"_im.dat");
-        gwr_re_str << gwr_re << std::endl;
-        gwr_im_str << gwr_im << std::endl;
-        gwr_re_str.close();
-        gwr_im_str.close();
-        save_hdf5(gwr_re, "gr_full_w"+wstring+"_re.dat");
-        save_hdf5(gwr_im, "gr_full_w"+wstring+"_im.dat");
-        std::cout << "test: = " << gw_test << " == " << gwr_im.diagonal().sum()/double(volume_) <<  std::endl;
-        std::cout << "test2: = " << gw_test << " == " << gwr_im(0,0) <<  std::endl;
+        save_hdf5(gwr_re, "gr_full_w"+wstring+"_re");
+        save_hdf5(gwr_im, "gr_full_w"+wstring+"_im");
+        //std::cout << "test: = " << gw_test << " == " << gwr_im.diagonal().sum()/double(volume_) <<  std::endl;
+        //std::cout << "test2: = " << gw_test << " == " << gwr_im(0,0) <<  std::endl;
 
         // now gwr_re, gwr_im contain Gw(r1,r2)
         // let's now convert it to Gw(r1 - r2)
@@ -606,14 +615,8 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
                 }
             }
 
-        gwr_re_str.open("gr_w"+wstring+"_re.dat");
-        gwr_im_str.open("gr_w"+wstring+"_im.dat");
-        gwr_re_str << gwr_re2 << std::endl;
-        gwr_im_str << gwr_im2 << std::endl;
-        save_hdf5(gwr_re2, "gr_w"+wstring+"_re.dat");
-        save_hdf5(gwr_im2, "gr_w"+wstring+"_im.dat");
-        gwr_re_str.close();
-        gwr_im_str.close();
+        save_hdf5(gwr_re2, "gr_w"+wstring+"_re");
+        save_hdf5(gwr_im2, "gr_w"+wstring+"_im");
 
         Eigen::MatrixXcd gwr = gwr_re2.cast<std::complex<double>>() + I*gwr_im2.cast<std::complex<double>>();
             
@@ -624,14 +627,8 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
                          FFTW_FORWARD, FFTW_ESTIMATE); 
         fftw_execute(p);
 
-        gwr_re_str.open("gk_w"+wstring+"_re.dat");
-        gwr_im_str.open("gk_w"+wstring+"_im.dat");
-        gwr_re_str << gwr.real().cast<double>() << std::endl;
-        gwr_im_str << gwr.imag().cast<double>() << std::endl;
-        save_hdf5(gwr.real().cast<double>(), "gk_w"+wstring+"_re.dat");
-        save_hdf5(gwr.imag().cast<double>(), "gk_w"+wstring+"_im.dat");
-        gwr_re_str.close();
-        gwr_im_str.close();
+        save_hdf5(gwr.real().cast<double>(), "gk_w"+wstring+"_re");
+        save_hdf5(gwr.imag().cast<double>(), "gk_w"+wstring+"_im");
         }
 }
 
