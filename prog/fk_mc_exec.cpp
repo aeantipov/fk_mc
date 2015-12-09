@@ -96,7 +96,8 @@ try {
     TCLAP::ValueArg<int>      cond_npoints_arg("","cond_npoints","number of points to sample conductivity", false, 150, "int", cmd);
 
     // eigenfunctions storage
-    TCLAP::ValueArg<bool>     calc_eigenvectors_switch("","calc_eigenvectors","Store eigenfunctions?", false, false, "bool", cmd);
+    TCLAP::ValueArg<bool>     calc_eigenvectors_switch("","calc_eigenvectors","Calculate eigenfunctions?", false, false, "bool", cmd);
+    TCLAP::ValueArg<bool>     save_eigenvectors_switch("","save_eigenvectors","Store eigenfunctions?", false, false, "bool", cmd);
 
     // chebyshev flags
     TCLAP::SwitchArg          chebyshev_switch("c","chebyshev","Make chebyshev moves?", cmd, false);
@@ -142,6 +143,7 @@ try {
     p["measure_ipr"] = calc_ipr_switch.getValue();
     p["measure_stiffness"] = calc_stiffness_switch.getValue();
     p["measure_eigenfunctions"] = calc_eigenvectors_switch.getValue();
+    p["save_eigenfunctions"] = save_eigenvectors_switch.getValue();
 
     p["measure_history"] = (calc_history_switch.getValue() && !bool(p["cheb_moves"])) || bool(p["measure_ipr"]) || bool(p["measure_eigenfunctions"]);
     p["dos_width"] = dos_width_arg.getValue();

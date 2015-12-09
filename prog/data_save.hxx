@@ -125,7 +125,7 @@ void data_saver<MC>::save_measurements()
         h5_write(h5_mc_data_,"cond_history", t_cond_history);
         };
 
-    if (p_["measure_eigenfunctions"]) {
+    if (bool(p_["measure_eigenfunctions"]) && bool(p_["save_eigenfunctions"])) {
         std::cout << "Eigenfunctions" << std::endl;
         const auto& eig_hist = observables_.eigenfunctions_history;
         triqs::arrays::array<double, 3> t_eig_history(eig_hist.size(), eig_hist[0].rows(), eig_hist[0].cols() );
