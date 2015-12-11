@@ -64,9 +64,15 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     size_t dos_npts = p_["dos_npts"];
     double dos_width = p_["dos_width"];
     std::vector<double> grid_real(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real[i] = -dos_width+2.*dos_width*i/(1.*dos_npts);
+    std::vector<std::complex<double>> grid_real2(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real2[i] = grid_real[i];
 
     // G(w,k)
-    if (p_["measure_eigenfunctions"]) { save_gwr({std::complex<double>(0,0)}, p_["dos_offset"]); } 
+    if (p_["measure_eigenfunctions"]) { 
+        // Save gw at zero
+        save_gwr({std::complex<double>(0,0)}, p_["dos_offset"], false); 
+        // Save dos and typical dos
+        save_gwr(grid_real2, p_["dos_offset"], true); 
+    } 
     // Save glocal
     this->save_glocal(grid_real);
     // Inverse participation ratio
@@ -489,7 +495,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
 }
 
 template <typename MC>
-void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double imag_offset) 
+void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double imag_offset, bool save_only_dos) 
 {
     typedef observables_t::dense_m dense_m;
     const std::vector<dense_m>& eigs = observables_.eigenfunctions_history;
@@ -514,7 +520,10 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
     std::cout << "measurements : " << nmeasures_ << std::endl;
     std::cout << "Gwr imag offset = " << xi << std::endl;
 
-    for (std::complex<double> w : wgrid) { 
+    triqs::arrays::array<double, 2> tdos_vals(wgrid.size(), 8);
+
+    for (int windex = 0; windex < wgrid.size(); ++windex) { 
+        std::complex<double> w = wgrid[windex];  
         std::cout << "w = " << w << std::endl;
         w+=I*xi;
         std::string wstr_re = std::to_string(float(w.real()));
@@ -537,7 +546,7 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
                 wminuseps.diagonal()(i) = w.real() - eps;
                 fconf[i] = observables_.focc_history[i][m];
                 gw_test += std::imag(1.0 / (w - observables_.spectrum_history[i][m])) / double(volume_) / double(nmeasures_);
-                }
+            }
 
             #ifndef NDEBUG
             // below is a check that (w - H)^{-1} is summed correctly
@@ -576,6 +585,34 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
             gwr_re += eigs[m] * wminuseps * denom * eigs[m].transpose() / nmeasures_;
             }
 
+        // get dos'es
+        Eigen::VectorXd gw_diag = gwr_im.diagonal() / (-PI);
+        double dos_val = gw_diag.sum() / volume_;
+        std::cout << "dos0 = " << dos_val << std::endl;
+        double dos_err = 0.;
+        for (int i = 0; i<volume_; ++i) { gw_diag[i] = std::log(gw_diag[i]); }
+        double dos_geom =std::exp(1.0 / volume_ *  gw_diag.sum());
+        std::cout << "dos_geom0 = " << dos_geom << std::endl;
+        double dos_geom_err = 0;
+
+        tdos_vals(windex, 0) = std::real(w);
+        tdos_vals(windex, 1) = std::imag(w);
+        tdos_vals(windex, 2) = dos_geom;
+        tdos_vals(windex, 3) = dos_geom_err;
+        tdos_vals(windex, 4) = dos_val;
+        tdos_vals(windex, 5) = dos_err;
+        tdos_vals(windex, 6) = dos_geom / dos_val;
+        tdos_vals(windex, 7) = std::sqrt(boost::math::pow<2>(dos_geom_err / dos_val) + boost::math::pow<2>(dos_err * dos_geom / dos_val / dos_val));
+
+        // if we don't need gf -> jump to the next w
+        if (save_only_dos) continue;
+
+        // if we need all the rest -> not too many points, save them
+        triqs::arrays::array<double, 1> tdos_out(8);
+        for (int jj=0; jj<8; ++jj) tdos_out(jj) = tdos_vals(windex, jj);
+        h5_write(h5_stats_,"tdos"+wstring ,tdos_out);
+        
+
         auto save_hdf5 = [&](Eigen::MatrixXd const& m, std::string name) {
             std::cout << "Saving " << name << " ...";
             triqs::arrays::array<double, 2> out(m.rows(),m.cols()); 
@@ -595,7 +632,8 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
         save_hdf5(gwr_im, "gr_full_w"+wstring+"_im");
         //std::cout << "test: = " << gw_test << " == " << gwr_im.diagonal().sum()/double(volume_) <<  std::endl;
         //std::cout << "test2: = " << gw_test << " == " << gwr_im(0,0) <<  std::endl;
-
+    
+        
         // now gwr_re, gwr_im contain Gw(r1,r2)
         // let's now convert it to Gw(r1 - r2)
         auto dims = lattice_.dims;
@@ -630,6 +668,7 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
         save_hdf5(gwr.real().cast<double>(), "gk_w"+wstring+"_re");
         save_hdf5(gwr.imag().cast<double>(), "gk_w"+wstring+"_im");
         }
+    h5_write(h5_stats_,"tdos_gwr",tdos_vals);
 }
 
 /* old incorrect stuff

@@ -116,7 +116,7 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
         };
 
     // Eigenfunctions
-    if (p["measure_eigenfunctions"]) {
+    if (bool(p["measure_eigenfunctions"]) && bool(p["save_eigenfunctions"])) {
         std::cout << "eigenfunctions..." << std::flush;
         triqs::arrays::array<double, 3> t_eig_history;
         h5_read(h5_mc_data,"eig_history", t_eig_history);
