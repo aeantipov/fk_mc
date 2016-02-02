@@ -5,6 +5,7 @@ set (fk_mc_src
     lattice/hypercubic.cpp
     lattice/triangular.cpp
     lattice/chain.cpp
+    lattice/honeycomb.cpp
     chebyshev.hpp
     configuration.hpp configuration.cpp
     moves.hpp moves.cpp

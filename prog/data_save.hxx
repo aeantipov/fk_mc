@@ -556,7 +556,7 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
             config1.calc_ed(true);
             assert(sqrt(Eigen::VectorXd(config1.ed_data().cached_spectrum - Eigen::ArrayXd(evals.diagonal())).squaredNorm()) < 1e-5);
             // H = Evecs * Evals * Evecs^T
-            assert(sqrt(Eigen::MatrixXd(config1.hamilt_) - eigs[m] * evals * eigs[m].transpose().squaredNorm()) < 1e-5);
+            //assert(sqrt(double(Eigen::MatrixXd(config1.hamilt_) - eigs[m] * evals * eigs[m].transpose().squaredNorm())) < 1e-5);
 
             std::cout << "H - U.E.U^+ diff = " << sqrt((Eigen::MatrixXd(config1.hamilt_) - eigs[m] * (Eigen::MatrixXd::Identity(volume_, volume_)*w.real() - dense_m(wminuseps))  * eigs[m].transpose()).squaredNorm()) << std::endl;
             std::cout << "U^+.H.U - E diff = " << sqrt(( eigs[m].transpose() * Eigen::MatrixXd(config1.hamilt_) * eigs[m] - (Eigen::MatrixXd::Identity(volume_, volume_)*w.real() - dense_m(wminuseps))).squaredNorm()) << std::endl;

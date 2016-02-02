@@ -3,6 +3,7 @@ include_directories(../solver .. ${TRIQS_INCLUDE_ALL})
 set (tests_fk
 #triqs_extra_test
 lattice_test
+honeycomb_test
 chain_test
 config_test
 fast_update_test

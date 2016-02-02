@@ -51,7 +51,7 @@ struct hypercubic_lattice : lattice_base
     using lattice_base::m_size_;
     using lattice_base::hopping_m_;
 
-    Eigen::ArrayXcd FFT(Eigen::ArrayXcd in, int direction) const;
+    template <typename M> M FFT(M in, int direction) const;
     int FFT_pi(const Eigen::ArrayXi& in) const;
     //triqs::arrays::array_view<double,D> matrix_view ( real_array_view_t in );
     //real_array_view_t flatten(triqs::arrays::array_view<double,D> in);
@@ -63,6 +63,26 @@ struct hypercubic_lattice : lattice_base
 //    protected:
         Eigen::ArrayXi ft_pi_array_;
 };
+
+template <size_t D>
+template <typename M> 
+M hypercubic_lattice<D>::FFT(M in, int direction) const
+{
+    M out(in);
+    out.setZero();
+
+    fftw_plan p;
+    p = fftw_plan_dft(D, dims.data(),
+                         reinterpret_cast<fftw_complex*>( in.data()), 
+                         reinterpret_cast<fftw_complex*>( out.data()), 
+                         direction, FFTW_ESTIMATE); 
+    fftw_execute(p);
+
+    double norm=1.0;
+    for (auto x:dims) norm*=x;
+    if (direction == FFTW_BACKWARD) out/=norm;
+    return out;
+}
 
 }; // end of namespace FK
 

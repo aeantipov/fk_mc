@@ -41,25 +41,6 @@ size_t hypercubic_lattice<D>::pos_to_index(std::array<int, D> pos) const
 }
 
 template <size_t D>
-Eigen::ArrayXcd hypercubic_lattice<D>::FFT(Eigen::ArrayXcd in, int direction) const
-{
-    Eigen::ArrayXcd out(in);
-
-    fftw_plan p;
-    p = fftw_plan_dft(D, dims.data(),
-                         reinterpret_cast<fftw_complex*>( in.data()), 
-                         reinterpret_cast<fftw_complex*>( out.data()), 
-                         direction, FFTW_ESTIMATE); 
-    fftw_execute(p);
-
-    double norm=1.0;
-    for (auto x:dims) norm*=x;
-    if (direction == FFTW_BACKWARD) out/=norm;
-    return out;
-
-}
-
-template <size_t D>
 int hypercubic_lattice<D>::FFT_pi(const Eigen::ArrayXi& in) const
 {
     return (in*ft_pi_array_).sum();

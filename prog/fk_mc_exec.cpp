@@ -25,6 +25,9 @@ using namespace fk;
 #elif LATTICE_chain
     #include "lattice/chain.hpp"
     typedef chain_lattice lattice_t;
+#elif LATTICE_honeycomb
+    #include "lattice/honeycomb.hpp"
+    typedef honeycomb_lattice lattice_t;
 #endif
 
 
@@ -225,6 +228,9 @@ try{
         lattice.fill(p["t"]);
         p["Nf_start"] = L/2;
     #elif LATTICE_cubic2d 
+        lattice.fill(p["t"]);
+        p["Nf_start"] = L*L/2;
+    #elif LATTICE_honeycomb 
         lattice.fill(p["t"]);
         p["Nf_start"] = L*L/2;
     #endif
