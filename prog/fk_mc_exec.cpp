@@ -22,6 +22,9 @@ using namespace fk;
 #elif LATTICE_cubic2d
     #include "lattice/hypercubic.hpp"
     typedef hypercubic_lattice<2> lattice_t;
+#elif LATTICE_cubic3d
+    #include "lattice/hypercubic.hpp"
+    typedef hypercubic_lattice<3> lattice_t;
 #elif LATTICE_chain
     #include "lattice/chain.hpp"
     typedef chain_lattice lattice_t;
@@ -230,6 +233,9 @@ try{
     #elif LATTICE_cubic2d 
         lattice.fill(p["t"]);
         p["Nf_start"] = L*L/2;
+    #elif LATTICE_cubic3d 
+        lattice.fill(p["t"]);
+        p["Nf_start"] = L*L*L/2;
     #elif LATTICE_honeycomb 
         lattice.fill(p["t"]);
         p["Nf_start"] = L*L/2;
