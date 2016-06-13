@@ -62,8 +62,9 @@ option(Benchmark "Enable benchmark" ON)
 option(Testing "Enable testing" ON)
 
 if (Benchmark OR Testing)
-    include(UseGtest)
-    add_subdirectory(${gtest_ROOT} ${PROJECT_BINARY_DIR}/gtest)
+    include(EnableGtests) #defined in common/cmake
+    #include(UseGtest)
+    #add_subdirectory(${gtest_ROOT} ${PROJECT_BINARY_DIR}/gtest)
     include_directories(${gtest_INCLUDE_DIR})
 endif()
 
@@ -74,10 +75,10 @@ endif (Benchmark)
 
 #build tests
 if (Testing)
-    message(STATUS "Building tests")
     enable_testing()
     add_subdirectory(test)
-endif (Testing)
+endif(Testing)
+
 
 ### Additional installation files
 configure_file("${CMAKE_SOURCE_DIR}/fk_mc.lmod.in" "${CMAKE_BINARY_DIR}/${FK_MC_VERSION}")
