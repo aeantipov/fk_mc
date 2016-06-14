@@ -1,5 +1,5 @@
-### Falicov-Kimball MC
-#### Dependencies 
+## Falicov-Kimball MC
+### Dependencies 
 - c++11-compatible compiler
 - triqs 1.1.0 release : https://github.com/aeantipov/triqs1.1.git (patched version for compatibility)
 - triqs required libraries : cmake, hdf5 (with c++ bindings compiled in c11 mode), mpi (openmpi), boost (with mpi)
@@ -8,11 +8,11 @@
 - TCLAP command line parser : http://tclap.sourceforge.net/
 - gtest : https://github.com/google/googletest (fetched automatically) 
 
-#### Installation (including triqs)
+### Installation (including triqs)
 1. Get all dependencies except of triqs 
 2. Download and install triqs version 1.1: `git clone https://github.com/aeantipov/triqs1.1.git` 
-  1. Create a temporary build directory
-  2. In it, run 
+    1. Create a temporary build directory
+    2. In it, run 
       ```
         cmake \
         -DCMAKE_INSTALL_PREFIX=TRIQS_INSTALL_DIR \
@@ -23,14 +23,15 @@
         -DBuild_Documentation=OFF \
         TRIQS_DOWNLOAD_DIR
     ```
-    
-    where TRIQS_DOWNLOAD_DIR is the location if the downloaded triqs source (with CMakeLists.txt), TRIQS_INSTALL_DIR is a location where you want to install triqs. Optionally - specify `CXX=your_c++_compiler cmake ...` to have your own compiler. 
-  3. run `make`
-  4. run `make install`
-  5. More details of triqs installation can be found at https://triqs.ipht.cnrs.fr/1.1/install.html
+     
+      where TRIQS_DOWNLOAD_DIR is the location if the downloaded triqs source (with CMakeLists.txt), TRIQS_INSTALL_DIR is a location where you want to install triqs. Optionally - specify `CXX=your_c++_compiler cmake ...` to have your own compiler. 
+    3. run `make`
+    4. run `make install`
+    5. More details of triqs installation can be found at https://triqs.ipht.cnrs.fr/1.1/install.html
+
 3. Download fk_mc: `git clone https://github.com/aeantipov/fk_mc.git`. The installation is similar to TRIQS. 
-  1. Create a temporary build directory
-  2. In it, run 
+    1. Create a temporary build directory
+    2. In it, run 
       ```
         cmake \
         -DCMAKE_INSTALL_PREFIX=FK_MC_INSTALL_DIR" \
