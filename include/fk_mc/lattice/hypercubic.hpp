@@ -19,6 +19,9 @@ struct hypercubic_lattice : lattice_base
     std::array<int, D> index_to_pos(size_t index) const;
     size_t pos_to_index(std::array<int, D> pos) const;
 
+    /// The nearest neighbor positions to the given position.
+    std::array<std::array<int, D>, 2*D> neighbor_pos(std::array<int, D> pos) const;
+
     struct BZPoint { std::array<double, D> val_; 
                      size_t ind_; 
                      explicit operator int() const {return ind_;};

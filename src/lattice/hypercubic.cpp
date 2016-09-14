@@ -41,6 +41,20 @@ size_t hypercubic_lattice<D>::pos_to_index(std::array<int, D> pos) const
 }
 
 template <size_t D>
+std::array<std::array<int, D>, 2*D> hypercubic_lattice<D>::neighbor_pos(std::array<int, D> pos) const {
+    std::array<std::array<int, D>, 2*D> result;
+
+    for (int i = 0; i < D; ++i) {
+        result[2*i].fill(0);
+        result[2*i+1].fill(0);
+        result[2*i][i] = pos[i] == 0 ? dims[i] - 1 : pos[i] - 1;
+        result[2*i+1][i] = pos[i] == dims[i] - 1 ? 0 : pos[i] + 1;
+    }
+
+    return result;
+}
+
+template <size_t D>
 int hypercubic_lattice<D>::FFT_pi(const Eigen::ArrayXi& in) const
 {
     return (in*ft_pi_array_).sum();
