@@ -55,6 +55,16 @@ std::array<std::array<int, D>, 2*D> hypercubic_lattice<D>::neighbor_pos(std::arr
 }
 
 template <size_t D>
+std::array<size_t, 2*D> hypercubic_lattice<D>::neighbor_index(size_t index) const {
+    std::array<size_t, 2*D> result;
+    auto positions = neighbor_pos(index_to_pos(index));
+    std::transform(std::begin(positions), std::end(positions),
+                   std::begin(result),
+                   [this](const std::array<int, D> &p) { return pos_to_index(p); });
+    return result;
+}
+
+template <size_t D>
 int hypercubic_lattice<D>::FFT_pi(const Eigen::ArrayXi& in) const
 {
     return (in*ft_pi_array_).sum();
