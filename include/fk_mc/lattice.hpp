@@ -24,6 +24,9 @@ struct lattice_base {
     /// disable moving
     lattice_base(lattice_base && rhs) = delete;
 
+    /// The nearest neighbor indices to the given index.
+    virtual std::vector<size_t> neighbor_index(size_t index) const = 0;
+
 protected:
     /// Hopping matrix
     sparse_m hopping_m_;

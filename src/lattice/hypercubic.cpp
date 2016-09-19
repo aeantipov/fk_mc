@@ -55,8 +55,8 @@ std::array<std::array<int, D>, 2*D> hypercubic_lattice<D>::neighbor_pos(std::arr
 }
 
 template <size_t D>
-std::array<size_t, 2*D> hypercubic_lattice<D>::neighbor_index(size_t index) const {
-    std::array<size_t, 2*D> result;
+std::vector<size_t> hypercubic_lattice<D>::neighbor_index(size_t index) const {
+    std::vector<size_t> result(2*D);
     auto positions = neighbor_pos(index_to_pos(index));
     std::transform(std::begin(positions), std::end(positions),
                    std::begin(result),
