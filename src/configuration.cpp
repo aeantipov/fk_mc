@@ -1,4 +1,4 @@
-#include "configuration.hpp"
+#include "fk_mc/configuration.hpp"
 
 #include "../eigen/ArpackSupport"
 
@@ -44,12 +44,15 @@ size_t configuration_t::get_nf() const
     return std::accumulate(f_config_.data(), f_config_.data()+lattice_.get_msize(), 0);
 }
 
-void configuration_t::randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf){
-    if (!nf) nf = rnd(lattice_.get_msize());
+void configuration_t::randomize_f(random_generator &rnd, size_t nf){
+    std::uniform_int_distribution<> distr(0, lattice_.get_msize() - 1); 
+    if (!nf) nf = distr(rnd);//(lattice_.get_msize());
     f_config_.setZero();
     for (size_t i=0; i<nf; ++i) {  
-        size_t ind = rnd(lattice_.get_msize());
-        while (f_config_(ind)==1) ind = rnd(lattice_.get_msize());
+        //size_t ind = rnd(lattice_.get_msize());
+        size_t ind = distr(rnd); //rnd(lattice_.get_msize());
+        //while (f_config_(ind)==1) ind = rnd(lattice_.get_msize());
+        while (f_config_(ind)==1) ind = distr(rnd);//(lattice_.get_msize());
         f_config_(ind) = 1; 
     };
 }

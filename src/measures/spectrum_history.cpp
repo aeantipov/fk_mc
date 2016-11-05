@@ -1,6 +1,6 @@
 #include <boost/mpi/collectives.hpp>
 
-#include "spectrum_history.hpp"
+#include "fk_mc/measures/spectrum_history.hpp"
 
 namespace fk {
 

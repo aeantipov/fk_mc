@@ -1,4 +1,4 @@
-#include "hypercubic.hpp"
+#include "fk_mc/lattice/hypercubic.hpp"
 
 namespace fk { 
 

@@ -1,4 +1,4 @@
-#include "chain.hpp"
+#include "fk_mc/lattice/chain.hpp"
 
 namespace fk { 
 

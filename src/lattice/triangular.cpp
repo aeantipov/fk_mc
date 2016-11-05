@@ -1,4 +1,4 @@
-#include "triangular.hpp"
+#include "fk_mc/lattice/triangular.hpp"
 
 namespace fk { 
 

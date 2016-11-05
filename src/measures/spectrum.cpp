@@ -1,4 +1,4 @@
-#include "spectrum.hpp"
+#include "fk_mc/measures/spectrum.hpp"
 #include <boost/mpi/collectives.hpp>
 
 namespace fk {

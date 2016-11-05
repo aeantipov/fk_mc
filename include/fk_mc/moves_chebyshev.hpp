@@ -4,7 +4,7 @@
 #include "common.hpp"
 #include "configuration.hpp"
 #include "chebyshev.hpp" 
-#include <triqs/mc_tools/random_generator.hpp>
+//#include <triqs/mc_tools/random_generator.hpp>
 
 namespace fk {
 
@@ -19,9 +19,9 @@ struct move_flip {
     configuration_t new_config;
     const chebyshev_eval& cheb_;
      
-    triqs::mc_tools::random_generator &RND;
+    random_generator &RND;
 
-    move_flip(double beta, configuration_t& current_config, const chebyshev_eval& cheb, triqs::mc_tools::random_generator &RND_): 
+    move_flip(double beta, configuration_t& current_config, const chebyshev_eval& cheb, random_generator &RND_): 
         beta(beta), config(current_config), new_config(current_config), cheb_(cheb), RND(RND_) {}
 
     mc_weight_type attempt();
@@ -32,7 +32,7 @@ struct move_flip {
 //************************************************************************************
 
 struct move_randomize : move_flip {
-    move_randomize(double beta, configuration_t& current_config, const chebyshev_eval& cheb, triqs::mc_tools::random_generator &RND_): 
+    move_randomize(double beta, configuration_t& current_config, const chebyshev_eval& cheb, random_generator &RND_): 
         move_flip::move_flip(beta, current_config, cheb, RND_) {}
 
     mc_weight_type attempt();
@@ -42,7 +42,7 @@ struct move_randomize : move_flip {
 
 struct move_addremove : move_flip {
     double exp_beta_mu_f;
-    move_addremove(double beta, configuration_t& current_config, const chebyshev_eval& cheb, triqs::mc_tools::random_generator &RND_): 
+    move_addremove(double beta, configuration_t& current_config, const chebyshev_eval& cheb, random_generator &RND_): 
         move_flip::move_flip(beta, current_config, cheb, RND_),exp_beta_mu_f(exp(beta*config.params_.mu_f)) {}
 
     mc_weight_type attempt();

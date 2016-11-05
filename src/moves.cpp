@@ -4,11 +4,12 @@ namespace fk {
 
 typename move_flip::mc_weight_type move_flip::attempt()
 {
+    std::uniform_int_distribution<> distr(0, config.lattice_.get_msize() - 1); 
     if (config.get_nf() == 0 || config.get_nf() == config.lattice_.get_msize()) return 0; // this move won't work when the configuration is completely full or empty
     new_config = config;
     size_t m_size = config.lattice_.get_msize();
-    size_t from = RND(m_size); while (new_config.f_config_(from)==0) from = RND(m_size);
-    size_t to = RND(m_size); while (new_config.f_config_(to)==1) to = RND(m_size);
+    size_t from = distr(RND); while (new_config.f_config_(from)==0) from = distr(RND);
+    size_t to = distr(RND); while (new_config.f_config_(to)==1) to = distr(RND);
     config.calc_ed(false);
 
     new_config.f_config_(from) = 0;
@@ -50,9 +51,10 @@ typename move_randomize::mc_weight_type move_randomize::attempt()
 // move_addremove
 typename move_addremove::mc_weight_type move_addremove::attempt()
 {
+    std::uniform_int_distribution<> distr(0, config.lattice_.get_msize() - 1); 
     new_config = config;
     size_t m_size = config.lattice_.get_msize();
-    size_t to = RND(m_size);
+    size_t to = distr(RND);
     new_config.f_config_(to) = 1 - config.f_config_(to);
 
     config.calc_ed(false);
@@ -72,7 +74,7 @@ typename move_cluster<Lattice>::mc_weight_type move_cluster::attempt()
     size_t m_size = config.lattice_.get_msize();
 
     // Generate bonds
-    size_t to = RND(m_size);
+    size_t to = distr(RND);
     new_config.f_config_(to) = 1 - config.f_config_(to);
 
     config.calc_ed(false);

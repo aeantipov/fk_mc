@@ -1,5 +1,5 @@
 #include <boost/mpi/collectives.hpp>
-#include "energy.hpp"
+#include "fk_mc/measures/energy.hpp"
 
 namespace fk {
 

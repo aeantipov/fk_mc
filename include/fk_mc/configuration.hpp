@@ -1,7 +1,6 @@
 #ifndef __FK_MC_CONFIGURATION_HPP_
 #define __FK_MC_CONFIGURATION_HPP_
 
-#include <triqs/mc_tools/random_generator.hpp>
 #include <numeric>
 
 #include <Eigen/Eigenvalues>
@@ -63,7 +62,7 @@ struct configuration_t {
     void swap(configuration_t &rhs);
 
     size_t get_nf() const;
-    void randomize_f(triqs::mc_tools::random_generator &rnd, size_t nf = 0);
+    void randomize_f(random_generator &rnd, size_t nf = 0);
     const sparse_m& calc_hamiltonian();
     void reset_cache(){ed_data_.status =  ed_cache::empty; cheb_data_.status = chebyshev_cache::empty;}
 

@@ -1,6 +1,6 @@
 #include <boost/mpi/collectives.hpp>
 
-#include "focc_history.hpp"
+#include "fk_mc/measures/focc_history.hpp"
 
 namespace fk {
 

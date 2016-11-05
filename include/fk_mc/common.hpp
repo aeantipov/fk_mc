@@ -3,22 +3,26 @@
 
 #include "definitions.hpp"
 
-#include <triqs/arrays.hpp>
-#include <triqs/arrays/algorithms.hpp>
-#include <triqs/parameters/parameters.hpp>
+//#include <triqs/arrays.hpp>
+//#include <triqs/arrays/algorithms.hpp>
+//#include <triqs/parameters/parameters.hpp>
 #include <complex>
 
 #include <tuple>
 #include <array>
 #include <boost/math/special_functions/pow.hpp>
 #include <numeric>
+#include <random>
+#include <alps/params.hpp>
 
 namespace fk {
 
-namespace tqa = triqs::arrays;
+typedef std::mt19937 random_generator;
 
-using triqs::arrays::prod;
-using triqs::arrays::sum;
+//namespace tqa = triqs::arrays;
+
+//using triqs::arrays::prod;
+//using triqs::arrays::sum;
 
 // FKDEBUG messages with custom verbosity.
 // Adapted from http://efesx.com/2010/08/31/overloading-macros/
@@ -49,8 +53,9 @@ using triqs::arrays::sum;
 #define INFO2(MSG)            std::cout << "    " << std::boolalpha << MSG << std::endl;
 #define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;
 #define ERROR(MSG)            std::cerr << MSG_PREFIX << MSG << std::endl;
+#define TRIQS_RUNTIME_ERROR std::cerr
 
-typedef triqs::utility::parameters parameters_t;
+//typedef triqs::utility::parameters parameters_t;
 typedef std::complex<double> complex_t;
 static const complex_t I (0.0,1.0); 
 static const double PI = atan(1)*4.;

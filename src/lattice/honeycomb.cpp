@@ -1,4 +1,4 @@
-#include "honeycomb.hpp"
+#include "fk_mc/lattice/honeycomb.hpp"
 
 namespace fk { 
 

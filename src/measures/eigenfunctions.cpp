@@ -1,6 +1,6 @@
 #include <boost/mpi/collectives.hpp>
 
-#include "eigenfunctions.hpp"
+#include "fk_mc/measures/eigenfunctions.hpp"
 
 namespace fk {
 
