@@ -10,7 +10,7 @@ measure_spectrum_history::measure_spectrum_history(configuration_t& in, std::vec
     _spectrum_history.resize(config.lattice_.get_msize());
 };
 
-void measure_spectrum_history::accumulate (double sign) 
+void measure_spectrum_history::measure (double sign) 
 {
     config.calc_ed(false);
     auto spectrum = config.ed_data_.cached_spectrum;

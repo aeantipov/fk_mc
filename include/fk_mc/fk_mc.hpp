@@ -6,7 +6,7 @@
 #include "configuration.hpp"
 
 #include <boost/mpi/communicator.hpp>
-#include <triqs/mc_tools/mc_generic.hpp>
+#include "fk_mc/mc_metropolis.hpp"
 
 namespace fk {
 
@@ -34,26 +34,30 @@ struct observables_t {
 };
 
 template <typename LatticeType>
-class fk_mc : public triqs::mc_tools::mc_generic<double> 
+class fk_mc : public alps::mc_metropolis //triqs::mc_tools::mc_generic<double> 
 {
-    typedef triqs::mc_tools::mc_generic<double> base;
+    typedef alps::mc_metropolis base; //triqs::mc_tools::mc_generic<double>
     static_assert(!std::is_same<LatticeType,lattice_base>::value,"Can't construct mc for an unspecified lattice");
     boost::mpi::communicator comm;
 public:
     typedef configuration_t config_t;
     typedef LatticeType lattice_type;
     parameters_t p;
-    lattice_type lattice;
-    configuration_t config;
+    std::shared_ptr<lattice_type> lattice_ptr;
+    std::shared_ptr<configuration_t> config_ptr;
     //mc_tools::mc_generic<double> mc;
     //const lattice_type& lattice;
     observables_t observables;
     //template <typename MeasureType> void add_measure(MeasureType&& in, std::string name);
 
-    static triqs::utility::parameter_defaults solve_defaults();
+    static parameters_t& define_parameters(parameters_t &p);
 
-    fk_mc(lattice_type l, parameters_t p, bool randomize_config = true);
-    void solve(std::vector<double> wgrid_conductivity = {0.0});
+    //fk_mc(lattice_type l, parameters_t p, bool randomize_config = true);
+    fk_mc(parameters_t const& p, int rank = 0);
+    void initialize(lattice_type l, bool randomize_config = true, std::vector<double> wgrid_conductivity = {0.0});//
+
+
+    //void solve(std::vector<double> wgrid_conductivity = {0.0});
     parameters_t& parameters() { return p; } 
 };
 

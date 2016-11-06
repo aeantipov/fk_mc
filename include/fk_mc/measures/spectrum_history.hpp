@@ -17,7 +17,7 @@ struct measure_spectrum_history {
 
     measure_spectrum_history(configuration_t& in, std::vector<std::vector<double>>& spectrum_history);
  
-    void accumulate(double sign);
+    void measure(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 };

@@ -56,6 +56,7 @@ typedef std::mt19937 random_generator;
 #define TRIQS_RUNTIME_ERROR std::cerr
 
 //typedef triqs::utility::parameters parameters_t;
+typedef alps::params parameters_t;
 typedef std::complex<double> complex_t;
 static const complex_t I (0.0,1.0); 
 static const double PI = atan(1)*4.;

@@ -9,7 +9,7 @@ measure_eigenfunctions::measure_eigenfunctions(configuration_t& in, std::vector<
 { 
 };
 
-void measure_eigenfunctions::accumulate (double sign) 
+void measure_eigenfunctions::measure (double sign) 
 {
     config.calc_ed(true);
     dense_m const& evecs = config.ed_data_.cached_evecs;

@@ -26,13 +26,13 @@ struct measure_nf0pi {
         config_(in), lattice_(lattice),
         n0_(n0), npi_(npi) {}
  
-    void accumulate(double sign);
+    void measure(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 };
 
 template <typename lattice_t>
-void measure_nf0pi<lattice_t>::accumulate(double sign)
+void measure_nf0pi<lattice_t>::measure(double sign)
 {
     double n0 = config_.f_config_.sum();
     double npi = std::abs(lattice_.FFT_pi(config_.f_config_)); 

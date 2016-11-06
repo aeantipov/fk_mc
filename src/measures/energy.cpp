@@ -3,7 +3,7 @@
 
 namespace fk {
 
-void measure_energy::accumulate (double sign) 
+void measure_energy::measure (double sign) 
 {
     config.calc_ed(false);
     const auto& spectrum = config.ed_data_.cached_spectrum;

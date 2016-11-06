@@ -12,31 +12,35 @@
 #include "measures/stiffness.hpp"
 #include "measures/eigenfunctions.hpp"
 
-#include <triqs/utility/callbacks.hpp>
+//#include <triqs/utility/callbacks.hpp>
 
 namespace fk {
 
-template <typename L>
-triqs::utility::parameters _update_def(triqs::utility::parameters p){p.update(fk_mc<L>::solve_defaults()); return p;}
+//template <typename L>
+//parameters_t _update_def(triqs::utility::parameters p){p.update(fk_mc<L>::solve_defaults()); return p;}
 
 template <typename L>
-fk_mc<L>::fk_mc(lattice_type l, triqs::utility::parameters p1, bool randomize_config):
-    base(_update_def<L>(p1)),
-    p(_update_def<L>(p1)),
-    lattice(l),
-    //cheb_eval(chebyshev_eval(p["cheb_size"], p["cheb_grid_size"])),
-    config(lattice,p["beta"],p["U"],p["mu_c"],p["mu_f"])
-    //mc(p) 
+//fk_mc<L>::fk_mc(lattice_type l, triqs::utility::parameters p1, bool randomize_config):
+fk_mc<L>::fk_mc(parameters_t const &p, int rank):
+    base(p, rank), 
+    p(p)
 {
-    INFO("\tRandom seed for proc " << comm.rank() << " : " << p["random_seed"]);
-    if (randomize_config) config.randomize_f(this->rng(),p["Nf_start"]);
+//    INFO("\tRandom seed for proc " << comm.rank() << " : " << p["random_seed"]);
+//    if (randomize_config) config.randomize_f(this->rng(),p["Nf_start"]);
 }
 
 template <typename L>
-void fk_mc<L>::solve(std::vector<double> wgrid_conductivity)
+//fk_mc<L>::fk_mc(lattice_type l, triqs::utility::parameters p1, bool randomize_config):
+void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<double> wgrid_conductivity)
+    //mc(p) 
 {
-    if (int(p["n_cycles"]) == 0) return;
-    if (comm.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
+    lattice_ptr = std::make_shared<lattice_type>(l);
+    config_ptr = std::make_shared<configuration_t> (configuration_t(*lattice_ptr,p["beta"],p["U"],p["mu_c"],p["mu_f"]));
+    INFO("\tRandom seed for proc " << comm.rank() << " : " << p["random_seed"]);
+    if (randomize_config) config_ptr->randomize_f(this->rng(),p["Nf_start"]);
+
+    configuration_t& config = *config_ptr;
+    lattice_type& lattice = *lattice_ptr;
 
     // Generate the configuration_t and cache the spectrum
     double beta = p["beta"];
@@ -97,14 +101,23 @@ void fk_mc<L>::solve(std::vector<double> wgrid_conductivity)
     if (p["measure_history"]) {
         this->add_measure(measure_focc(config,observables.focc_history), "focc_history");
         };
+}
 
-      // run and collect results
+/*
+template <typename L>
+void fk_mc<L>::solve(std::vector<double> wgrid_conductivity)
+{
+    if (int(p["n_cycles"]) == 0) return;
+    if (comm.rank() == 0) std::cout << "Running MC..." << std::endl << std::endl;
+
+          // run and collect results
     this->start(1.0, [](){return false;}); 
     //this->start(1.0, triqs::utility::clock_callback(p["max_time"]));
     this->collect_results(comm);
 }
+*/
 
-template <typename L>
+/*template <typename L>
  triqs::utility::parameter_defaults fk_mc<L>::solve_defaults() {
 
   triqs::utility::parameter_defaults pdef;
@@ -137,5 +150,39 @@ template <typename L>
 
   return pdef;
  }
+*/
+
+template <typename L>
+parameters_t &fk_mc<L>::define_parameters(parameters_type &p) {
+   base::define_parameters(p);
+
+   p.define<double> ("beta", double(), "Inverse temperature")
+   .define<double> ("U", double(1.0), "FK U")
+   .define<int>("n_cycles", int(), "Number of QMC cycles")
+   .define<double>("mu_c", double(0.5), "Chemical potential of c electrons")
+   .define<double>("mu_f", double(0.5), "Chemical potential of f electrons")
+   ;
+
+   p.define<double>("mc_flip", double(0.0), "Make flip moves")
+   .define<double>("mc_add_remove", double(1.0), "Make add/remove moves")
+   .define<double>("mc_reshuffle", double(0.0), "Make reshuffle moves")
+   .define<bool>("cheb_moves", bool(false), "Allow moves using Chebyshev sampling")
+   .define<double>("cheb_prefactor", double(2.2), "Prefactor for number of Chebyshev polynomials = #ln(Volume)")
+   .define<bool>("measure_history", bool(true), "Measure the history")
+   //.optional("random_name", std::string(""), "Name of random number generator")
+   .define<int>("Nf_start", size_t(5), "Starting number of f-electrons")
+   .define<int>("length_cycle", int(50), "Length of a single QMC cycle")
+   .define<int>("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
+   .define<int>("random_seed", int(34788), "Seed for random number generator")
+   .define<int>("max_time",int(600000), "Maximum running time")
+   .define<bool>("measure_ipr", bool(false), "Measure inverse participation ratio")
+   .define<bool>("measure_eigenfunctions", bool(false), "Measure eigenfunctions")
+   .define<double>("cond_offset", double(0.05), "dos offset from the real axis")
+   ;
+
+  return p;
+ }
+
+
 
 } // end of namespace FK

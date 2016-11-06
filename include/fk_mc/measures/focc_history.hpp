@@ -19,7 +19,7 @@ struct measure_focc {
         { focc_.resize(config.lattice_.get_msize()); };
     int _Z = 0;
  
-    void accumulate(double sign);
+    void measure(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 };

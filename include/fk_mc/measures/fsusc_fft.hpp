@@ -40,12 +40,12 @@ struct measure_fsusc {
             fsuscq_history.resize(nqpts);
         };
  
-    void accumulate(double sign);
+    void measure(double sign);
     void collect_results(boost::mpi::communicator const &c);
 };
 
 template <typename lattice_t> 
-void measure_fsusc<lattice_t>::accumulate(double sign)
+void measure_fsusc<lattice_t>::measure(double sign)
 {
     
     Eigen::ArrayXcd nf_in = config_.f_config_.cast<std::complex<double>>();
