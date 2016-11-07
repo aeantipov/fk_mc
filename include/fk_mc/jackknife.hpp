@@ -2,6 +2,7 @@
 #define __FK_MC_JACKKNIFE_HPP_
 
 #include "binning.hpp"
+#include <gftools/tuple_tools.hpp>
 
 namespace fk {
 namespace jackknife { 
@@ -27,7 +28,8 @@ struct jackknife_adapter
         out_ = [&](const std::vector<Arg1>& in)->R { 
             if (in.size()!=L) TRIQS_RUNTIME_ERROR << "Argument size mismatch for jackknife";
             std::array<Arg1, L> p; std::copy(in.begin(), in.end(), p.begin());
-            return triqs::tuple::apply(F_in,p);
+            //return triqs::tuple::apply(F_in,p);
+            return gftools::tuple_tools::unfold_vector<std::function<R(Arg1, Args...)>, Arg1, sizeof...(Args)+1>  (F_in,in);
             };
         //FKDEBUG("Converting f of " << L << " args to f(std::vector)");
         return out_;

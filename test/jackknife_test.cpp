@@ -1,8 +1,7 @@
 #include "common.hpp"
-#include "triqs_extra.hpp"
 #include "jackknife.hpp"
-#include <triqs/mc_tools/random_generator.hpp>
-#include <triqs/utility/tuple_tools.hpp>
+//#include <triqs/mc_tools/random_generator.hpp>
+//#include <triqs/utility/tuple_tools.hpp>
 
 using namespace fk;
 using namespace jackknife;
@@ -26,7 +25,10 @@ template <typename T1> bool is_equal(T1 a, T1 b, double tol = std::numeric_limit
 
 int main()
 {
-    triqs::mc_tools::random_generator RNG("mt19937", 23432);
+    //triqs::mc_tools::random_generator RNG("mt19937", 23432);
+    random_generator RNG(23432);
+    std::uniform_real_distribution<> dst(0, 5013);
+
     std::vector<double> a = {0.0711992, 0.344949, 0.940913, 0.166604, 0.811305, 0.617859, 
 0.462844, 0.550449, 0.28126, 0.0560575, 0.0673806, 0.710085, 
 0.459742, 0.977218, 0.500193, 0.45763, 0.752903};
@@ -143,7 +145,7 @@ int main()
     constexpr size_t nargs = 12; // need f(x_1, x_2, ... x_12);
     size_t nmeasures = 17;
     std::vector<std::vector<double>> data(nargs);
-    for (size_t i=0; i<nargs; i++) { data[i].resize(nmeasures); for (size_t j=0; j<nmeasures; j++) data[i][j]=RNG(); };
+    for (size_t i=0; i<nargs; i++) { data[i].resize(nmeasures); for (size_t j=0; j<nmeasures; j++) data[i][j]=dst(RNG); };
     for (size_t j=0; j<nmeasures; j++) {
         for (size_t i=0; i<nargs; i++)  
             std::cout << data[i][j] <<" " << std::flush; std::cout << std::endl; 
