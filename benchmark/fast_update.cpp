@@ -13,7 +13,6 @@ using namespace std::chrono;
 #include <gtest/gtest.h>
 
 #include "eigen/ArpackSupport"
-//#include <triqs/gfs.hpp>
 
 #include "lattice/hypercubic.hpp"
 #include "fk_mc.hpp"
@@ -58,7 +57,8 @@ TEST(FastUpdateTest, weight) {
     chebyshev::chebyshev_eval ch(cheb_size, ngrid_points);
 
     configuration_t config(lattice, beta, U, mu, mu+e_f);
-    triqs::mc_tools::random_generator r1("mt19937", rnd_seed);
+    //triqs::mc_tools::random_generator r1("mt19937", rnd_seed);
+    random_generator r1 (rnd_seed);
     config.randomize_f(r1,L*L/2);
     config.calc_hamiltonian();
     config.calc_ed();
@@ -72,8 +72,10 @@ TEST(FastUpdateTest, weight) {
         };
 
    // test move
-    triqs::mc_tools::random_generator r("mt19937", rnd_seed);
-    triqs::mc_tools::random_generator r2(r);
+    //triqs::mc_tools::random_generator r("mt19937", rnd_seed);
+    random_generator r(rnd_seed);
+    random_generator r2(r);
+    //triqs::mc_tools::random_generator r2(r);
     bool result;
     steady_clock::time_point start, end;
 
