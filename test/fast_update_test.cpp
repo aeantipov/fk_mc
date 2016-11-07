@@ -44,8 +44,9 @@ TEST(Chebyshev,diff)
     lattice.fill(-1.0);
 
     configuration_t config(lattice, beta, U, mu, mu+e_f);
-    triqs::mc_tools::random_generator r1("mt19937", 32167);
-    config.randomize_f(r1,L*L/2);
+    //triqs::mc_tools::random_generator r1("mt19937", 32167);
+    random_generator RNG(32167);
+    config.randomize_f(RNG,L*L/2);
     config.calc_hamiltonian();
     config.calc_ed();
 

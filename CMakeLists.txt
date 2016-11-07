@@ -67,6 +67,7 @@ link_libraries(${ARPACK_LIBRARIES})
 #target_include_directories(${PROJEC
 
 add_boost(mpi)
+add_fftw3()
 
 #configure compile definitions file
 configure_file(${CMAKE_SOURCE_DIR}/include/fk_mc/definitions.hpp.in ${CMAKE_BINARY_DIR}/include/fk_mc/definitions.hpp)
