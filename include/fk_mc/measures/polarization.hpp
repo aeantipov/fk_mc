@@ -25,13 +25,13 @@ struct measure_polarization {
                 }
         }
  
-    void measure(double sign);
+    void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 };
 
 template <typename Lattice>
-void measure_polarization<Lattice>::measure(double sign)
+void measure_polarization<Lattice>::accumulate(double sign)
 {
     config_.calc_ed(true);
 

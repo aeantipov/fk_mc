@@ -17,7 +17,7 @@ struct measure_eigenfunctions {
 
     measure_eigenfunctions(configuration_t& in, std::vector<dense_m>& eigenfunctions);
  
-    void measure(double sign);
+    void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 };

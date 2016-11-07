@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     //FKDEBUG(config.cached_evecs);
 
    }
-  catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl;}
+  catch(std::exception const & e) { std::cout  << "exception "<< e.what() << std::endl;}
   return 0;
 
     return EXIT_SUCCESS;

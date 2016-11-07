@@ -66,6 +66,7 @@ link_libraries(${ARPACK_LIBRARIES})
 #include_directories(${TRIQS_INCLUDE_ALL} ${EIGEN3_INCLUDE_DIR} ${FFTW_INCLUDE_DIR} ${CMAKE_BINARY_DIR}/solver)
 #target_include_directories(${PROJEC
 
+add_boost(mpi)
 
 #configure compile definitions file
 configure_file(${CMAKE_SOURCE_DIR}/include/fk_mc/definitions.hpp.in ${CMAKE_BINARY_DIR}/include/fk_mc/definitions.hpp)

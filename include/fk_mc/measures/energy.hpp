@@ -23,7 +23,7 @@ struct measure_energy {
     measure_energy(double beta, configuration_t& in, std::vector<double>& energies, std::vector<double>& d2energies, std::vector<double>& c_energies):
         beta(beta),config(in), _energies(energies),_d2energies(d2energies),_c_energies(c_energies){};
  
-    void measure(double sign);
+    void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 };

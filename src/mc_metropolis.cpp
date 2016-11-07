@@ -54,7 +54,7 @@ void mc_metropolis::update() {
 void mc_metropolis::measure() {
     if (measure_count_ >= thermalization_sweeps_) {
         for (auto &measure : measures_) {
-            measure.second.measure(phase_);
+            measure.second.accumulate(phase_);
         }
     }
     measure_count_++;

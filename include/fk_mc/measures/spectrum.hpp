@@ -16,7 +16,7 @@ struct measure_spectrum {
 
     measure_spectrum(configuration_t& in, std::vector<double>& average_spectrum);
  
-    void measure(double sign);
+    void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 };

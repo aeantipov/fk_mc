@@ -19,7 +19,7 @@ polarized_test
 
 set (other_tests
 #eigen_test
-hdf5
+#hdf5
 )
 
 enable_testing()

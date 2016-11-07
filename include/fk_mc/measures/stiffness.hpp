@@ -45,7 +45,7 @@ struct measure_stiffness {
                       std::vector<std::vector<double>>& cond_history,
                       std::vector<double> wgrid, double offset); 
  
-    void measure(double sign);
+    void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 protected:
@@ -127,7 +127,7 @@ measure_stiffness<lattice_t>::measure_stiffness(configuration_t& in, const latti
 }
 
 template <typename lattice_t>
-void measure_stiffness<lattice_t>::measure(double sign)
+void measure_stiffness<lattice_t>::accumulate(double sign)
 {
     config_.calc_ed(true);
 

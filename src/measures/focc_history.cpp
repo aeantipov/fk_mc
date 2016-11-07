@@ -4,7 +4,7 @@
 
 namespace fk {
 
-void measure_focc::measure (double sign) 
+void measure_focc::accumulate(double sign) 
 {
     const auto& focc_current = config.f_config_;
     for (size_t i=0; i<focc_current.size(); ++i) { focc_[i].push_back(focc_current(i)); };

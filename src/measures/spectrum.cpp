@@ -10,7 +10,7 @@ config(in), _average_spectrum(average_spectrum)
 };
 
 
-void measure_spectrum::measure (double sign) 
+void measure_spectrum::accumulate(double sign) 
 {
     config.calc_ed(false);
     auto spectrum = config.ed_data_.cached_spectrum;

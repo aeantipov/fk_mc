@@ -21,7 +21,7 @@ struct measure_ipr {
     measure_ipr(configuration_t& in, const lattice_t& lattice, 
                   std::vector<std::vector<double>>& ipr_vals); 
  
-    void measure(double sign);
+    void accumulate(double sign);
     void collect_results(boost::mpi::communicator const &c);
 
 };
@@ -37,7 +37,7 @@ measure_ipr<lattice_t>::measure_ipr(configuration_t& in, const lattice_t& lattic
 }
 
 template <typename lattice_t>
-void measure_ipr<lattice_t>::measure(double sign)
+void measure_ipr<lattice_t>::accumulate(double sign)
 {
     config_.calc_ed(true);
 

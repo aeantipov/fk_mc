@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     for (auto& v:ipr_vals) std::cout << v[1] << " " << std::flush; std::cout << std::endl;
 
    }
-  catch(triqs::runtime_error const & e) { std::cout  << "exception "<< e.what() << std::endl; return EXIT_FAILURE;}
+  catch(std::exception const & e) { std::cout  << "exception "<< e.what() << std::endl; return EXIT_FAILURE;}
 
   return EXIT_SUCCESS;
 }

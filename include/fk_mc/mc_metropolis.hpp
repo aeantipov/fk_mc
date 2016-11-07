@@ -40,13 +40,13 @@ struct move_wrap {
 /// A wrap structure to make measures in MC. Wraps any class with measure(sign) method.
 struct measure_wrap {
     /// Perform a measurement with a given phase.
-    void measure(mc_weight_t phase) { measure_(phase); };
+    void accumulate(mc_weight_t phase) { accumulate_(phase); };
     //measure_wrap(){};
     measure_wrap(measure_wrap &&r) noexcept {
         ptr_.swap(r.ptr_);
-        measure_.swap(r.measure_);
+        accumulate_.swap(r.accumulate_);
     }
-    measure_wrap(const measure_wrap &r) : ptr_(r.ptr_), measure_(r.measure_) { };
+    measure_wrap(const measure_wrap &r) : ptr_(r.ptr_), accumulate_(r.accumulate_) { };
     template<typename MeasureType, typename = typename std::enable_if<!std::is_convertible<MeasureType, measure_wrap>::value, move_wrap>::type>
     measure_wrap(MeasureType &&in);
     template<typename MeasureType>
@@ -57,7 +57,7 @@ struct measure_wrap {
     void collect_results(boost::mpi::communicator const &c) { collect_results_(c); } 
 
     std::shared_ptr<void> ptr_;
-    std::function<void(mc_weight_t)> measure_;
+    std::function<void(mc_weight_t)> accumulate_;
     std::function<void(boost::mpi::communicator const&)> collect_results_;
 };
 
@@ -155,7 +155,7 @@ measure_wrap::measure_wrap(MeasureType &&in) {
     typedef typename std::remove_reference<MeasureType>::type m_type;
     m_type *m = new m_type(std::forward<MeasureType>(in));
     ptr_.reset(m);
-    measure_ = [m](mc_weight_t p) { m->measure(p); };
+    accumulate_ = [m](mc_weight_t p) { m->accumulate(p); };
 }
 
 template<typename MoveType, typename>
