@@ -1,8 +1,6 @@
 #include "common.hpp"
-#include "triqs_extra.hpp"
 #include "binning.hpp"
-#include <triqs/mc_tools/random_generator.hpp>
-#include <triqs/utility/tuple_tools.hpp>
+#include <gftools/tuple_tools.hpp>
 
 using namespace fk;
 using namespace binning;
@@ -24,16 +22,14 @@ return (float_comparator<Arg1>::is_equal(std::get<0>(a),std::get<0>(b),tol) && f
 
 template <typename T1> bool is_equal(T1 a, T1 b, double tol = std::numeric_limits<double>::epsilon()){return float_comparator<T1>::is_equal(a,b,tol);};
 
+using namespace gftools::tuple_tools;
+
 int main()
 {
-    triqs::mc_tools::random_generator RNG("mt19937", 23432);
+
     std::vector<double> a = {0.0711992, 0.344949, 0.940913, 0.166604, 0.811305, 0.617859, 
 0.462844, 0.550449, 0.28126, 0.0560575, 0.0673806, 0.710085, 
 0.459742, 0.977218, 0.500193, 0.45763, 0.752903};
-    tqa::vector<double> arr1(a.size());
-    std::copy(a.begin(),a.end(),arr1.begin());
-    
-    INFO(arr1());
 
     binned_iterator<std::vector<double>::iterator,0> it0(a.begin());
     FKDEBUG(it0.step); FKDEBUG(*it0); it0++; FKDEBUG(*it0);
@@ -47,7 +43,7 @@ int main()
 try{ 
     bin<6>(a.begin(), a.end());
     }
-catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() << std::endl;}
+catch (std::exception const & e) { std::cerr  << "exception "<< e.what() << std::endl;}
    
     FKDEBUG("--0 :" << calc_stats(a.begin(), a.end()));
     FKDEBUG("--0 :" << calc_stats(a.crbegin(), a.crend()));
@@ -67,7 +63,7 @@ catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() <
     std::vector<double> correct_cor_lens({0, -0.0151463, 0.118023, -0.4253});
     bool success = true;
     for (size_t i=0; i<bin_stats.size(); i++) {
-        INFO(i <<" : " << bin_stats[i] << "," << cor_lens[i] << "==" << correct_v[i] << "," << correct_cor_lens[i] << 
+        INFO(i <<" : " << print_tuple(bin_stats[i]) << "," << cor_lens[i] << "==" << print_tuple(correct_v[i]) << "," << correct_cor_lens[i] << 
             " = " << is_equal(bin_stats[i],correct_v[i],1e-5) << " " << is_equal(cor_lens[i],correct_cor_lens[i],1e-5));
         success = success && is_equal(bin_stats[i],correct_v[i],1e-5) && is_equal(cor_lens[i],correct_cor_lens[i],1e-5); 
     };
@@ -75,17 +71,17 @@ catch (triqs::runtime_error const & e) { std::cerr  << "exception "<< e.what() <
 
     auto bin_stats2 = accumulate_binning(a.begin(),a.end(), 3); // call non-templated
     for (size_t i=0; i<bin_stats2.size(); i++) {
-        INFO(i <<" : " << bin_stats2[i] << "," << cor_lens[i] << "==" << correct_v[i] << "," << correct_cor_lens[i] << 
+        INFO(i <<" : " << print_tuple(bin_stats2[i]) << "," << cor_lens[i] << "==" << print_tuple(correct_v[i]) << "," << correct_cor_lens[i] << 
             " = " << is_equal(bin_stats2[i],correct_v[i],1e-5) << " " << is_equal(cor_lens[i],correct_cor_lens[i],1e-5));
         success = success && is_equal(bin_stats2[i],correct_v[i],1e-5) && is_equal(cor_lens[i],correct_cor_lens[i],1e-5); 
     };
     if (!success) return EXIT_FAILURE;
 
 
-    tqa::array<double,1> b(17); std::copy(a.begin(),a.end(),b.begin());
+    std::array<double, 17> b; std::copy(a.begin(),a.end(),b.begin());
     auto bin_stats_tqa = binning_accumulator<3>::accumulate_binning(b.begin(),b.end());
     for (size_t i=0; i<bin_stats_tqa.size(); i++) {
-        INFO(i <<" : " << bin_stats_tqa[i] << "," << cor_lens[i] << "==" << correct_v[i] << "," << correct_cor_lens[i] << 
+        INFO(i <<" : " << print_tuple(bin_stats_tqa[i]) << "," << cor_lens[i] << "==" << print_tuple(correct_v[i]) << "," << correct_cor_lens[i] << 
             " = " << is_equal(bin_stats_tqa[i],correct_v[i],1e-5) << " " << is_equal(cor_lens[i],correct_cor_lens[i],1e-5));
         success = success && is_equal(bin_stats_tqa[i],correct_v[i],1e-5) && is_equal(cor_lens[i],correct_cor_lens[i],1e-5); 
     };

@@ -2,12 +2,10 @@
 #define __FK_MC_BINNING_HPP_
 
 #include "common.hpp"
-#include "triqs_extra.hpp"
 
 #include <cmath>
 #include <ctgmath>
 #include <boost/iterator/iterator_facade.hpp>
-#include <triqs/utility/exceptions.hpp>
 
 #include <boost/preprocessor.hpp>
 #undef BOOST_PP_VARIADICS 
