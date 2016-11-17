@@ -64,8 +64,8 @@ void measure_nf0pi<lattice_t>::collect_results(boost::mpi::communicator const &c
     c.barrier();
     
     if (c.rank() == 0) {
-    INFO("Average nf(q=0): " << nf0_aver / sum_Z);
-    INFO("Average nf(q=pi): " << nfpi_aver / sum_Z);
+        std::cout << "Average nf(q=0): " << nf0_aver / sum_Z << std::endl;
+        std::cout << "Average nf(q=pi): " << nfpi_aver / sum_Z << std::endl;
     }
 }
 

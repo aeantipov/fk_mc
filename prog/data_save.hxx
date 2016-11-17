@@ -5,23 +5,23 @@
 
 namespace fk {
 
-void savetxt (std::string fname, const triqs::arrays::array<double,1>& in)
+void savetxt (std::string fname, const gftools::container<double,1>& in)
 {
     std::ofstream out(fname);
     out.setf(std::ios::scientific); //out << std::setw(9);
     for (size_t i=0; i<in.shape()[0]; i++){
-            out << in(i) << " ";
+            out << in[i] << " ";
         };
     out.close();
 }
 
-void savetxt (std::string fname, const triqs::arrays::array<double,2>& in)
+void savetxt (std::string fname, const gftools::container<double,2>& in)
 {
     std::ofstream out(fname);
     out.setf(std::ios::scientific); //out << std::setw(9);
     for (size_t i=0; i<in.shape()[0]; i++){
         for (size_t j=0; j<in.shape()[1]; j++){
-            out << in(i,j) << " ";
+            out << in[i][j] << " ";
         };
         out << std::endl;
     };
@@ -36,22 +36,22 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     bool save_plaintext = p_["save_plaintext"];
 
     print_section("Statistics");
-    H5::H5File output(output_file.c_str(),H5F_ACC_TRUNC);
-    top_ = triqs::h5::group(output);
+    //H5::H5File output(output_file.c_str(),H5F_ACC_TRUNC);
+    top_ = "/"; //triqs::h5::group(output);
     // save parameters to "/parameters" dataset
-    h5_write(top_, "parameters", p_);
+    alps::hdf5::save(ar_, top_ + "parameters", p_);
 
     // save measurement to "/mc_data" group
-    top_.create_group("mc_data");
-    h5_mc_data_ = top_.open_group("mc_data");
+    //top_.create_group("mc_data");
+    h5_mc_data_ = top_ + "/mc_data"; //top_.open_group("mc_data");
     save_measurements();
     
     // save final statistics to "/stats" group
-    top_.create_group("stats");
-    h5_stats_ = top_.open_group("stats");
+    //top_.create_group("stats");
+    h5_stats_ = top_ + "/stats";
     // save binned data to "/binning" group
-    top_.create_group("binning");
-    h5_binning_ = top_.open_group("binning");
+    //top_.create_group("binning");
+    h5_binning_ = top_ + "/binning";
 
     std::vector<double> const& spectrum = observables_.spectrum;
     // save energy and the specific heat
@@ -98,47 +98,47 @@ void data_saver<MC>::save_measurements()
         };
 
     if (p_["measure_history"]) { 
-        triqs::arrays::array<double, 2> t_spectrum_history(observables_.spectrum_history.size(), observables_.spectrum_history[0].size());
+        gftools::container<double, 2> t_spectrum_history({observables_.spectrum_history.size(), observables_.spectrum_history[0].size()});
         for (int i=0; i<observables_.spectrum_history.size(); i++)
             for (int j=0; j< observables_.spectrum_history[0].size(); j++)
-                t_spectrum_history(i,j) =  observables_.spectrum_history[i][j];
+                t_spectrum_history[i][j] =  observables_.spectrum_history[i][j];
         h5_write(h5_mc_data_,"spectrum_history", t_spectrum_history);
 
-        triqs::arrays::array<double, 2> focc_history(observables_.focc_history.size(), observables_.focc_history[0].size());
+        gftools::container<double, 2> focc_history( { observables_.focc_history.size(), observables_.focc_history[0].size() } );
         for (int i=0; i<observables_.focc_history.size(); i++)
             for (int j=0; j< observables_.focc_history[0].size(); j++)
-                focc_history(i,j) =  observables_.focc_history[i][j];
+                focc_history[i][j] =  observables_.focc_history[i][j];
         h5_write(h5_mc_data_,"focc_history", focc_history);
         };
 
     // Inverse participation ratio
     if (p_["measure_ipr"] && p_["measure_history"]) {
         std::cout << "Inverse participation ratio" << std::endl;
-        triqs::arrays::array<double, 2> t_ipr_history(observables_.ipr_history.size(), observables_.ipr_history[0].size());
+        gftools::container<double, 2> t_ipr_history(observables_.ipr_history.size(), observables_.ipr_history[0].size());
         for (int i=0; i<observables_.ipr_history.size(); i++)
             for (int j=0; j< observables_.ipr_history[0].size(); j++)
-                t_ipr_history(i,j) =  observables_.ipr_history[i][j];
+                t_ipr_history[i][j] =  observables_.ipr_history[i][j];
         h5_write(h5_mc_data_,"ipr_history", t_ipr_history);
         };
 
     // Conductivity
     if (p_["measure_stiffness"]) {
         std::cout << "Conductivity" << std::endl;
-        triqs::arrays::array<double, 2> t_cond_history(observables_.cond_history.size(), observables_.cond_history[0].size());
+        gftools::container<double, 2> t_cond_history(observables_.cond_history.size(), observables_.cond_history[0].size());
         for (int i=0; i<observables_.cond_history.size(); i++)
             for (int j=0; j< observables_.cond_history[0].size(); j++)
-                t_cond_history(i,j) =  observables_.cond_history[i][j];
+                t_cond_history[i][j] =  observables_.cond_history[i][j];
         h5_write(h5_mc_data_,"cond_history", t_cond_history);
         };
 
     if (bool(p_["measure_eigenfunctions"]) && bool(p_["save_eigenfunctions"])) {
         std::cout << "Eigenfunctions" << std::endl;
         const auto& eig_hist = observables_.eigenfunctions_history;
-        triqs::arrays::array<double, 3> t_eig_history(eig_hist.size(), eig_hist[0].rows(), eig_hist[0].cols() );
+        gftools::container<double, 3> t_eig_history(eig_hist.size(), eig_hist[0].rows(), eig_hist[0].cols() );
         for (int i=0; i<eig_hist.size(); i++)
             for (int j=0; j< eig_hist[0].rows(); j++) 
                 for (int k=0; k< eig_hist[0].cols(); k++) 
-                    t_eig_history(i,j,k) =  eig_hist[i](j,k);
+                    t_eig_history[i][j][k] =  eig_hist[i](j,k);
         h5_write(h5_mc_data_,"eig_history", t_eig_history);
         }
 }
@@ -299,16 +299,16 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
         // dos(w)
         {
             INFO("Saving local DOS w errorbars");
-            triqs::arrays::array<double, 2> dos_ev(grid_real.size(),3);
+            gftools::container<double, 2> dos_ev(grid_real.size(),size_t(3));
             for (size_t i=0; i<grid_real.size(); i++) {
                 std::complex<double> z = grid_real[i];
                 for (size_t m=0; m<nmeasures_; ++m) { 
                     dos_data[m] = dos0_f(spec_hist_transposed[m], z, p_["dos_offset"], volume_);
                 }
                 auto dosz_data = binning::bin(dos_data.rbegin(), dos_data.rend(), dos_bin);
-                dos_ev(i,0) = std::real(z); 
-                dos_ev(i,1) = std::get<binning::bin_m::_MEAN>(dosz_data);
-                dos_ev(i,2) = std::get<binning::bin_m::_SQERROR>(dosz_data); 
+                dos_ev[i][0] = std::real(z); 
+                dos_ev[i][1] = std::get<binning::bin_m::_MEAN>(dosz_data);
+                dos_ev[i][2] = std::get<binning::bin_m::_SQERROR>(dosz_data); 
                 }
             h5_write(h5_stats_,"dos_err",dos_ev);
             if (save_plaintext) savetxt("dos_err.dat",dos_ev);
@@ -367,17 +367,17 @@ void data_saver<MC>::save_fcorrel()
         double fcorrel0_mean = std::get<binning::_MEAN>(fcorrel0_stats[nf_bin]);
         double fcorrel0_error = std::get<binning::_SQERROR>(fcorrel0_stats[nf_bin]);
 
-        triqs::arrays::array<double, 2> fcorrel_out(lattice_.dims[0] / 2, 5);
+        gftools::container<double, 2> fcorrel_out(lattice_.dims[0] / 2, 5);
         for (int l = 0; l < lattice_.dims[0] / 2; l++) { 
             auto fcorrel_stats = jackknife::jack(std::function<double(std::vector<double>)>(std::bind(fcorrel_f, std::placeholders::_1, l)),fhistory,nf_bin);
             save_bin_data(fcorrel_stats,h5_stats_,"fcorrel_" + std::to_string(l),save_plaintext);
             double fcorrel_mean = std::get<binning::_MEAN>(fcorrel_stats);
             double fcorrel_error = std::get<binning::_SQERROR>(fcorrel_stats);
-            fcorrel_out(l,0) = l;
-            fcorrel_out(l,1) = fcorrel_mean;
-            fcorrel_out(l,2) = fcorrel_error;
-            fcorrel_out(l,3) = fcorrel_mean / fcorrel0_mean;
-            fcorrel_out(l,4) = std::sqrt(std::pow(fcorrel_error / fcorrel0_mean, 2) + std::pow(fcorrel_mean / (fcorrel0_mean * fcorrel0_mean) * fcorrel0_error, 2));
+            fcorrel_out[l][0] = l;
+            fcorrel_out[l][1] = fcorrel_mean;
+            fcorrel_out[l][2] = fcorrel_error;
+            fcorrel_out[l][3] = fcorrel_mean / fcorrel0_mean;
+            fcorrel_out[l][4] = std::sqrt(std::pow(fcorrel_error / fcorrel0_mean, 2) + std::pow(fcorrel_mean / (fcorrel0_mean * fcorrel0_mean) * fcorrel0_error, 2));
             }
 
         h5_write(h5_stats_,"fcorrel",fcorrel_out);
@@ -404,13 +404,13 @@ void data_saver<MC>::save_conductivity(std::vector<double> wgrid_cond)
     int cond_bin = estimate_bin(cond_stats0); 
 
     INFO("Saving w*conductivity (w)");
-    triqs::arrays::array<double, 2> wcond_ev(wgrid.size(),3);
+    gftools::container<double, 2> wcond_ev(wgrid.size(),size_t(3));
     for (size_t i=0; i<wgrid.size(); i++) {
         std::complex<double> z = wgrid[i];
         auto cond_binning_data = binning::bin(cond_history[i].begin(), cond_history[i].end(), cond_bin);
-        wcond_ev(i,0) = std::real(z); 
-        wcond_ev(i,1) = std::get<binning::bin_m::_MEAN>(cond_binning_data);
-        wcond_ev(i,2) = std::get<binning::bin_m::_SQERROR>(cond_binning_data); 
+        wcond_ev[i][0] = std::real(z); 
+        wcond_ev[i][1] = std::get<binning::bin_m::_MEAN>(cond_binning_data);
+        wcond_ev[i][2] = std::get<binning::bin_m::_SQERROR>(cond_binning_data); 
         }
     h5_write(h5_stats_,"wcond_err",wcond_ev);
     if (save_plaintext) savetxt("wcond_err.dat",wcond_ev);
@@ -418,26 +418,26 @@ void data_saver<MC>::save_conductivity(std::vector<double> wgrid_cond)
     int index_zero = (wgrid.size() - 1)/2;
     std::cout << "wgrid center = " << wgrid[index_zero] << std::endl;
     //if (std::abs(wgrid[index_zero]) > std::numeric_limits<double>::epsilon()) index_zero = std::distance(wgrid.begin(), wgrid
-    double cond_left = -wcond_ev(index_zero - 1,1)/wgrid[index_zero - 1];
-    double cond_right = -wcond_ev(index_zero + 1,1)/wgrid[index_zero + 1];
+    double cond_left = -wcond_ev[index_zero - 1][1]/wgrid[index_zero - 1];
+    double cond_right = -wcond_ev[index_zero + 1][1]/wgrid[index_zero + 1];
     double cond0 = (cond_left + cond_right)/2;
-    double cond0_err = wcond_ev(index_zero + 1, 2)/wgrid[index_zero + 1];
+    double cond0_err = wcond_ev[index_zero + 1][2]/wgrid[index_zero + 1];
 
     // save dc conductivity
-    triqs::arrays::array<double, 1> t_cond0(4); 
-    t_cond0(binning::bin_m::_SIZE) = std::get<binning::bin_m::_SIZE>(cond_stats0[cond_bin]); 
-    t_cond0(binning::bin_m::_MEAN) = cond0; 
-    t_cond0(binning::bin_m::_DISP) = t_cond0(binning::bin_m::_SIZE)*cond0_err*cond0_err; 
-    t_cond0(binning::bin_m::_SQERROR)=cond0_err;
+    gftools::container<double, 1> t_cond0(4); 
+    t_cond0[binning::bin_m::_SIZE] = std::get<binning::bin_m::_SIZE>(cond_stats0[cond_bin]); 
+    t_cond0[binning::bin_m::_MEAN] = cond0; 
+    t_cond0[binning::bin_m::_DISP] = t_cond0[binning::bin_m::_SIZE]*cond0_err*cond0_err; 
+    t_cond0[binning::bin_m::_SQERROR]=cond0_err;
     h5_write(h5_stats_,"cond0",t_cond0);
     if (save_plaintext) savetxt("cond0.dat",t_cond0);
 
-    triqs::arrays::array<double, 2> cond_ev(wcond_ev), cond_ev_subtract(wcond_ev);
+    gftools::container<double, 2> cond_ev(wcond_ev), cond_ev_subtract(wcond_ev);
     for (size_t i=0; i<wgrid.size(); i++) { 
-        cond_ev(i,1) = -wcond_ev(i,1) / wgrid[i];
-        cond_ev(i,2) = -wcond_ev(i,2) / wgrid[i];
-        cond_ev_subtract(i,1) = cond_ev(i,1) - cond0;
-        cond_ev_subtract(i,2) = cond_ev(i,2);
+        cond_ev[i][1] = -wcond_ev[i][1] / wgrid[i];
+        cond_ev[i][2] = -wcond_ev[i][2] / wgrid[i];
+        cond_ev_subtract[i][1] = cond_ev[i][1] - cond0;
+        cond_ev_subtract[i][2] = cond_ev[i][2];
         }
     
     h5_write(h5_stats_,"cond_err",cond_ev);
@@ -478,16 +478,16 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
     auto ipr0_binning = binning::accumulate_binning(ipr_data.rbegin(), ipr_data.rend(), max_bin_);
     save_binning(ipr0_binning,h5_binning_,h5_stats_,"ipr0",p_["save_plaintext"]);
     auto ipr0_bin=estimate_bin(ipr0_binning);
-    triqs::arrays::array<double, 2> ipr_ev(grid_real.size(),3);
+    gftools::container<double, 2> ipr_ev(grid_real.size(),size_t(3));
     for (size_t i=0; i<grid_real.size(); i++) {
         double z = grid_real[i];
         for (size_t m=0; m<nmeasures_; ++m) for (int i=0; i<volume_; ++i) { 
             ipr_data[m] = ipr_f(ipr_spec_tr[m], z, p_["dos_offset"], this->lattice_.get_msize());
             }
         auto ipr_bin_data = binning::bin(ipr_data.rbegin(), ipr_data.rend(), ipr0_bin);
-        ipr_ev(i,0) = z;
-        ipr_ev(i,1) = std::get<binning::bin_m::_MEAN>(ipr_bin_data);
-        ipr_ev(i,2) = std::get<binning::bin_m::_SQERROR>(ipr_bin_data); 
+        ipr_ev[i][0] = z;
+        ipr_ev[i][1] = std::get<binning::bin_m::_MEAN>(ipr_bin_data);
+        ipr_ev[i][2] = std::get<binning::bin_m::_SQERROR>(ipr_bin_data); 
         };
 
     h5_write(h5_stats_,"ipr_err",ipr_ev);
@@ -520,7 +520,7 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
     std::cout << "measurements : " << nmeasures_ << std::endl;
     std::cout << "Gwr imag offset = " << xi << std::endl;
 
-    triqs::arrays::array<double, 2> tdos_vals(wgrid.size(), 8);
+    gftools::container<double, 2> tdos_vals(wgrid.size(), size_t(8));
 
     for (int windex = 0; windex < wgrid.size(); ++windex) { 
         std::complex<double> w = wgrid[windex];  
@@ -595,30 +595,30 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
         std::cout << "dos_geom0 = " << dos_geom << std::endl;
         double dos_geom_err = 0;
 
-        tdos_vals(windex, 0) = std::real(w);
-        tdos_vals(windex, 1) = std::imag(w);
-        tdos_vals(windex, 2) = dos_geom;
-        tdos_vals(windex, 3) = dos_geom_err;
-        tdos_vals(windex, 4) = dos_val;
-        tdos_vals(windex, 5) = dos_err;
-        tdos_vals(windex, 6) = dos_geom / dos_val;
-        tdos_vals(windex, 7) = std::sqrt(boost::math::pow<2>(dos_geom_err / dos_val) + boost::math::pow<2>(dos_err * dos_geom / dos_val / dos_val));
+        tdos_vals[windex][ 0] = std::real(w);
+        tdos_vals[windex][ 1] = std::imag(w);
+        tdos_vals[windex][ 2] = dos_geom;
+        tdos_vals[windex][ 3] = dos_geom_err;
+        tdos_vals[windex][ 4] = dos_val;
+        tdos_vals[windex][ 5] = dos_err;
+        tdos_vals[windex][ 6] = dos_geom / dos_val;
+        tdos_vals[windex][ 7] = std::sqrt(boost::math::pow<2>(dos_geom_err / dos_val) + boost::math::pow<2>(dos_err * dos_geom / dos_val / dos_val));
 
         // if we don't need gf -> jump to the next w
         if (save_only_dos) continue;
 
         // if we need all the rest -> not too many points, save them
-        triqs::arrays::array<double, 1> tdos_out(8);
-        for (int jj=0; jj<8; ++jj) tdos_out(jj) = tdos_vals(windex, jj);
+        gftools::container<double, 1> tdos_out(8);
+        for (int jj=0; jj<8; ++jj) tdos_out[jj] = tdos_vals[windex][jj];
         h5_write(h5_stats_,"tdos"+wstring ,tdos_out);
         
 
         auto save_hdf5 = [&](Eigen::MatrixXd const& m, std::string name) {
             std::cout << "Saving " << name << " ...";
-            triqs::arrays::array<double, 2> out(m.rows(),m.cols()); 
-            for (int i = 0; i < m.rows(); ++i) 
-                for (int j = 0; j < m.cols(); ++j) 
-                    out(i,j) = m(i,j);
+            gftools::container<double, 2> out(m); //size_t(m.rows()),size_t(m.cols())); 
+            //for (int i = 0; i < m.rows(]; ++i) 
+            //    for (int j = 0; j < m.cols(]; ++j) 
+            //        out(i,j] = m(i,j);
             h5_write(h5_stats_,name,out);
             if (save_plaintext) { 
                 std::ofstream out_str(name + ".dat");

@@ -25,8 +25,6 @@ fk_mc<L>::fk_mc(parameters_t const &p, int rank):
     base(p, rank), 
     p(p)
 {
-//    INFO("\tRandom seed for proc " << comm.rank() << " : " << p["random_seed"]);
-//    if (randomize_config) config.randomize_f(this->rng(),p["Nf_start"]);
 }
 
 template <typename L>
@@ -36,7 +34,7 @@ void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<dou
 {
     lattice_ptr = std::make_shared<lattice_type>(l);
     config_ptr = std::make_shared<configuration_t> (configuration_t(*lattice_ptr,p["beta"],p["U"],p["mu_c"],p["mu_f"]));
-    INFO("\tRandom seed for proc " << comm.rank() << " : " << p["random_seed"]);
+    std::cout << "\tRandom seed for proc " << comm.rank() << " : " << p["random_seed"] << std::endl;
     if (randomize_config) config_ptr->randomize_f(this->rng(),p["Nf_start"]);
 
     configuration_t& config = *config_ptr;

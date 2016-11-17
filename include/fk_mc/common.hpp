@@ -48,11 +48,11 @@ typedef std::mt19937 random_generator;
 #define FKDEBUG(...) macro_dispatcher(FKDEBUG, __VA_ARGS__)(__VA_ARGS__)
 
 
-
+/*
 #define INFO(MSG)             std::cout << std::boolalpha << MSG << std::endl;
 #define INFO2(MSG)            std::cout << "    " << std::boolalpha << MSG << std::endl;
 #define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;
-#define ERROR(MSG)            std::cerr << MSG_PREFIX << MSG << std::endl;
+*/
 #define TRIQS_RUNTIME_ERROR std::cerr
 
 //typedef triqs::utility::parameters parameters_t;
