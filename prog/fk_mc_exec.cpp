@@ -55,17 +55,19 @@ std::string h5fname;
 // First we parse all command-line arguments into a triqs::utility::parameters object
 try {
     p.description("Falicov-Kimball Monte Carlo - parameters from command line");
-    p.define<double> ("U","value of U",1.0,"value of U");
-    TCLAP::ValueArg<double> T_arg("T","T","Temperature",false,0.1,"double",cmd);
-    TCLAP::ValueArg<size_t> L_arg("L","L","system size",false,4,"int",cmd);
-    TCLAP::ValueArg<double> t_arg("t","t","hopping",false,1.0,"double",cmd);
+    p.define<double> ("U", 1.0, "value of U");
+    p.define<double> ("T", 0.1, "Temperature");
+    p.define<size_t> ("L", 4, "System linear size");
+    p.define<double> ("t", 1.0, "Hopping");
+
     #ifdef LATTICE_triangular
-        TCLAP::ValueArg<double> tp_arg("","tp","next nearest hopping",false,0.0,"double",cmd);
+        p.define<double> ("tp", 1.0, "Triangular lattice : NNN Hopping");
     #elif LATTICE_chain
-        TCLAP::ValueArg<double> delta_arg("","delta","delta",false,0.0,"double",cmd);
-        TCLAP::ValueArg<double> eta_arg("","eta","eta",false,0.0,"double",cmd);
+        p.define<double> ("delta", 0.0, "chain : delta");
+        p.define<double> ("eta", 0.0, "chain : eta");
     #endif
 
+    
     TCLAP::ValueArg<std::string> h5file_arg("o","output","archive to read/write data to",false,"output.h5","string",cmd);
     TCLAP::SwitchArg             resume_switch("r","resume","Attepmpt to resume a calculation", cmd, false);
 
