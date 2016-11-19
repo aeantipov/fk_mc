@@ -171,12 +171,14 @@ parameters_t &fk_mc<L>::define_parameters(parameters_type &p) {
    .define<int>("Nf_start", size_t(5), "Starting number of f-electrons")
    //.define<int>("length_cycle", int(50), "Length of a single QMC cycle")
    //.define<int>("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
-   .define<int>("random_seed", int(34788), "Seed for random number generator")
+   .define<int>("random_seed", int(std::random_device()()), "Seed for random number generator")
    .define<bool>("measure_ipr", bool(false), "Measure inverse participation ratio")
    .define<bool>("measure_eigenfunctions", bool(false), "Measure eigenfunctions")
    .define<double>("cond_offset", double(0.05), "dos offset from the real axis")
    .define<bool>("measure_stiffness", bool(false), "Measure stiffness/conductivity")
    ;
+
+  p["SEED"] = p["random_seed"];
 
   return p;
  }
