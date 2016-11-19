@@ -38,6 +38,8 @@ set (fk_mc_src
     fk_mc
 )
 
+add_definitions("-Wno-deprecated-register -Wno-mismatched-new-delete")
+
 include_directories(${CMAKE_SOURCE_DIR}/include/fk_mc ${CMAKE_BINARY_DIR}/include/fk_mc)
 add_this_package(${fk_mc_src})
 

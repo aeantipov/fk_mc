@@ -68,7 +68,7 @@ void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<dou
                    else this->add_move(chebyshev::move_randomize(beta, config, *cheb_ptr, this->rng()), "reshuffle", p["mc_reshuffle"]);
         };
 
-    size_t max_bins = p["n_cycles"];
+    size_t max_bins = p["nsweeps"];
     observables.reserve(max_bins);
 
     bool calc_spectrum = !cheb_move; 
@@ -154,9 +154,9 @@ template <typename L>
 parameters_t &fk_mc<L>::define_parameters(parameters_type &p) {
    base::define_parameters(p);
 
-   p.define<double> ("beta", double(), "Inverse temperature")
+   p.define<double> ("beta", double(10.0), "Inverse temperature")
    .define<double> ("U", double(1.0), "FK U")
-   .define<int>("n_cycles", int(), "Number of QMC cycles")
+   //.define<int>("n_cycles", int(), "Number of QMC cycles")
    .define<double>("mu_c", double(0.5), "Chemical potential of c electrons")
    .define<double>("mu_f", double(0.5), "Chemical potential of f electrons")
    ;
@@ -169,13 +169,13 @@ parameters_t &fk_mc<L>::define_parameters(parameters_type &p) {
    .define<bool>("measure_history", bool(true), "Measure the history")
    //.optional("random_name", std::string(""), "Name of random number generator")
    .define<int>("Nf_start", size_t(5), "Starting number of f-electrons")
-   .define<int>("length_cycle", int(50), "Length of a single QMC cycle")
-   .define<int>("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
+   //.define<int>("length_cycle", int(50), "Length of a single QMC cycle")
+   //.define<int>("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
    .define<int>("random_seed", int(34788), "Seed for random number generator")
-   .define<int>("max_time",int(600000), "Maximum running time")
    .define<bool>("measure_ipr", bool(false), "Measure inverse participation ratio")
    .define<bool>("measure_eigenfunctions", bool(false), "Measure eigenfunctions")
    .define<double>("cond_offset", double(0.05), "dos offset from the real axis")
+   .define<bool>("measure_stiffness", bool(false), "Measure stiffness/conductivity")
    ;
 
   return p;

@@ -1,7 +1,7 @@
 # Build executables
 
-find_package (TCLAP)
-message(STATUS "TCLAP includes: " ${TCLAP_INCLUDE_DIRS} )
+#find_package (TCLAP)
+#message(STATUS "TCLAP includes: " ${TCLAP_INCLUDE_DIRS} )
 
 link_libraries(fk_mc ${LINK_ALL})
 include_directories(../solver ${TRIQS_INCLUDE_ALL} ${TCLAP_INCLUDE_DIRS})

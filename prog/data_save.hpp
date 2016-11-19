@@ -124,7 +124,7 @@ inline void save_bin_data(const binning::bin_stats_t& data, alps::hdf5::archive&
     std::array<double, 4> tmp (
         {{double(std::get<binning::_SIZE>(data)), std::get<binning::_MEAN>(data), std::get<binning::_DISP>(data), std::get<binning::_SQERROR>(data) }});
     gftools::container<double, 1> data_arr(4);
-    std::copy(tmp.begin(),tmp.end(),data_arr.begin());
+    std::copy(tmp.begin(),tmp.end(),data_arr.data());
 
     std::cout << name << " = " << std::get<binning::_MEAN>(data) << " +/- " << std::get<binning::_SQERROR>(data) 
               << " (" << std::get<binning::_SIZE>(data) << ") samples [" << bin << "]." << std::endl;
@@ -135,7 +135,7 @@ inline void save_bin_data(const binning::bin_stats_t& data, alps::hdf5::archive&
 inline void save_binning(const binning::bin_data_t& binning_data, alps::hdf5::archive& ar, std::string h5_group, std::string& h5_stats, std::string name, bool save_plaintext = false)
 {
     auto cor_lens = binning::calc_cor_length(binning_data);
-    gftools::container<double, 2> data_arr({ int(binning_data.size()),5 });
+    gftools::container<double, 2> data_arr( int(binning_data.size()),5 );
     //std::ofstream out; out.setf(std::ios::scientific); //out << std::setw(9);
     //if (save_plaintext) out.open(name+"_binning.dat",std::ios::out);
     for (size_t i=0; i<binning_data.size(); i++){
