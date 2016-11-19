@@ -7,7 +7,7 @@ namespace fk {
 
 
 // construct a solver from given hdf5 file. The observables are populated with existing data
-triqs::utility::parameters load_parameters(std::string output_file, triqs::utility::parameters pnew)
+parameters_t load_parameters(std::string output_file, parameters_t pnew)
 {
     boost::mpi::communicator world;
     bool success = true; 
@@ -16,13 +16,13 @@ triqs::utility::parameters load_parameters(std::string output_file, triqs::utili
     H5::H5File input(output_file.c_str(),H5F_ACC_RDONLY);
     triqs::h5::group top(input);
 
-    triqs::utility::parameters pold, p;
+    parameters_t pold, p;
     h5_read(top, "parameters", pold);
 
     // Check that the most important parameters are the same in new and old runs
     success = 
-        (!pold.has_key("t") || std::abs(double(pnew["t"]) - double(pold["t"])) < 1e-4) && 
-        (!pold.has_key("L") || int(pold["L"]) == int(pnew["L"])) && 
+        (!pold.exists("t") || std::abs(double(pnew["t"]) - double(pold["t"])) < 1e-4) && 
+        (!pold.exists("L") || int(pold["L"]) == int(pnew["L"])) && 
         std::abs(double(pnew["U"]) - double(pold["U"])) < 1e-4 && 
         std::abs(double(pnew["beta"]) - double(pold["beta"])) < 1e-4 && 
         bool(pnew["measure_history"]) == bool(pold["measure_history"]) && 
@@ -49,7 +49,7 @@ triqs::utility::parameters load_parameters(std::string output_file, triqs::utili
     return p;
 }
 
-observables_t load_observables(std::string output_file, triqs::utility::parameters p)
+observables_t load_observables(std::string output_file, parameters_t p)
 {
     // now load actual data
     H5::H5File input(output_file.c_str(),H5F_ACC_RDONLY);
@@ -58,14 +58,14 @@ observables_t load_observables(std::string output_file, triqs::utility::paramete
 
     auto h5_mc_data = top.open_group("mc_data");
     std::cout << "Loading observables... " << std::flush;
-    if (h5_mc_data.has_key("energies")) h5_read(h5_mc_data,"energies", obs.energies);
-    if (h5_mc_data.has_key("d2energies")) h5_read(h5_mc_data,"d2energies", obs.d2energies);
-    if (h5_mc_data.has_key("c_energies")) {h5_read(h5_mc_data,"c_energies", obs.c_energies);} 
+    if (h5_mc_data.exists("energies")) h5_read(h5_mc_data,"energies", obs.energies);
+    if (h5_mc_data.exists("d2energies")) h5_read(h5_mc_data,"d2energies", obs.d2energies);
+    if (h5_mc_data.exists("c_energies")) {h5_read(h5_mc_data,"c_energies", obs.c_energies);} 
             
     h5_read(h5_mc_data,"nf0", obs.nf0);
     h5_read(h5_mc_data,"nfpi", obs.nfpi);
-    if (h5_mc_data.has_key("spectrum")) h5_read(h5_mc_data,"spectrum", obs.spectrum);
-    if (h5_mc_data.has_key("stiffness") && p["measure_stiffness"]) h5_read(h5_mc_data,"stiffness", obs.stiffness);
+    if (h5_mc_data.exists("spectrum")) h5_read(h5_mc_data,"spectrum", obs.spectrum);
+    if (h5_mc_data.exists("stiffness") && p["measure_stiffness"]) h5_read(h5_mc_data,"stiffness", obs.stiffness);
 
     if (p["measure_history"]) { 
         std::cout << "spectrum_history... " << std::flush;
