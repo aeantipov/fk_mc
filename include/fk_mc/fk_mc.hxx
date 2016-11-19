@@ -34,7 +34,7 @@ void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<dou
 {
     lattice_ptr = std::make_shared<lattice_type>(l);
     config_ptr = std::make_shared<configuration_t> (configuration_t(*lattice_ptr,p["beta"],p["U"],p["mu_c"],p["mu_f"]));
-    std::cout << "\tRandom seed for proc " << comm.rank() << " : " << p["random_seed"] << std::endl;
+    std::cout << "\tRandom seed for proc " << comm.rank() << " : " << p["seed"] << std::endl;
     if (randomize_config) config_ptr->randomize_f(this->rng(),p["Nf_start"]);
 
     configuration_t& config = *config_ptr;
@@ -171,14 +171,14 @@ parameters_t &fk_mc<L>::define_parameters(parameters_type &p) {
    .define<int>("Nf_start", size_t(5), "Starting number of f-electrons")
    //.define<int>("length_cycle", int(50), "Length of a single QMC cycle")
    //.define<int>("n_warmup_cycles", int(5000), "Number of cycles for thermalization")
-   .define<int>("random_seed", int(std::random_device()()), "Seed for random number generator")
+   .define<int>("seed", int(std::random_device()()), "Seed for random number generator")
    .define<bool>("measure_ipr", bool(false), "Measure inverse participation ratio")
    .define<bool>("measure_eigenfunctions", bool(false), "Measure eigenfunctions")
    .define<double>("cond_offset", double(0.05), "dos offset from the real axis")
    .define<bool>("measure_stiffness", bool(false), "Measure stiffness/conductivity")
    ;
 
-  p["SEED"] = p["random_seed"];
+  p["SEED"] = p["seed"];
 
   return p;
  }

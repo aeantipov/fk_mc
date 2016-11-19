@@ -67,6 +67,9 @@ protected:
     static double ipr_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume, double mean);
     template <int N>
     static double dos_moment_f(std::vector<double> const& ipr_spec, std::complex<double> z, double offset, int volume, double mean);
+
+    template <typename T>
+    void h5_write(std::string top, std::string name, T &&t) { alps::hdf5::save(ar_, top + "/" + name, t); } 
     
 public:
     static parameters_t& save_defaults(alps::params &pd) {
@@ -78,12 +81,11 @@ public:
       return pd;
     }
     
-    data_saver(const mc_t& mc, parameters_t &p, std::string output_file, bool save_plaintext = false) : mc_(mc), lattice_(mc.lattice), observables_(mc_.observables), p_(p), ar_(p["output"], "w") 
+    data_saver(const mc_t& mc, parameters_t &p) : mc_(mc), lattice_(mc.lattice()), observables_(mc_.observables), p_(p), ar_(p["output"].as<std::string>(), "w") 
     {
         //p_.update(save_defaults());
-        p_["output_file"] = output_file; 
-        p_["save_plaintext"] = save_plaintext; 
-        volume_ = mc.lattice.get_msize(); 
+        //p_["output_file"] = output_file; 
+        volume_ = mc.lattice().get_msize(); 
         nmeasures_ = observables_.nfpi.size();
         max_bin_ = std::min(15,std::max(int(std::log(double(nmeasures_)/16)/std::log(2.)-1),1));
     }
@@ -93,9 +95,9 @@ public:
 
 // save data from solver to hdf5 file 
 template <typename MC>
-void save_all_data(const MC& mc, parameters_t p, std::string output_file, bool save_plaintext = false, std::vector<double> wgrid_cond = {0.0})
+void save_all_data(const MC& mc, parameters_t p, std::vector<double> wgrid_cond = {0.0})
 {
-    data_saver<MC> saver(mc, p, output_file, save_plaintext);
+    data_saver<MC> saver(mc, p);
     saver.save_all(wgrid_cond);
 }
 

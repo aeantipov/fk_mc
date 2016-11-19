@@ -75,10 +75,8 @@ int main(int argc, char* argv[])
 
     double beta = p["beta"]; 
     double U = p["U"]; 
-    std::string h5fname = p["output"];
     bool resume = false; 
     bool dry_run = p["exit"];
-    int save_plaintext = p["plaintext"];
     //p["random_seed"] = (random_seed_switch.getValue()?std::random_device()():(rnd_seed_arg.getValue()+comm.rank()));
 
     p["measure_history"] = (p["measure_history"].as<bool>() && !bool(p["cheb_moves"])) || bool(p["measure_ipr"]) || bool(p["measure_eigenfunctions"]);
@@ -131,7 +129,7 @@ try{
     MINFO2("Total number of sweeps       : " << p["nsweeps"]); 
     MINFO2("MC steps in a sweep          : " << p["sweep_len"]); 
     MINFO2("Warmup sweeps                : " << p["ntherm_sweeps"]);
-    MINFO2("Random seed                  : " << p["random_seed"]);
+    MINFO2("Random seed                  : " << p["seed"]);
     MINFO2("MC flip moves weight         : " << p["mc_flip"]); 
     MINFO2("MC add/remove moves weight   : " << p["mc_add_remove"]);
     MINFO2("MC reshuffle moves weight    : " << p["mc_reshuffle"]);
@@ -179,14 +177,13 @@ try{
     fk_mc<lattice_t> mc(p, _myrank); 
     mc.initialize(lattice, true, wgrid_conductivity);
 
-
     //#ifdef LATTICE_chain
     //mc.add_measure(measure_polarization<lattice_t>(mc.config,mc.lattice),"polarization");
     //#endif
         
     steady_clock::time_point start, end;
-    mc.run(alps::stop_callback(p["max_time"].as<size_t>())); // this runs monte-carlo
     start = steady_clock::now();
+    mc.run(alps::stop_callback(p["max_time"].as<size_t>())); // this runs monte-carlo
     end = steady_clock::now();
 
     comm.barrier();
@@ -201,7 +198,7 @@ try{
             << std::endl;
 
         start = steady_clock::now();
-        //save_all_data(mc,p,h5fname,save_plaintext,wgrid_conductivity);
+        save_all_data(mc,p,wgrid_conductivity);
         end = steady_clock::now();
         std::cout << "Saving lasted : " 
             << duration_cast<hours>(end-start).count() << "h " 
@@ -235,7 +232,7 @@ alps::params cmdline_params(int argc, char *argv[]) {
     #endif
 
     p.define<std::string>("output", "output.h5", "archive to read/write data to");
-    p.define<int>("plaintext", false, "plaintext output level");
+    p.define<bool>("plaintext", false, "plaintext output level");
     p.define<int>("maxtime", 24*30, "max evaluation time");
     // DOS args
     p.define<double>("dos_width", 6.0, "Width of DOS");

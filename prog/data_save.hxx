@@ -32,8 +32,8 @@ template <typename MC>
 void data_saver<MC>::save_all(std::vector<double> wgrid_cond) 
 { 
     double beta = p_["beta"];
-    std::string output_file = p_["output_file"];
-    bool save_plaintext = p_["save_plaintext"];
+    std::string output_file = p_["output"];
+    bool save_plaintext = p_["plaintext"];
 
     print_section("Statistics");
     //H5::H5File output(output_file.c_str(),H5F_ACC_TRUNC);
@@ -98,13 +98,13 @@ void data_saver<MC>::save_measurements()
         };
 
     if (p_["measure_history"]) { 
-        gftools::container<double, 2> t_spectrum_history({observables_.spectrum_history.size(), observables_.spectrum_history[0].size()});
+        gftools::container<double, 2> t_spectrum_history(observables_.spectrum_history.size(), observables_.spectrum_history[0].size());
         for (int i=0; i<observables_.spectrum_history.size(); i++)
             for (int j=0; j< observables_.spectrum_history[0].size(); j++)
                 t_spectrum_history[i][j] =  observables_.spectrum_history[i][j];
         h5_write(h5_mc_data_,"spectrum_history", t_spectrum_history);
 
-        gftools::container<double, 2> focc_history( { observables_.focc_history.size(), observables_.focc_history[0].size() } );
+        gftools::container<double, 2> focc_history( observables_.focc_history.size(), observables_.focc_history[0].size() );
         for (int i=0; i<observables_.focc_history.size(); i++)
             for (int j=0; j< observables_.focc_history[0].size(); j++)
                 focc_history[i][j] =  observables_.focc_history[i][j];
@@ -134,7 +134,7 @@ void data_saver<MC>::save_measurements()
     if (bool(p_["measure_eigenfunctions"]) && bool(p_["save_eigenfunctions"])) {
         std::cout << "Eigenfunctions" << std::endl;
         const auto& eig_hist = observables_.eigenfunctions_history;
-        gftools::container<double, 3> t_eig_history(eig_hist.size(), eig_hist[0].rows(), eig_hist[0].cols() );
+        gftools::container<double, 3> t_eig_history(long(eig_hist.size()), eig_hist[0].rows(), eig_hist[0].cols() );
         for (int i=0; i<eig_hist.size(); i++)
             for (int j=0; j< eig_hist[0].rows(); j++) 
                 for (int k=0; k< eig_hist[0].cols(); k++) 
@@ -150,7 +150,7 @@ void data_saver<MC>::save_measurements()
 template <typename MC>
 void data_saver<MC>::save_energy()
 {
-    double beta = mc_.config.params().beta;
+    double beta = mc_.config().params().beta;
 
     if (observables_.energies.size()) { 
         const std::vector<double>& energies = observables_.energies;
@@ -163,12 +163,12 @@ void data_saver<MC>::save_energy()
             size_t size = energies.size();
             INFO("Binning " << max_bin_ <<" times.");
             auto energy_binning_data = binning::accumulate_binning(energies.rbegin(), energies.rend(), max_bin_); 
-            save_binning(energy_binning_data,h5_binning_,h5_stats_,"energy",p_["save_plaintext"]);
+            save_binning(energy_binning_data,ar_,h5_binning_,h5_stats_,"energy",p_["plaintext"]);
             auto d2energy_binning_data = binning::accumulate_binning(d2energies.rbegin(),d2energies.rend(), max_bin_); 
-            save_binning(d2energy_binning_data,h5_binning_,h5_stats_,"d2energy",p_["save_plaintext"]);
+            save_binning(d2energy_binning_data,ar_,h5_binning_,h5_stats_,"d2energy",p_["plaintext"]);
             if (observables_.c_energies.size()) { 
                 auto c_energy_binning_data = binning::accumulate_binning(c_energies.rbegin(),c_energies.rend(), max_bin_); 
-                save_binning(c_energy_binning_data,h5_binning_,h5_stats_,"c_energy",p_["save_plaintext"]);
+                save_binning(c_energy_binning_data,ar_,h5_binning_,h5_stats_,"c_energy",p_["plaintext"]);
             }
         };
         
@@ -186,7 +186,7 @@ void data_saver<MC>::save_energy()
                 std::make_pair(d2energies.rbegin(), d2energies.rend())
             }; 
             auto cv_stats = jackknife::accumulate_jackknife(cv_function,c_data,max_bin_);
-            save_binning(cv_stats,h5_binning_,h5_stats_,"cv",p_["save_plaintext"]);
+            save_binning(cv_stats,ar_,h5_binning_,h5_stats_,"cv",p_["plaintext"]);
         };
     };
 }
@@ -195,7 +195,7 @@ void data_saver<MC>::save_energy()
 template <typename MC>
 void data_saver<MC>::save_fstats()
 {
-    bool save_plaintext = p_["save_plaintext"];
+    bool save_plaintext = p_["plaintext"];
     if (observables_.nf0.size() && observables_.nfpi.size()) { 
           /* Save nf(q=0), nf(q=pi) */
         const std::vector<double>& nf0 = observables_.nf0;
@@ -206,13 +206,13 @@ void data_saver<MC>::save_fstats()
         std::function<double(double,double)> disp_f = [](double x, double x2){return x2 - x*x;};
         
         auto nf0_stats = binning::accumulate_binning(nf0.rbegin(), nf0.rend(), max_bin_);
-        save_binning( nf0_stats,h5_binning_,h5_stats_,"nf_0",save_plaintext);
+        save_binning( nf0_stats,ar_,h5_binning_,h5_stats_,"nf_0",save_plaintext);
         auto nfpi_stats = binning::accumulate_binning(nfpi.rbegin(), nfpi.rend(), max_bin_);
-        save_binning( nfpi_stats,h5_binning_,h5_stats_,"nf_pi",save_plaintext);
+        save_binning( nfpi_stats,ar_,h5_binning_,h5_stats_,"nf_pi",save_plaintext);
         auto fsusc0_stats = jackknife::accumulate_jackknife(disp_f,std::vector<std::vector<double>>({nf0,nn_0}),max_bin_);
-        save_binning(fsusc0_stats,h5_binning_,h5_stats_,"fsusc_0",save_plaintext);
+        save_binning(fsusc0_stats,ar_,h5_binning_,h5_stats_,"fsusc_0",save_plaintext);
         auto fsuscpi_stats = jackknife::accumulate_jackknife(disp_f,std::vector<std::vector<double>>({nfpi,nn_pi}),max_bin_);
-        save_binning(fsuscpi_stats,h5_binning_,h5_stats_,"fsusc_pi",save_plaintext);
+        save_binning(fsuscpi_stats,ar_,h5_binning_,h5_stats_,"fsusc_pi",save_plaintext);
 
     
         /* Binder cumulant (q=0, pi). */
@@ -223,8 +223,8 @@ void data_saver<MC>::save_fstats()
         auto nf_bin = estimate_bin(fsusc0_stats);
         auto binder_0 = jackknife::jack(binder_f, std::vector<std::vector<double>>({nn_0, nnnn_0}), nf_bin);
         auto binder_pi = jackknife::jack(binder_f, std::vector<std::vector<double>>({nn_pi, nnnn_pi}), nf_bin);
-        save_bin_data(binder_0,h5_stats_,"binder_0",save_plaintext);
-        save_bin_data(binder_pi,h5_stats_,"binder_pi",save_plaintext);
+        save_bin_data(binder_0,ar_,h5_stats_,"binder_0",save_plaintext);
+        save_bin_data(binder_pi,ar_,h5_stats_,"binder_pi",save_plaintext);
     }
 }
 
@@ -257,8 +257,8 @@ double data_saver<MC>::dos_moment_f(std::vector<double> const& ipr_spec, std::co
 template <typename MC>
 void data_saver<MC>::save_glocal(std::vector<double> grid_real)
 {
-    bool save_plaintext = p_["save_plaintext"];
-    double beta = mc_.config.params().beta;
+    bool save_plaintext = p_["plaintext"];
+    double beta = mc_.config().params().beta;
     std::vector<double> const& spectrum = observables_.spectrum;
     // Local green's functions
     auto gf_im_f = [&](const std::vector<double>& spec, std::complex<double> z, double offset, int norm)->double {
@@ -294,7 +294,7 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
             dos_data[m] = dos0_f(spec_hist_transposed[m], 0.0, p_["dos_offset"], volume_);
         }
         auto dos0_stats = binning::accumulate_binning(dos_data.rbegin(), dos_data.rend(), max_bin_);
-        save_binning(dos0_stats,h5_binning_,h5_stats_,"dos0",save_plaintext);
+        save_binning(dos0_stats,ar_,h5_binning_,h5_stats_,"dos0",save_plaintext);
         size_t dos_bin = estimate_bin(dos0_stats);
         // dos(w)
         {
@@ -322,7 +322,7 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
 template <typename MC>
 void data_saver<MC>::save_fcorrel()
 {
-    bool save_plaintext = p_["save_plaintext"];
+    bool save_plaintext = p_["plaintext"];
     // f-electron correlation functions
     // assuming x <-> y symmetry
     const auto& fhistory = observables_.focc_history;
@@ -370,7 +370,7 @@ void data_saver<MC>::save_fcorrel()
         gftools::container<double, 2> fcorrel_out(lattice_.dims[0] / 2, 5);
         for (int l = 0; l < lattice_.dims[0] / 2; l++) { 
             auto fcorrel_stats = jackknife::jack(std::function<double(std::vector<double>)>(std::bind(fcorrel_f, std::placeholders::_1, l)),fhistory,nf_bin);
-            save_bin_data(fcorrel_stats,h5_stats_,"fcorrel_" + std::to_string(l),save_plaintext);
+            save_bin_data(fcorrel_stats,ar_,h5_stats_,"fcorrel_" + std::to_string(l),save_plaintext);
             double fcorrel_mean = std::get<binning::_MEAN>(fcorrel_stats);
             double fcorrel_error = std::get<binning::_SQERROR>(fcorrel_stats);
             fcorrel_out[l][0] = l;
@@ -388,12 +388,12 @@ void data_saver<MC>::save_fcorrel()
 template <typename MC>
 void data_saver<MC>::save_conductivity(std::vector<double> wgrid_cond)
 {
-    bool save_plaintext = p_["save_plaintext"];
+    bool save_plaintext = p_["plaintext"];
     INFO("Stiffness");
     const auto& stiffness = observables_.stiffness;
     size_t size = stiffness.size();
     auto stiffness_data = binning::accumulate_binning(stiffness.rbegin(), stiffness.rend(), max_bin_); 
-    save_binning(stiffness_data,h5_binning_,h5_stats_,"stiffness",save_plaintext);
+    save_binning(stiffness_data,ar_,h5_binning_,h5_stats_,"stiffness",save_plaintext);
 
     // conductivity
     std::vector<std::vector<double>> const& cond_history = observables_.cond_history;
@@ -449,7 +449,7 @@ void data_saver<MC>::save_conductivity(std::vector<double> wgrid_cond)
 template <typename MC>
 void data_saver<MC>::save_ipr(std::vector<double> grid_real) 
 {
-    double beta = mc_.config.params().beta;
+    double beta = mc_.config().params().beta;
 
     auto ipr_f = [&](std::vector<double> const& ipr_spec, double z, double offset, int volume)->double  {
         double nom = 0.0, denom = 0.0;
@@ -476,7 +476,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
         }
 
     auto ipr0_binning = binning::accumulate_binning(ipr_data.rbegin(), ipr_data.rend(), max_bin_);
-    save_binning(ipr0_binning,h5_binning_,h5_stats_,"ipr0",p_["save_plaintext"]);
+    save_binning(ipr0_binning,ar_,h5_binning_,h5_stats_,"ipr0",p_["plaintext"]);
     auto ipr0_bin=estimate_bin(ipr0_binning);
     gftools::container<double, 2> ipr_ev(grid_real.size(),size_t(3));
     for (size_t i=0; i<grid_real.size(); i++) {
@@ -491,7 +491,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
         };
 
     h5_write(h5_stats_,"ipr_err",ipr_ev);
-    if (p_["save_plaintext"]) savetxt("ipr_err.dat",ipr_ev);
+    if (p_["plaintext"]) savetxt("ipr_err.dat",ipr_ev);
 }
 
 template <typename MC>
@@ -514,7 +514,7 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
     Eigen::ArrayXi fconf(volume_); 
     fconf.setZero(); 
 
-    bool save_plaintext = p_["save_plaintext"];
+    bool save_plaintext = p_["plaintext"];
 
     double xi = imag_offset;
     std::cout << "measurements : " << nmeasures_ << std::endl;
@@ -675,7 +675,7 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
 template <typename MC>
 void data_saver<MC>::save_glocal(std::vector<double> grid_real)
 {
-    bool save_plaintext = p_["save_plaintext"];
+    bool save_plaintext = p_["plaintext"];
     double beta = mc_.config.params().beta;
     std::vector<double> const& spectrum = observables_.spectrum;
     // Local green's functions

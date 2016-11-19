@@ -45,6 +45,9 @@ public:
     parameters_t p;
     std::shared_ptr<lattice_type> lattice_ptr;
     std::shared_ptr<configuration_t> config_ptr;
+
+    lattice_type const& lattice() const { return *lattice_ptr; }
+    configuration_t const& config() const { return *config_ptr; }
     //mc_tools::mc_generic<double> mc;
     //const lattice_type& lattice;
     observables_t observables;
