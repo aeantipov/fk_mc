@@ -35,7 +35,7 @@ struct hypercubic_lattice : lattice_base
                         size_t i = l.pos_to_index(pos); 
                         (*this) = BZPoint(i,l); 
                         double diff = 0; for (size_t j=0; j<D; j++) diff+=std::abs(v[j]-val_[j]);
-                        if (diff>=prec) TRIQS_RUNTIME_ERROR<<"Couldn't find right BZPoint.";
+                        if (diff>=prec) FKMC_ERROR<<"Couldn't find right BZPoint.";
                         };
                     friend class hypercubic_lattice<D>;
 
