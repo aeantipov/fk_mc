@@ -68,7 +68,7 @@ inline constexpr size_t bin_size(){return binned_iterator<std::vector<double>::i
 inline size_t calc_bin_size(size_t size, size_t bin_step)
 {
     if (bin_step > size) {
-        TRIQS_RUNTIME_ERROR << "Can't bin with binning step(" << bin_step << ")> container size (" << size << ")";
+        FKMC_ERROR << "Can't bin with binning step(" << bin_step << ")> container size (" << size << ")";
         };
     int nsteps = size/bin_step;
     return nsteps;
@@ -135,7 +135,7 @@ static bin_stats_t bin(iter_t begin, iter_t end, int bin_depth) {
         return bin<BOOST_PP_SEQ_ELEM(0, p), iter_t>(begin,end);
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(MACRO, BINNING_RANGE)
     #undef MACRO
-    TRIQS_RUNTIME_ERROR << "bin_depth =" << bin_depth << "> compiled bin size";
+    FKMC_ERROR << "bin_depth =" << bin_depth << "> compiled bin size";
     return std::make_tuple(0, std::nan(""),std::nan(""),std::nan(""));
     };
 
@@ -150,7 +150,7 @@ static bin_data_t accumulate_binning(iter_t begin, iter_t end, size_t bin_depth)
         return binning_accumulator<BOOST_PP_SEQ_ELEM(0, p)>::accumulate_binning(begin,end);
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(MACRO, BINNING_RANGE)
     #undef MACRO
-    TRIQS_RUNTIME_ERROR << "bin_depth =" << bin_depth << "> compiled bin size";
+    FKMC_ERROR << "bin_depth =" << bin_depth << "> compiled bin size";
     return {std::make_tuple(0, std::nan(""),std::nan(""),std::nan(""))};
 }
 

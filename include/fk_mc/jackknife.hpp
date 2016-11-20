@@ -26,7 +26,7 @@ struct jackknife_adapter
         constexpr size_t L = sizeof...(Args)+1;
         std::function<R(std::vector<Arg1>)> out_;
         out_ = [&](const std::vector<Arg1>& in)->R { 
-            if (in.size()!=L) TRIQS_RUNTIME_ERROR << "Argument size mismatch for jackknife";
+            if (in.size()!=L) FKMC_ERROR << "Argument size mismatch for jackknife";
             std::array<Arg1, L> p; std::copy(in.begin(), in.end(), p.begin());
             //return triqs::tuple::apply(F_in,p);
             return gftools::tuple_tools::unfold_vector<std::function<R(Arg1, Args...)>, Arg1, sizeof...(Args)+1>  (F_in,in);
@@ -129,7 +129,7 @@ bin_stats_t jack(Functor F, const std::vector<std::pair<iter_t,iter_t>>& in, siz
         }; 
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(MACRO, BINNING_RANGE)
     #undef MACRO
-    TRIQS_RUNTIME_ERROR << "bin =" << bin << "> compiled bin size";
+    FKMC_ERROR << "bin =" << bin << "> compiled bin size";
     return std::make_tuple(0, std::nan(""),std::nan(""),std::nan(""));
 }
 
@@ -153,7 +153,7 @@ bin_data_t accumulate_jackknife(Functor F, const std::vector<std::pair<iter_t,it
         { return jackknife_accumulator<Functor,BOOST_PP_SEQ_ELEM(0, p)>::template accumulate_jackknife<iter_t>(F,in); };
     BOOST_PP_SEQ_FOR_EACH_PRODUCT(MACRO, BINNING_RANGE)
     #undef MACRO
-    TRIQS_RUNTIME_ERROR << "bin_depth =" << bin_depth << "> compiled bin size";
+    FKMC_ERROR << "bin_depth =" << bin_depth << "> compiled bin size";
     return {std::make_tuple(0, std::nan(""),std::nan(""),std::nan(""))};
 }
 

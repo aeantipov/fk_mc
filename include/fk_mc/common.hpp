@@ -63,7 +63,7 @@ struct err_and_throw {
     err_and_throw(std::ostream &x):str_(x) {}
     //static err_and_throw &get_instance() { static err_and_throw x; return x; };
     };
-#define TRIQS_RUNTIME_ERROR err_and_throw(std::cerr)
+#define FKMC_ERROR err_and_throw(std::cerr)
 
 //typedef triqs::utility::parameters parameters_t;
 typedef alps::params parameters_t;

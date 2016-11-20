@@ -35,7 +35,7 @@ inline lattice_base::lattice_base(sparse_m in):
    hopping_m_(in),
    m_size_(hopping_m_.rows()) 
 {
-    if (hopping_m_.rows() != hopping_m_.cols() || hopping_m_.rows() == 0) TRIQS_RUNTIME_ERROR << "Failed to initalize lattice. ";
+    if (hopping_m_.rows() != hopping_m_.cols() || hopping_m_.rows() == 0) FKMC_ERROR << "Failed to initalize lattice. ";
 }
 
 }; // end of namespace FK
