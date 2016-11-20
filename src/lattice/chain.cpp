@@ -7,7 +7,7 @@ void chain_lattice::fill(double t, double eta, double delta)
     double t1 = t-eta;
     double t2 = t+eta;
 
-    if (m_size_%2 != 0) { TRIQS_RUNTIME_ERROR << "Can't have a chain of even elements"; exit(1); };
+    if (m_size_%2 != 0) { FK_ERROR << "Can't have a chain of even elements"; exit(1); };
     
     for (size_t i=0; i<m_size_; i+=2) {
         hopping_m_.insert(i,i) = eta;
