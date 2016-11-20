@@ -23,14 +23,14 @@ TEST(lattice, pos_to_index)
 TEST(lattice, hopping_m)
 {
     l1.fill(1.0);
-    INFO(l1.hopping_m());
+    std::cout << l1.hopping_m() << std::endl;
 }
 
 TEST(lattice, bzpoints)
 {
     triangular_lattice t1(L);
     t1.fill(-1.0,-0.5);
-    INFO(t1.hopping_m());
+    std::cout << l1.hopping_m() << std::endl;
 
     for (size_t i=0; i<t1.get_msize(); i++) {
         auto b = t1.get_bzpoint(i);

@@ -69,8 +69,6 @@ int main(int argc, char* argv[])
         exit(1);
     };
 
-    mpi_cout << "All parameters : " << std::endl << p << std::endl;
-
     MINFO("Falicov-Kimball Monte Carlo");
 
     double beta = p["beta"]; 

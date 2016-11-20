@@ -30,7 +30,7 @@ TEST(lattice, pos_to_index)
 TEST(lattice, hopping_m)
 {
     l1.fill(1.0, 10.0);
-    INFO(l1.hopping_m());
+    std::cout << l1.hopping_m() << std::endl;
 }
 
 TEST(lattice, spectrum)

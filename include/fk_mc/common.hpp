@@ -53,7 +53,17 @@ typedef std::mt19937 random_generator;
 #define INFO2(MSG)            std::cout << "    " << std::boolalpha << MSG << std::endl;
 #define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;
 */
-#define TRIQS_RUNTIME_ERROR std::cerr
+//inline std::ostream& err_and_throw(std::string x, std::ostream& y) { y << x; throw std::logic_error(x); } 
+struct err_and_throw { 
+    std::ostream& str_;
+    template <typename T>
+    friend err_and_throw& operator<< (err_and_throw&& y, T x) { y.str_ << x; std::stringstream s1; s1 << x; throw std::logic_error(s1.str()); return y; } 
+    template <typename T>
+    friend err_and_throw& operator<< (err_and_throw& y, T x) { y.str_ << x; std::stringstream s1; s1 << x; throw std::logic_error(s1.str()); return y; } 
+    err_and_throw(std::ostream &x):str_(x) {}
+    //static err_and_throw &get_instance() { static err_and_throw x; return x; };
+    };
+#define TRIQS_RUNTIME_ERROR err_and_throw(std::cerr)
 
 //typedef triqs::utility::parameters parameters_t;
 typedef alps::params parameters_t;
