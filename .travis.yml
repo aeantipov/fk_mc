@@ -5,9 +5,9 @@ language: c
 sudo: required
 dist: trusty
 
-compiler:
-  - clang
-  - gcc
+#compiler:
+#  - clang
+#  - gcc
 
 before_install:
   - sudo apt-get -qq update
@@ -18,6 +18,7 @@ before_install:
   - sudo apt-get install -y libarpack2-dev
 
 script:
+  - git clone https://github.com/aeantipov/gftools.git
   - git clone https://github.com/ALPSCore/ALPSCore.git
   - cd ALPSCore
   - mkdir build 
@@ -27,7 +28,7 @@ script:
   - cd ../../
   - mkdir build
   - cd build
-  - cmake -DTesting=ON -DExamples=ON -DALPSCoreDIR="/home/travis/build/aeantipov/fk_mc/alpscore-inst/share/ALPSCore" ..
+  - cmake -DTesting=ON -DExamples=ON -DALPSCore_DIR="/home/travis/build/aeantipov/fk_mc/alpscore-inst/share/ALPSCore" -DGFTOOLS_INCLUDE_DIR="../gftools" ..
   - make
   - make test
 
@@ -40,7 +41,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
-      env: CXX=g++-4.9
+      env: CXX=g++-4.9 OMPI_CXX=g++-4.9 OMPI_CC=gcc-4.9 
     - compiler: gcc
       addons:
         apt:
@@ -48,7 +49,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
-      env: CXX=g++-5
+      env: CXX=g++-5 OMPI_CXX=g++-5 OMPI_CC=gcc-5
     - compiler: clang
       addons:
         apt:
@@ -57,7 +58,7 @@ matrix:
             - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
-      env: CXX=clang++-3.6 
+      env: CXX=clang++-3.6 OMPI_CXX=clang++-3.6 OMPI_CC=clang-3.6 
     - compiler: clang
       addons:
         apt:
@@ -66,5 +67,5 @@ matrix:
             - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
-      env: CXX=clang++-3.7
+      env: CXX=clang++-3.7 OMPI_CXX=clang++-3.7 OMPI_CC=clang-3.7
 
