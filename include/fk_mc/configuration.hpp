@@ -13,6 +13,8 @@ namespace fk {
 
 struct config_params {
     double beta, U, mu_c, mu_f;
+    // interaction between f-electrons
+    std::vector<double> W;
     bool operator== ( const config_params& rhs) const;
 };
 
