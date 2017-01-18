@@ -10,7 +10,7 @@
 
 ### Installation 
 1. Get all dependencies except of triqs 
-2. Download fk_mc: `git clone https://github.com/aeantipov/fk_mc.git`. The installation is similar to TRIQS. 
+2. Download fk_mc: `git clone https://github.com/aeantipov/fk_mc.git`. 
     1. Create a temporary build directory
     2. In it, run 
       ```
@@ -47,4 +47,4 @@ The output is stored in the hdf5 archive (by default - output.h5). Specifying `-
 - Andreas Herrmann, University of Fribourg
 
 #### Using 
-- please cite http://arxiv.org/abs/1605.01390 [Phys. Rev. Lett. 117, 146601 (2016)]
+- please cite http://arxiv.org/abs/1605.01390 [Phys. Rev. Lett. 117, 146601 (2016)].
