@@ -46,5 +46,5 @@ The output is stored in the hdf5 archive (by default - output.h5). Specifying `-
 - Andrey Antipov, *Andrey.E.Antipov[at]gmail.com*, 2013-now.
 - Andreas Herrmann, University of Fribourg.
 
-#### Using 
+#### Academic usage 
 - please cite http://arxiv.org/abs/1605.01390 [Phys. Rev. Lett. 117, 146601 (2016)].
