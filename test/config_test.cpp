@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #include "lattice/hypercubic.hpp"
 #include "fk_mc.hpp"
 #include <boost/mpi/environment.hpp>
@@ -5,11 +7,8 @@
 
 using namespace fk;
 
-int main(int argc, char* argv[])
+TEST(config, test1)
 {
-    boost::mpi::environment env(argc, argv);
-  try {
-
     size_t L = 4;
 
     double U = 1.0;
@@ -41,10 +40,10 @@ int main(int argc, char* argv[])
     config.calc_ed();
     FKDEBUG(config.ed_data().cached_spectrum.transpose());
     //FKDEBUG(config.cached_evecs);
+}
 
-   }
-  catch(std::exception const & e) { std::cout  << "exception "<< e.what() << std::endl;}
-  return 0;
-
-    return EXIT_SUCCESS;
+int main(int argc, char* argv[])
+{
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
