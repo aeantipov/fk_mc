@@ -16,6 +16,7 @@ before_install:
   - sudo apt-get install -y libboost-all-dev
   - sudo apt-get install -y libhdf5-dev
   - sudo apt-get install -y libarpack2-dev
+  - sudo apt-get install -y libfftw3-dev
 
 script:
   - git clone https://github.com/aeantipov/gftools.git

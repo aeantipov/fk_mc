@@ -89,7 +89,7 @@ if (Execs)
     add_subdirectory(prog)
 endif (Execs)
 
-option(Benchmark "Enable benchmark" ON)
+option(Benchmark "Enable benchmark" OFF)
 option(Testing "Enable testing" ON)
 
 if (Benchmark OR Testing)
