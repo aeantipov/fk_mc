@@ -9,7 +9,7 @@
 - gtest : https://github.com/google/googletest (fetched automatically) 
 
 ### Installation 
-1. Get all dependencies except of triqs 
+1. Get all dependencies. 
 2. Download fk_mc: `git clone https://github.com/aeantipov/fk_mc.git`. 
     1. Create a temporary build directory
     2. In it, run 
