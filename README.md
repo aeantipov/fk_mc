@@ -42,7 +42,7 @@ Here beta is the inverse temperature, U is the interaction strength, and L is th
 The output is stored in the hdf5 archive (by default - output.h5). Specifying `--plaintext` option in the run dumps the value of observables to plaintext files. For example specific heat is obtained then in `cv_error.dat` and reads:
 `5.000000e+01 -2.474323e-01 1.207943e-28 1.554312e-15`. First column is the number of samples used, second - the value of the observable, third is variance, and last is the standard error. The binning is done to avoid autocorrelations, so the number of samples is typically smaller than the number of measurements.
 
-#### Author & Contributors
+#### Authors & Contributors
 - Andrey Antipov, *Andrey.E.Antipov[at]gmail.com*, 2013-now
 - Andreas Herrmann, University of Fribourg
 
