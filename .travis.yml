@@ -14,19 +14,20 @@ before_install:
   - sudo apt-get install -y libeigen3-dev
   - sudo apt-get install -y libopenmpi-dev
   - sudo apt-get install -y libboost-all-dev
-  - sudo apr-get install -y arpack-ng
+  - sudo apt-get install -y libhdf5-dev
+  - sudo apt-get install -y libarpack2-dev
 
 script:
   - git clone https://github.com/ALPSCore/ALPSCore.git
   - cd ALPSCore
   - mkdir build 
   - cd build 
-  - cmake -DCMAKE_BUILD_TYPE=Release -DTesting=OFF -DENABLE_MPI=ON -DCMAKE_INSTALL_PREFIX="../../alpscore-inst" 
+  - cmake -DCMAKE_BUILD_TYPE=Release -DTesting=OFF -DENABLE_MPI=ON -DCMAKE_INSTALL_PREFIX="../../alpscore-inst" .. 
   - make install 
   - cd ../../
   - mkdir build
   - cd build
-  - cmake -DTesting=ON -DExamples=ON .. -DALPSCoreDIR="../alpscore-inst/share/ALPSCore"
+  - cmake -DTesting=ON -DExamples=ON -DALPSCoreDIR="../alpscore-inst/share/ALPSCore" ..
   - make
   - make test
 
