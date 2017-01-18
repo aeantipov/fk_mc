@@ -27,7 +27,7 @@ script:
   - cd ../../
   - mkdir build
   - cd build
-  - cmake -DTesting=ON -DExamples=ON -DALPSCoreDIR="../alpscore-inst/share/ALPSCore" ..
+  - cmake -DTesting=ON -DExamples=ON -DALPSCoreDIR="/home/travis/build/aeantipov/fk_mc/alpscore-inst/share/ALPSCore" ..
   - make
   - make test
 
