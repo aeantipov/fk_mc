@@ -43,8 +43,8 @@ The output is stored in the hdf5 archive (by default - output.h5). Specifying `-
 `5.000000e+01 -2.474323e-01 1.207943e-28 1.554312e-15`. First column is the number of samples used, second - the value of the observable, third is variance, and last is the standard error. The binning is done to avoid autocorrelations, so the number of samples is typically smaller than the number of measurements.
 
 #### Authors & Contributors
-- Andrey Antipov, *Andrey.E.Antipov[at]gmail.com*, 2013-now
-- Andreas Herrmann, University of Fribourg
+- Andrey Antipov, *Andrey.E.Antipov[at]gmail.com*, 2013-now.
+- Andreas Herrmann, University of Fribourg.
 
 #### Using 
 - please cite http://arxiv.org/abs/1605.01390 [Phys. Rev. Lett. 117, 146601 (2016)].
