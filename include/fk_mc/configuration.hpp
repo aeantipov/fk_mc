@@ -70,6 +70,7 @@ struct configuration_t {
 
     void calc_ed(bool calc_evecs = false);
     void calc_chebyshev(const chebyshev::chebyshev_eval& cheb);
+    double calc_ff_energy() const;
 
     const config_params& params() const {return params_;}
     const ed_cache& ed_data() const {return ed_data_;}

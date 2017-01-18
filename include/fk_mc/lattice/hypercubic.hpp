@@ -23,7 +23,7 @@ struct hypercubic_lattice : lattice_base
     std::array<std::array<int, D>, 2*D> neighbor_pos(std::array<int, D> pos) const;
     /// The nearest neighbor indices to the given index.
     std::vector<size_t> neighbor_index(size_t index) const override;
-
+    size_t ndim() const override { return Ndim; }
     struct BZPoint { std::array<double, D> val_; 
                      size_t ind_; 
                      explicit operator int() const {return ind_;};

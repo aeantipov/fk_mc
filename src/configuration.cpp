@@ -57,6 +57,27 @@ void configuration_t::randomize_f(random_generator &rnd, size_t nf){
     };
 }
 
+
+double configuration_t::calc_ff_energy() const 
+{
+    // 1D - easy to add f-f interactions
+    if (this->lattice_.ndim() != 1) return 0;
+    double e = 0;
+    size_t V = lattice_.get_msize();
+    for (int i = 0; i < V; ++i) {  
+        if (!f_config_(i)) continue;
+        for (int l = 1; l < params_.W.size(); ++l) { 
+            int left = (i - l + V)%V;
+            int right = (i + l)%V;
+            double el = params_.W[l] * f_config_(left);
+            double er = params_.W[l] * f_config_(right); 
+            e+=el;
+            e+=er;
+            }
+        }
+    return e;
+}
+
 const typename configuration_t::sparse_m& configuration_t::calc_hamiltonian()
 {
     reset_cache();

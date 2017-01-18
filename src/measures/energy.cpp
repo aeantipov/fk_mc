@@ -16,7 +16,7 @@ void measure_energy::accumulate(double sign)
         d2e_nf(i) = spectrum(i)*spectrum(i) / (1.0+0.5*(exp_e[i] + 1./exp_e[i]));
         };
     double e_val_c = e_nf.sum();
-    double e_val = e_val_c - double(config.params_.mu_f)*config.get_nf();
+    double e_val = e_val_c - double(config.params_.mu_f)*config.get_nf() + config.calc_ff_energy();
     double d2e_val = d2e_nf.sum()/2.0;
     _average_energy += e_val;
     _average_d2energy += d2e_val;

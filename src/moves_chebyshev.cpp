@@ -18,7 +18,8 @@ typename move_flip::mc_weight_type move_flip::attempt()
 
     new_config.calc_hamiltonian();
     new_config.calc_chebyshev(cheb_);
-    auto ratio = std::exp(new_config.cheb_data_.logZ - config.cheb_data_.logZ );
+    double ff_diff = new_config.calc_ff_energy() - config.calc_ff_energy();
+    auto ratio = std::exp(new_config.cheb_data_.logZ - config.cheb_data_.logZ - beta * ff_diff);
     return ratio;
 }
 
@@ -44,9 +45,10 @@ typename move_randomize::mc_weight_type move_randomize::attempt()
     new_config.calc_chebyshev(cheb_);
 
     auto log_ratio = new_config.cheb_data_.logZ - config.cheb_data_.logZ;
-    if (beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf()) > 2.7182818 - log_ratio) { return 1;}
-    else if (beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf()) + log_ratio < 0) {return 0;}
-    else return std::exp(log_ratio)*exp(beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf())); 
+    double ff_diff = new_config.calc_ff_energy() - config.calc_ff_energy();
+    if (beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf()) - ff_diff > 2.7182818 - log_ratio) { return 1;}
+    else if (beta*config.params_.mu_f*(new_config.get_nf()-config.get_nf()) - ff_diff + log_ratio < 0) {return 0;}
+    else return std::exp(log_ratio)*exp(beta*(config.params_.mu_f*(new_config.get_nf()-config.get_nf()) - ff_diff)); 
 }
 
 // move_addremove
@@ -61,13 +63,13 @@ typename move_addremove::mc_weight_type move_addremove::attempt()
 
     new_config.calc_hamiltonian();
     new_config.calc_chebyshev(cheb_);
+    double ff_diff = new_config.calc_ff_energy() - config.calc_ff_energy();
 
     //FKDEBUG(new_config.cheb_data_.logZ << " " << config.cheb_data_.logZ);
     auto ratio = std::exp(new_config.cheb_data_.logZ - config.cheb_data_.logZ );
-    auto out = (new_config.f_config_(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f);
+    auto out = (new_config.f_config_(to)?ratio*exp_beta_mu_f:ratio/exp_beta_mu_f) * std::exp(-beta * ff_diff);
     return out;
 }
-
 
 
 } // end of namespace chebyshev
