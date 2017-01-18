@@ -25,7 +25,7 @@ void measure_spectrum::collect_results(boost::mpi::communicator const &c)
     int sum_Z;
     boost::mpi::reduce(c, _Z, sum_Z, std::plus<int>(), 0);
     std::vector<double> arr(_average_spectrum.size());
-    boost::mpi::reduce(c, _average_spectrum, arr, std::plus<double>(), 0);
+    boost::mpi::reduce(c, &_average_spectrum[0], _average_spectrum.size(), &arr[0], std::plus<double>(), 0);
     int n = c.size();
     std::transform(arr.begin(), arr.end(), _average_spectrum.data(), [n](double x){return x / n; });
 }
