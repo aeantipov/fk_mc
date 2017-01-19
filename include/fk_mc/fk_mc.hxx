@@ -33,7 +33,12 @@ void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<dou
     //mc(p) 
 {
     lattice_ptr = std::make_shared<lattice_type>(l);
-    config_ptr = std::make_shared<configuration_t> (configuration_t(*lattice_ptr,p["beta"],p["U"],p["mu_c"],p["mu_f"]));
+    if (lattice_ptr->ndim() != 1) {
+         config_ptr = std::make_shared<configuration_t> (configuration_t(*lattice_ptr,p["beta"],p["U"],p["mu_c"],p["mu_f"]));
+        }
+    else { 
+         config_ptr = std::make_shared<configuration_t> (configuration_t(*lattice_ptr,p["beta"],p["U"],p["mu_c"],p["mu_f"],p["W"]));
+        }
     std::cout << "\tRandom seed for proc " << comm.rank() << " : " << p["seed"] << std::endl;
     if (randomize_config) config_ptr->randomize_f(this->rng(),p["Nf_start"]);
 

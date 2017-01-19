@@ -63,7 +63,7 @@ configure_file(${CMAKE_SOURCE_DIR}/include/fk_mc/definitions.hpp.in ${CMAKE_BINA
 # build executable
 option(Execs "Enable executables" ON)
 if (Execs)
-    list(APPEND all_lattices cubic2d triangular cubic3d honeycomb)
+    list(APPEND all_lattices cubic1d cubic2d triangular cubic3d honeycomb)
     list(LENGTH LATTICES lattice_len)
     if (${lattice_len} EQUAL 0) 
         set(LATTICES ${all_lattices})

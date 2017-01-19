@@ -227,6 +227,8 @@ alps::params cmdline_params(int argc, char *argv[]) {
     #elif LATTICE_chain
         p.define<double> ("delta", 0.0, "chain : delta");
         p.define<double> ("eta", 0.0, "chain : eta");
+    #elif LATTICE_cubic1d 
+        p.define<std::vector<double>>( "W", "1d : f-f interaction");
     #endif
 
     p.define<std::string>("output", "output.h5", "archive to read/write data to");
