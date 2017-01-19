@@ -55,7 +55,7 @@ struct configuration_t {
     typedef typename ed_cache::real_array_t real_array_t;
     typedef Eigen::ArrayXi int_array_t;
 
-    configuration_t(const lattice_base &lattice, double beta, double U, double mu_c, double mu_f);
+    configuration_t(const lattice_base &lattice, double beta, double U, double mu_c, double mu_f, std::vector<double> W = {});
 
     configuration_t(const configuration_t& rhs) = default ;
     configuration_t& operator=(const configuration_t& rhs);

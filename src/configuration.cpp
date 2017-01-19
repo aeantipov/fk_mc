@@ -11,10 +11,10 @@ bool config_params::operator== ( const config_params& rhs) const
 }
 
 configuration_t::configuration_t(
-    const lattice_base &lattice, double beta, double U, double mu_c, double mu_f):
+    const lattice_base &lattice, double beta, double U, double mu_c, double mu_f, std::vector<double> W):
     lattice_(lattice),
     f_config_(lattice_.get_msize()),
-    params_(config_params({beta, U, mu_c, mu_f})),
+    params_(config_params({beta, U, mu_c, mu_f, W})),
     hamilt_(lattice_.hopping_m().rows(), lattice_.hopping_m().cols())
 { 
     f_config_.setZero(); 

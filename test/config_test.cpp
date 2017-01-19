@@ -42,6 +42,35 @@ TEST(config, test1)
     //FKDEBUG(config.cached_evecs);
 }
 
+// test ff-energy
+TEST(config, ff_energy)
+{
+    size_t L = 12;
+    double U = 0.0;
+    double mu = U/2;
+    double e_f = 0.0;
+
+    std::vector<double> W = { 0, 1, 2};
+
+    hypercubic_lattice<1> lattice(L);
+    lattice.fill(-1.0);
+    configuration_t config(lattice, 1.0, U, mu, mu+e_f, W);
+
+    Eigen::ArrayXi my_config(lattice.get_msize()); my_config.setZero();
+    for (int x=0; x<L; x+=1) {
+            my_config(x) = x % 2;
+        }
+    my_config(0) = 1;
+    config.f_config_ = my_config;
+
+    double e_ff = config.calc_ff_energy(); 
+    double e_ff_comp = 2 * L/2 * W[2] + 4 * W[1];
+
+    std::cout << "configuration = " << my_config.transpose() << std::endl;
+    std::cout << "ff energy = " << e_ff << " == " << e_ff_comp << std::endl;
+    ASSERT_NEAR(e_ff, e_ff_comp, 1e-15);
+}
+
 int main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
