@@ -301,6 +301,9 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
         {
             INFO("Saving local DOS w errorbars");
             gftools::container<double, 2> dos_ev(grid_real.size(),size_t(3));
+            gftools::real_grid wgrid(grid_real);
+            gftools::grid_object<double, gftools::real_grid> dos_w(wgrid), dos_w_err(wgrid);
+
             for (size_t i=0; i<grid_real.size(); i++) {
                 std::complex<double> z = grid_real[i];
                 for (size_t m=0; m<nmeasures_; ++m) { 
@@ -310,9 +313,24 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
                 dos_ev[i][0] = std::real(z); 
                 dos_ev[i][1] = std::get<binning::bin_m::_MEAN>(dosz_data);
                 dos_ev[i][2] = std::get<binning::bin_m::_SQERROR>(dosz_data); 
+                
+                dos_w[i] = std::get<binning::bin_m::_MEAN>(dosz_data);
+                dos_w_err[i] = std::get<binning::bin_m::_SQERROR>(dosz_data);
                 }
             h5_write(h5_stats_,"dos_err",dos_ev);
             if (save_plaintext) savetxt("dos_err.dat",dos_ev);
+
+            auto fermi = [&](double w) { return 1.0 / ( 1.0 + std::exp(beta * w)); };
+            gftools::grid_object<double, gftools::real_grid> ncw(wgrid), ncw_err(wgrid);
+            ncw.fill([&](gftools::real_grid::point w){ return dos_w(w) * fermi(w); });
+            ncw_err.fill([&](gftools::real_grid::point w){ return std::pow(dos_w_err(w) * fermi(w), 2); });
+
+            double nc = wgrid.integrate(ncw);
+            double nc_err = std::sqrt(wgrid.integrate(ncw_err)); 
+            binning::bin_stats_t nc_stats;
+            std::get<binning::bin_m::_MEAN>(nc_stats) = nc;
+            std::get<binning::bin_m::_SQERROR>(nc_stats) = nc_err;
+            save_bin_data(nc_stats, ar_, h5_stats_, "nc", save_plaintext);
             }
         //double gw0 = 0.0;
         //for (auto spec : spectrum_history) for (auto e : spec) gw0+=std::imag(1.0/(I*double(p_["dos_offset"]) - e)) / double(volume_) / double(nmeasures_); 
