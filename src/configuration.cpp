@@ -66,13 +66,13 @@ double configuration_t::calc_ff_energy() const
     size_t V = lattice_.get_msize();
     for (int i = 0; i < V; ++i) {  
         if (!f_config_(i)) continue;
-        for (int l = 1; l < params_.W.size(); ++l) { 
+        for (int l = 0; l < params_.W.size(); ++l) { 
             int left = (i - l + V)%V;
             int right = (i + l)%V;
             double el = params_.W[l] * f_config_(left);
             double er = params_.W[l] * f_config_(right); 
             e+=el;
-            e+=er;
+            e+=er * (l>0);
             }
         }
     return e;
