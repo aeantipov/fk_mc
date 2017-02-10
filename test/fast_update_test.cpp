@@ -29,7 +29,7 @@ double weight_tol = 4e-2;
 
 TEST(Chebyshev,diff)
 {
-    size_t L = 16;
+    size_t L = 24;
 
     double U = 8;
     double mu = U/2;
@@ -71,10 +71,10 @@ TEST(Chebyshev,diff)
     double s2 = 0.0;
     for (int i=0; i<lattice.get_msize(); i++) { double e = config.ed_data().cached_spectrum[i]; s2 += std::log(1 + exp(-beta * e)); };
 
-    std::cout << "logZ chebyshev : " << logZ << std::endl;
-    std::cout << "logZ ed        : " << s2 << std::endl;
-    std::cout << "logZ ed        : " << config.ed_data_.logZ << std::endl;
-    EXPECT_EQ( (std::abs((logZ - s2) / logZ) > 1e-2), false);
+    std::cout << "logZ chebyshev   : " << logZ << std::endl;
+    std::cout << "logZ ed (direct) : " << s2 << std::endl;
+    std::cout << "logZ ed          : " << config.ed_data_.logZ << std::endl;
+    EXPECT_EQ( (std::abs((logZ - s2) / logZ) > 5e-2), false);
     EXPECT_EQ( (std::abs((config.ed_data_.logZ - s2) / logZ) > 1e-15), false);
 }
 

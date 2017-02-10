@@ -73,7 +73,7 @@ if (Execs)
 endif (Execs)
 
 option(Benchmark "Enable benchmark" OFF)
-option(Testing "Enable testing" ON)
+option(Testing "Enable testing" OFF)
 
 if (Benchmark OR Testing)
     include(EnableGtests) #defined in common/cmake

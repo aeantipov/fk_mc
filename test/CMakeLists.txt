@@ -1,15 +1,13 @@
 include_directories(../solver .. ${TRIQS_INCLUDE_ALL})
 
 set (tests_fk
-#triqs_extra_test
 lattice_test
 honeycomb_test
 chain_test
 config_test
-fast_update_test
+#fast_update_test
 binning_test
 jackknife_test
-#ietl_inverse01
 ipr_test
 stiffness_test
 polarized_test
