@@ -15,10 +15,12 @@ struct lattice_base {
 
     /// get hopping matrix dimension
     int get_msize() const {return m_size_;}; 
+    /// get the total number of orbitals
+    size_t get_norbs() const { return norbs_; }
     /// get the hopping matrix
     const sparse_m& hopping_m() const { return hopping_m_; }
-    /// construct from hopping matrix
-    lattice_base(sparse_m in); 
+    /// construct from hopping matrix and the number of orbitals
+    lattice_base(sparse_m in, size_t norbitals); 
     /// copy constructor 
     lattice_base(lattice_base const& rhs) : hopping_m_(rhs.hopping_m_), m_size_(rhs.m_size_){};
     /// disable moving
@@ -34,17 +36,18 @@ protected:
     sparse_m hopping_m_;
     /// Size of the hopping matrix
     size_t m_size_;
+    /// Number of orbitals (hopping matrix size = volume * n_orbitals)
+    size_t norbs_; 
 };
 
-inline lattice_base::lattice_base(sparse_m in):
+inline lattice_base::lattice_base(sparse_m in, size_t norbitals = 1):
    hopping_m_(in),
-   m_size_(hopping_m_.rows()) 
+   m_size_(hopping_m_.rows()),
+   norbs_(norbitals) 
 {
     if (hopping_m_.rows() != hopping_m_.cols() || hopping_m_.rows() == 0) FKMC_ERROR << "Failed to initalize lattice. ";
 }
 
 }; // end of namespace FK
 
-//#include "lattice/hypercubic.hpp"
-//#include "lattice/triangular.hpp"
 
