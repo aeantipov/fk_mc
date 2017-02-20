@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 
     typedef hypercubic_lattice<2> lattice_t;
     lattice_t lattice(L);
-    lattice.fill(-1.0);
+    fill_nearest_neighbors(lattice, -1.0);
 
     FKDEBUG(lattice.hopping_m());
 

@@ -59,13 +59,13 @@ public:
     //real_array_view_t flatten(triqs::arrays::array_view<double,D> in);
 
     hypercubic_lattice(size_t lattice_size);
-    hypercubic_lattice(hypercubic_lattice const& rhs):abstract_lattice(rhs), dims_(rhs.dims_), ft_pi_array_(rhs.ft_pi_array_){}
-        
+    hypercubic_lattice(hypercubic_lattice const& rhs):abstract_lattice(rhs), dims_(rhs.dims_) {};
     std::array<int, D> const& dims() const { return dims_; }
+
+    Eigen::ArrayXcd phase_array(double phase) const;
 
 protected:
     std::array<int, D> dims_;
-    Eigen::ArrayXi ft_pi_array_;
 };
 
 template <size_t D>

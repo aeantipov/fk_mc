@@ -6,18 +6,26 @@ namespace fk {
 
 template <size_t D>
 hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
-    abstract_lattice(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size))),
-    ft_pi_array_(msize())
+    abstract_lattice(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size)))
 {
     hopping_m_.reserve(Eigen::ArrayXi::Constant(msize(),D*2));
     dims_.fill(lattice_size);
-    for (size_t i=0; i< msize(); i++) {
+};
+
+
+template <size_t D>
+Eigen::ArrayXcd hypercubic_lattice<D>::phase_array(double phase) const
+{
+    Eigen::ArrayXcd phases(volume());
+    for (size_t i=0; i< volume(); i++) {
         auto pos = index_to_pos(i); 
         int v = 1;
-        for (int p : pos) v*=((p%2)*2-1);
-        ft_pi_array_[i]=v;
+        std::complex<double> p1 = 1.0;
+        for (int p : pos) { v*=((p%2)*2-1); p1*=std::exp(I*phase*double(p)); }
+        phases[i]=p1;
         }; 
-};
+    return phases;
+}
 
 template <size_t D>
 std::array<int, D> hypercubic_lattice<D>::index_to_pos(size_t index) const
@@ -69,7 +77,9 @@ std::vector<size_t> hypercubic_lattice<D>::neighbor_index(size_t index) const {
 template <size_t D>
 int hypercubic_lattice<D>::FFT_pi(const Eigen::ArrayXi& in) const
 {
-    return (in*ft_pi_array_).sum();
+    Eigen::ArrayXd ft_array =this->phase_array(M_PI).real();
+    Eigen::ArrayXd in2(in.cast<double>());
+    return std::lround((in2*ft_array).sum());
 }
 
 

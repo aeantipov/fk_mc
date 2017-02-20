@@ -44,13 +44,13 @@ TEST(FastUpdateTest, weight) {
 
     typedef hypercubic_lattice<2> lattice_t;
     lattice_t lattice(L);
-    lattice.fill(-1.0);
+    fill_nearest_neighbors(lattice, -1.0);
 
     std::cout << "Random seed : " << rnd_seed << std::endl;
     std::cout << "Number of states = " << lattice.msize() << std::endl;
     std::cout << "log(nstates) = " << int(std::log(lattice.msize())) << std::endl;
 
-    size_t cheb_size = std::min( int(std::log(lattice.msize())*cheb_prefactor), lattice.msize()/4);
+    size_t cheb_size = std::min( size_t(std::log(lattice.msize())*cheb_prefactor), lattice.msize()/4);
     cheb_size+=cheb_size%2;
     std::cout << "Number of Chebyshev polynomials = " << cheb_size << std::endl;
     size_t ngrid_points = cheb_size*2;// std::max(size_t(200), cheb_size);

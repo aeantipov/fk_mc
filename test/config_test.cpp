@@ -19,7 +19,7 @@ TEST(config, test1)
     double beta = 1.0/T;
 
     hypercubic_lattice<2> lattice(L);
-    lattice.fill(-1.0);
+    fill_nearest_neighbors(lattice, -1.0);
 
     FKDEBUG(lattice.hopping_m());
 
@@ -53,7 +53,7 @@ TEST(config, ff_energy)
     std::vector<double> W = { 0, 1, 2};
 
     hypercubic_lattice<1> lattice(L);
-    lattice.fill(-1.0);
+    fill_nearest_neighbors(lattice, -1.0);
     configuration_t config(lattice, 1.0, U, mu, mu+e_f, W);
 
     Eigen::ArrayXi my_config(lattice.msize()); my_config.setZero();

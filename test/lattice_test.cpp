@@ -21,14 +21,14 @@ TEST(lattice, pos_to_index)
 
 TEST(lattice, hopping_m)
 {
-    l1.fill(1.0);
+    fill_nearest_neighbors(l1, 1.0);
     std::cout << l1.hopping_m() << std::endl;
 }
 
 TEST(lattice, bzpoints)
 {
     hypercubic_lattice<2> t1(L);
-    t1.fill(-1.0,-0.5);
+    fill_triangular(t1, -1.0, -0.5);
     std::cout << l1.hopping_m() << std::endl;
 
     for (size_t i=0; i<t1.msize(); i++) {

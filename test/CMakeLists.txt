@@ -3,14 +3,14 @@ include_directories(../solver .. ${TRIQS_INCLUDE_ALL})
 set (tests_fk
 lattice_test
 honeycomb_test
-chain_test
+#chain_test
 config_test
 #fast_update_test
 binning_test
 jackknife_test
 ipr_test
 stiffness_test
-polarized_test
+#polarized_test
 #mc_test01
 #saveload_test
 )
