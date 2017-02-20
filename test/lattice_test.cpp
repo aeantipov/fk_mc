@@ -63,15 +63,16 @@ TEST(lattice, fft)
 
 TEST(lattice, fft2)
 { 
-    Eigen::ArrayXi a1(l1.msize());
+    Eigen::ArrayXd a1(l1.msize());
     a1.setZero();
     for (int i=0; i<l1.msize(); i++) {
         auto pos = l1.index_to_pos(i);
         int s = -((pos[0] + pos[1])%2 * 2 - 1);
         a1[i] = s;
         };
-    std::cout << a1.transpose() << " == " << std::endl << l1.ft_pi_array_.transpose() << std::endl;
-    ASSERT_EQ(l1.ft_pi_array_.isApprox(a1),true);
+    Eigen::ArrayXd pi_array = l1.phase_array(M_PI).real();
+    std::cout << a1.transpose() << " == " << std::endl << pi_array.transpose() << std::endl;
+    ASSERT_EQ(pi_array.isApprox(a1),true);
 };
 
 
