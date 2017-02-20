@@ -12,10 +12,7 @@
 
 using namespace fk;
 
-#ifdef LATTICE_triangular
-    #include "lattice/triangular.hpp"
-    typedef triangular_lattice lattice_t;
-#elif LATTICE_cubic1d
+#ifdef LATTICE_cubic1d
     #include "lattice/hypercubic.hpp"
     typedef hypercubic_lattice<1> lattice_t;
 #elif LATTICE_cubic2d
@@ -24,12 +21,6 @@ using namespace fk;
 #elif LATTICE_cubic3d
     #include "lattice/hypercubic.hpp"
     typedef hypercubic_lattice<3> lattice_t;
-#elif LATTICE_chain
-    #include "lattice/chain.hpp"
-    typedef chain_lattice lattice_t;
-#elif LATTICE_honeycomb
-    #include "lattice/honeycomb.hpp"
-    typedef honeycomb_lattice lattice_t;
 #endif
 
 
