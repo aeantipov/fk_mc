@@ -90,5 +90,8 @@ M hypercubic_lattice<D>::FFT(M in, int direction) const
 template <size_t D>
 hypercubic_lattice<D>& fill_nearest_neighbors(hypercubic_lattice<D> &l, double t);
 
+hypercubic_lattice<2>& fill_triangular(hypercubic_lattice<2> &l, double t, double tp);
+hypercubic_lattice<2>& fill_honeycomb(hypercubic_lattice<2> &l, double t);
+
 }; // end of namespace FK
 

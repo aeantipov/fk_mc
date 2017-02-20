@@ -2,23 +2,7 @@
 
 namespace fk { 
 
-template <size_t D>
-hypercubic_lattice<D>& fill_nearest_neighbors(hypercubic_lattice<D> &l, double t)
-{
-    for (size_t i=0; i< l.volume(); ++i) {
-        for (int o=0; o< l.norbs(); ++o) {
-            auto current_pos = l.index_to_pos(i);
-            for (size_t n=0; n<D; ++n) {
-                auto pos_l(current_pos), pos_r(current_pos);
-                pos_l[n]=(current_pos[n]>0?current_pos[n]-1:l.dims()[n]-1);
-                pos_r[n]=(current_pos[n]<l.dims()[n]-1?current_pos[n]+1:0);
-                l.add_hopping(i, l.pos_to_index(pos_l), -1.0*t);
-                l.add_hopping(i, l.pos_to_index(pos_r), -1.0*t);
-            };
-        }; 
-    };
-    return l;
-}
+
 
 template <size_t D>
 hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
@@ -117,8 +101,96 @@ template struct hypercubic_lattice<2>;
 template struct hypercubic_lattice<3>;
 //template struct hypercubic_lattice<4>;
 
+
+template <size_t D>
+hypercubic_lattice<D>& fill_nearest_neighbors(hypercubic_lattice<D> &l, double t)
+{
+    for (size_t i=0; i< l.volume(); ++i) {
+        for (int o=0; o< l.norbs(); ++o) {
+            auto current_pos = l.index_to_pos(i);
+            for (size_t n=0; n<D; ++n) {
+                auto pos_l(current_pos), pos_r(current_pos);
+                pos_l[n]=(current_pos[n]>0?current_pos[n]-1:l.dims()[n]-1);
+                pos_r[n]=(current_pos[n]<l.dims()[n]-1?current_pos[n]+1:0);
+                l.add_hopping(i, l.pos_to_index(pos_l), -1.0*t);
+                l.add_hopping(i, l.pos_to_index(pos_r), -1.0*t);
+            };
+        };
+    };
+    return l;
+}
+
 template hypercubic_lattice<1>& fill_nearest_neighbors (hypercubic_lattice<1> &, double);
 template hypercubic_lattice<2>& fill_nearest_neighbors (hypercubic_lattice<2> &, double);
 template hypercubic_lattice<3>& fill_nearest_neighbors (hypercubic_lattice<3> &, double);
+
+hypercubic_lattice<2>& fill_triangular(hypercubic_lattice<2> &l, double t, double tp)
+{
+    fill_nearest_neighbors(l, t);
+    for (size_t i=0; i<l.volume(); ++i) {
+        for (int o=0; o< l.norbs(); ++o) {
+            auto current_pos = l.index_to_pos(i);
+            auto pos_l(current_pos), pos_r(current_pos);
+            for (size_t n=0; n<2; ++n) {
+                pos_l[n]=(current_pos[n]>0?current_pos[n]-1:l.dims()[n]-1);
+                pos_r[n]=(current_pos[n]<l.dims()[n]-1?current_pos[n]+1:0);
+                };
+
+            l.add_hopping(i, l.pos_to_index(pos_l), -1.0*tp);
+            l.add_hopping(i, l.pos_to_index(pos_r), -1.0*tp);
+            };
+        }
+
+    return l;
+}
+
+
+
+
+hypercubic_lattice<2>& fill_honeycomb(hypercubic_lattice<2> &l, double t)
+{
+    /** The rule for filling the lattice is the following:
+     y ^
+       | -B-A-B-A-
+       | -|---|---
+       | -A-B-A-B-
+       | ---|---|-
+       | -B-A-B-A-
+       | -|---|---
+       | -A-B-A-B-
+       |___________> x
+        A always connects to B, and connection always
+        go up from A sites and down from B
+        x will be the second axis, y - the first
+        */
+
+        constexpr static int X = 1;
+        constexpr static int Y = 0;
+        auto dims = l.dims();
+
+        if (l.dims()[X] != l.dims()[Y]) throw std::logic_error("X dim != Y dim");
+        if (l.dims()[X] %2 != 0 || l.dims()[Y] %2 != 0) throw std::logic_error("Need even size");
+
+        bool subA = true;
+        for (size_t i=0; i<l.volume(); ++i) {
+            auto current_pos = l.index_to_pos(i);
+            auto pos_l(current_pos), pos_r(current_pos),pos_u(current_pos),pos_d(current_pos);
+
+            pos_l[X]=(current_pos[X]>0?current_pos[X]-1:dims[X]-1);
+            pos_r[X]=(current_pos[X]<dims[X]-1?current_pos[X]+1:0);
+            pos_d[Y]=(current_pos[Y]>0?current_pos[Y]-1:dims[Y]-1);
+            pos_u[Y]=(current_pos[Y]<dims[Y]-1?current_pos[Y]+1:0);
+
+            l.add_hopping(i,l.pos_to_index(pos_l), -1.0*t);
+            l.add_hopping(i,l.pos_to_index(pos_r), -1.0*t);
+            if (subA)
+                l.add_hopping(i,l.pos_to_index(pos_u), -1.0*t);
+            else
+                l.add_hopping(i,l.pos_to_index(pos_d), -1.0*t);
+            subA = !subA;
+        };
+   return l;
+}
+
 
 } // end of namespace fk
