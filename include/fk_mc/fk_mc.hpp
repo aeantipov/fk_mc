@@ -37,7 +37,7 @@ template <typename LatticeType>
 class fk_mc : public alps::mc_metropolis //triqs::mc_tools::mc_generic<double> 
 {
     typedef alps::mc_metropolis base; //triqs::mc_tools::mc_generic<double>
-    static_assert(!std::is_same<LatticeType,lattice_base>::value,"Can't construct mc for an unspecified lattice");
+    static_assert(!std::is_same<LatticeType,abstract_lattice>::value,"Can't construct mc for an unspecified lattice");
     boost::mpi::communicator comm;
 public:
     typedef configuration_t config_t;

@@ -22,7 +22,7 @@ hypercubic_lattice<D>& fill_nearest_neighbors(hypercubic_lattice<D> &l, double t
 
 template <size_t D>
 hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
-    lattice_base(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size))),
+    abstract_lattice(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size))),
     ft_pi_array_(msize())
 {
     hopping_m_.reserve(Eigen::ArrayXi::Constant(msize(),D*2));

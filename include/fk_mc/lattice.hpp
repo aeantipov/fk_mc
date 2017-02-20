@@ -9,7 +9,7 @@ namespace fk {
 /** A class to represent a lattice of a finite volume. 
  *  It defines and provides the tight-binding "hopping" matrix in real space.
  */
-struct lattice_base {
+struct abstract_lattice {
     typedef Eigen::Matrix<melem_type, Eigen::Dynamic, Eigen::Dynamic> dense_m;
     typedef Eigen::SparseMatrix<melem_type> sparse_m;
 
@@ -22,17 +22,17 @@ struct lattice_base {
     /// get the hopping matrix
     const sparse_m& hopping_m() const { return hopping_m_; }
     /// construct from hopping matrix and the number of orbitals
-    lattice_base(sparse_m in, size_t norbitals); 
+    abstract_lattice(sparse_m in, size_t norbitals);
     /// copy constructor 
-    lattice_base(lattice_base const& rhs) : hopping_m_(rhs.hopping_m_), norbs_(rhs.norbs_){}
+    abstract_lattice(abstract_lattice const& rhs) : hopping_m_(rhs.hopping_m_), norbs_(rhs.norbs_){}
     /// disable moving
-    lattice_base(lattice_base && rhs) = delete;
+    abstract_lattice(abstract_lattice && rhs) = delete;
     /// The nearest neighbor indices to the given index.
     virtual std::vector<size_t> neighbor_index(size_t index) const = 0;
 
     virtual size_t ndim() const = 0;
 
-    lattice_base& add_hopping(size_t l, size_t r, melem_type v, bool symmetrize = false);
+    abstract_lattice& add_hopping(size_t l, size_t r, melem_type v, bool symmetrize = false);
 
 protected:
     /// Hopping matrix
@@ -41,7 +41,7 @@ protected:
     size_t norbs_; 
 };
 
-inline lattice_base::lattice_base(sparse_m in, size_t norbitals = 1):
+inline abstract_lattice::abstract_lattice(sparse_m in, size_t norbitals = 1):
    hopping_m_(in),
    norbs_(norbitals) 
 {

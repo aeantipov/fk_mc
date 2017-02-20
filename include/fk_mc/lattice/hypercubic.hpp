@@ -13,9 +13,9 @@ namespace fk {
 /** A class that represents a lattice and generates the hopping matrix 
  * of a hypercubic lattice in different dimensions. */ 
 template <size_t D>
-class hypercubic_lattice : public lattice_base
+class hypercubic_lattice : public abstract_lattice
 {
-    using lattice_base::hopping_m_;
+    using abstract_lattice::hopping_m_;
 public:
     static constexpr size_t Ndim = D;
 
@@ -58,7 +58,7 @@ public:
     //real_array_view_t flatten(triqs::arrays::array_view<double,D> in);
 
     hypercubic_lattice(size_t lattice_size);
-    hypercubic_lattice(hypercubic_lattice const& rhs):lattice_base(rhs), dims_(rhs.dims_), ft_pi_array_(rhs.ft_pi_array_){} 
+    hypercubic_lattice(hypercubic_lattice const& rhs):abstract_lattice(rhs), dims_(rhs.dims_), ft_pi_array_(rhs.ft_pi_array_){}
         
     std::array<int, D> const& dims() const { return dims_; }
 

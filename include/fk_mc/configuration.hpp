@@ -20,7 +20,7 @@ struct config_params {
 
 struct ed_cache { 
     enum status_eval {empty, spectrum, full};
-    typedef typename lattice_base::sparse_m sparse_m;
+    typedef typename abstract_lattice::sparse_m sparse_m;
     typedef Eigen::ArrayXd real_array_t;
     typedef Eigen::MatrixXd dense_m;
     
@@ -34,7 +34,7 @@ struct ed_cache {
 };
 
 struct chebyshev_cache { 
-    typedef typename lattice_base::sparse_m sparse_m;
+    typedef typename abstract_lattice::sparse_m sparse_m;
     enum status_eval {empty, logz};
 
     status_eval status;
@@ -55,7 +55,7 @@ struct configuration_t {
     typedef typename ed_cache::real_array_t real_array_t;
     typedef Eigen::ArrayXi int_array_t;
 
-    configuration_t(const lattice_base &lattice, double beta, double U, double mu_c, double mu_f, std::vector<double> W = {});
+    configuration_t(const abstract_lattice &lattice, double beta, double U, double mu_c, double mu_f, std::vector<double> W = {});
 
     configuration_t(const configuration_t& rhs) = default ;
     configuration_t& operator=(const configuration_t& rhs);
@@ -76,7 +76,7 @@ struct configuration_t {
     const ed_cache& ed_data() const {return ed_data_;}
     const chebyshev_cache& cheb_data() const {return cheb_data_;}
 ///
-    const lattice_base& lattice_;
+    const abstract_lattice& lattice_;
     const config_params params_;
     int_array_t f_config_;
     sparse_m hamilt_;

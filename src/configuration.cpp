@@ -11,7 +11,7 @@ bool config_params::operator== ( const config_params& rhs) const
 }
 
 configuration_t::configuration_t(
-    const lattice_base &lattice, double beta, double U, double mu_c, double mu_f, std::vector<double> W):
+    const abstract_lattice &lattice, double beta, double U, double mu_c, double mu_f, std::vector<double> W):
     lattice_(lattice),
     f_config_(lattice_.msize()),
     params_(config_params({beta, U, mu_c, mu_f, W})),
