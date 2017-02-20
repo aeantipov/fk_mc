@@ -16,11 +16,12 @@ template <size_t D>
 class hypercubic_lattice : public abstract_lattice
 {
     using abstract_lattice::hopping_m_;
+    typedef std::array<int, D> pos_t;
 public:
     static constexpr size_t Ndim = D;
 
-    std::array<int, D> index_to_pos(size_t index) const;
-    size_t pos_to_index(std::array<int, D> pos) const;
+    pos_t index_to_pos(size_t index) const;
+    size_t pos_to_index(pos_t pos) const;
     /// The nearest neighbor positions to the given position.
     std::array<std::array<int, D>, 2*D> neighbor_pos(std::array<int, D> pos) const;
     /// The nearest neighbor indices to the given index.
