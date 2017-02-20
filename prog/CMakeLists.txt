@@ -18,6 +18,12 @@ foreach (lattice ${lattices})
     add_executable(${prog} ${prog_src})
     set_target_properties(${prog} PROPERTIES COMPILE_DEFINITIONS "LATTICE_${lattice}") 
     install ( TARGETS ${prog} DESTINATION bin )
+
+    set (prog_src data_save.hpp data_save.hxx data_load.hpp fk_mc_kwant.cpp)
+    set (prog fk_kwant_${lattice})
+    add_executable(${prog} ${prog_src})
+    set_target_properties(${prog} PROPERTIES COMPILE_DEFINITIONS "LATTICE_${lattice}") 
+    install ( TARGETS ${prog} DESTINATION bin )
 endforeach(lattice)
 
 
