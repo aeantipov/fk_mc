@@ -24,9 +24,6 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 set (fk_mc_src
     mc_metropolis
     lattice/hypercubic
-    lattice/triangular
-    lattice/chain
-    lattice/honeycomb
     configuration
     moves
     moves_chebyshev
@@ -63,7 +60,7 @@ configure_file(${CMAKE_SOURCE_DIR}/include/fk_mc/definitions.hpp.in ${CMAKE_BINA
 # build executable
 option(Execs "Enable executables" ON)
 if (Execs)
-    list(APPEND all_lattices cubic1d cubic2d triangular cubic3d honeycomb)
+    list(APPEND all_lattices cubic1d cubic2d cubic3d)
     list(LENGTH LATTICES lattice_len)
     if (${lattice_len} EQUAL 0) 
         set(LATTICES ${all_lattices})

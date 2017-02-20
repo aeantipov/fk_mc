@@ -1,18 +1,12 @@
 #include "fk_mc.hxx"
 
 #include "lattice/hypercubic.hpp"
-#include "lattice/triangular.hpp"
-#include "lattice/chain.hpp"
-#include "lattice/honeycomb.hpp"
 
 namespace fk {
 
-template class fk_mc<triangular_lattice>; 
 template class fk_mc<hypercubic_lattice<1>>; 
 template class fk_mc<hypercubic_lattice<2>>; 
 template class fk_mc<hypercubic_lattice<3>>; 
-template class fk_mc<chain_lattice>; 
-template class fk_mc<honeycomb_lattice>; 
 
 void observables_t::reserve(int n) 
 { 
