@@ -21,7 +21,7 @@ polarized_lattice<2> l1(L);
 TEST(lattice, pos_to_index)
 {
 
-    for (int x=0; x<l1.get_msize(); x++) {
+    for (int x=0; x<l1.msize(); x++) {
         EXPECT_EQ(x, l1.pos_to_index(l1.index_to_pos(x)));
         std::cout << x << " -> " << l1.index_to_pos(x) << "->" << l1.pos_to_index(l1.index_to_pos(x)) << std::endl;
     };
@@ -38,7 +38,7 @@ TEST(lattice, spectrum)
  //   l1.fill(1.0, 10.0);
     configuration_t config(l1, beta, U, mu, mu+e_f);
     // checkerboard
-    Eigen::ArrayXi my_config(l1.get_msize()); my_config.setZero();
+    Eigen::ArrayXi my_config(l1.msize()); my_config.setZero();
     for (int x=0; x<L; x+=1)
         for (int y=0; y<L; y+=2) {
             my_config(l1.pos_to_index({{x,y+x%2}}))=1;

@@ -16,7 +16,7 @@ struct measure_focc {
 
     measure_focc(const configuration_t& in, std::vector<std::vector<double>>& focc): 
         config(in), focc_(focc)
-        { focc_.resize(config.lattice_.get_msize()); };
+        { focc_.resize(config.lattice_.volume()); };
     int _Z = 0;
  
     void accumulate(double sign);

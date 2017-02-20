@@ -14,17 +14,17 @@ struct lattice_base {
     typedef Eigen::SparseMatrix<melem_type> sparse_m;
 
     /// get hopping matrix dimension
-    size_t get_msize() const {return hopping_m_.rows();}; 
+    size_t msize() const {return hopping_m_.rows();};
     /// get the total number of orbitals
-    size_t get_norbs() const { return norbs_; }
+    size_t norbs() const { return norbs_; }
     /// get the volume of the lattice
-    size_t get_volume() const { return get_msize() / get_norbs(); } 
+    size_t volume() const { return size_t(msize() / norbs()); }
     /// get the hopping matrix
     const sparse_m& hopping_m() const { return hopping_m_; }
     /// construct from hopping matrix and the number of orbitals
     lattice_base(sparse_m in, size_t norbitals); 
     /// copy constructor 
-    lattice_base(lattice_base const& rhs) : hopping_m_(rhs.hopping_m_){}
+    lattice_base(lattice_base const& rhs) : hopping_m_(rhs.hopping_m_), norbs_(rhs.norbs_){}
     /// disable moving
     lattice_base(lattice_base && rhs) = delete;
     /// The nearest neighbor indices to the given index.
@@ -45,7 +45,7 @@ inline lattice_base::lattice_base(sparse_m in, size_t norbitals = 1):
    hopping_m_(in),
    norbs_(norbitals) 
 {
-    if (hopping_m_.rows() != hopping_m_.cols() || hopping_m_.rows() == 0) FKMC_ERROR << "Failed to initalize lattice. ";
+    if (hopping_m_.rows() != hopping_m_.cols() || hopping_m_.rows() == 0) FKMC_ERROR << "Failed to initialize lattice. ";
 }
 
 }; // end of namespace FK

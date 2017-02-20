@@ -127,7 +127,7 @@ try{
 
     lattice_t lattice(p["L"].as<size_t>());
     fill_nearest_neighbors(lattice, p["t"]);
-    p["Nf_start"] = int(lattice.get_volume()/2);
+    p["Nf_start"] = int(lattice.volume()/2);
 
     if (!comm.rank()) std::cout << "All parameters: " << p << std::endl;
     

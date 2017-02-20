@@ -85,7 +85,7 @@ public:
     {
         //p_.update(save_defaults());
         //p_["output_file"] = output_file; 
-        volume_ = mc.lattice().get_msize(); 
+        volume_ = mc.lattice().msize();
         nmeasures_ = observables_.nfpi.size();
         max_bin_ = std::min(15,std::max(int(std::log(double(nmeasures_)/16)/std::log(2.)-1),1));
     }

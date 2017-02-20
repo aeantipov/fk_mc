@@ -19,8 +19,8 @@ struct measure_polarization {
 
     measure_polarization(configuration_t& in, const Lattice& lattice, int dir = 0): 
         config_(in), lattice_(lattice){
-            phase_v.resize(lattice.get_msize());
-            for (int j=0; j<lattice.get_msize(); j++) { 
+            phase_v.resize(lattice.msize());
+            for (int j=0; j<lattice.msize(); j++) {
                 phase_v[j] = exp(I*double(lattice_.index_to_pos(j)[dir])*2.*M_PI / double(lattice_.dims[dir]));
                 }
         }

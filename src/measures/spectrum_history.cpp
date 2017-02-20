@@ -7,7 +7,7 @@ namespace fk {
 measure_spectrum_history::measure_spectrum_history(configuration_t& in, std::vector<std::vector<double>>& spectrum_history):
     config(in), _spectrum_history(spectrum_history)
 { 
-    _spectrum_history.resize(config.lattice_.get_msize());
+    _spectrum_history.resize(config.lattice_.msize());
 };
 
 void measure_spectrum_history::accumulate(double sign) 

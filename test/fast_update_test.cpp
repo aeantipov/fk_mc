@@ -50,9 +50,9 @@ TEST(Chebyshev,diff)
     config.calc_hamiltonian();
     config.calc_ed();
 
-    std::cout << "Number of states = " << lattice.get_msize() << std::endl;
-    std::cout << "log(nstates) = " << int(std::log(lattice.get_msize())) << std::endl;
-    size_t cheb_size = int(std::log(lattice.get_msize()))*2;
+    std::cout << "Number of states = " << lattice.msize() << std::endl;
+    std::cout << "log(nstates) = " << int(std::log(lattice.msize())) << std::endl;
+    size_t cheb_size = int(std::log(lattice.msize()))*2;
     cheb_size+=cheb_size%2;
     size_t ngrid_points = cheb_size; //std::max(size_t(200), cheb_size);
     chebyshev::chebyshev_eval ch(cheb_size, ngrid_points);
@@ -69,7 +69,7 @@ TEST(Chebyshev,diff)
     
     config.calc_ed();
     double s2 = 0.0;
-    for (int i=0; i<lattice.get_msize(); i++) { double e = config.ed_data().cached_spectrum[i]; s2 += std::log(1 + exp(-beta * e)); };
+    for (int i=0; i<lattice.msize(); i++) { double e = config.ed_data().cached_spectrum[i]; s2 += std::log(1 + exp(-beta * e)); };
 
     std::cout << "logZ chebyshev   : " << logZ << std::endl;
     std::cout << "logZ ed (direct) : " << s2 << std::endl;

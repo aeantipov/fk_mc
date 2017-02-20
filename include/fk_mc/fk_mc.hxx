@@ -53,7 +53,7 @@ void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<dou
 
     bool cheb_move = p["cheb_moves"];
     if (cheb_move) {
-        int cheb_size = int(std::log(lattice.get_msize()) * double(p["cheb_prefactor"]));
+        int cheb_size = int(std::log(lattice.msize()) * double(p["cheb_prefactor"]));
         cheb_size+=cheb_size%2;
         size_t ngrid_points = std::max(cheb_size*2,10);
         cheb_ptr.reset(new chebyshev::chebyshev_eval(cheb_size, ngrid_points));

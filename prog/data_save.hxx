@@ -503,7 +503,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
 
     std::vector<double> ipr_data(nmeasures_);
     for (size_t m=0; m<nmeasures_; ++m) for (int i=0; i<volume_; ++i) { 
-        ipr_data[m] = ipr_f(ipr_spec_tr[m], 0.0, p_["dos_offset"], this->lattice_.get_msize());
+        ipr_data[m] = ipr_f(ipr_spec_tr[m], 0.0, p_["dos_offset"], this->lattice_.msize());
         }
 
     auto ipr0_binning = binning::accumulate_binning(ipr_data.rbegin(), ipr_data.rend(), max_bin_);
@@ -513,7 +513,7 @@ void data_saver<MC>::save_ipr(std::vector<double> grid_real)
     for (size_t i=0; i<grid_real.size(); i++) {
         double z = grid_real[i];
         for (size_t m=0; m<nmeasures_; ++m) for (int i=0; i<volume_; ++i) { 
-            ipr_data[m] = ipr_f(ipr_spec_tr[m], z, p_["dos_offset"], this->lattice_.get_msize());
+            ipr_data[m] = ipr_f(ipr_spec_tr[m], z, p_["dos_offset"], this->lattice_.msize());
             }
         auto ipr_bin_data = binning::bin(ipr_data.rbegin(), ipr_data.rend(), ipr0_bin);
         ipr_ev[i][0] = z;
@@ -730,8 +730,8 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
         for (size_t i=0; i<grid_imag.size(); i++) { 
             std::complex<double> z = I*grid_imag[i]; 
             gf_im_v(i,0) = std::imag(z); 
-            gf_im_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, 0.0, lattice_.get_msize())(spectrum); 
-            gf_im_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, 0.0, lattice_.get_msize())(spectrum); 
+            gf_im_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, 0.0, lattice_.msize())(spectrum);
+            gf_im_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, 0.0, lattice_.msize())(spectrum);
             };
         h5_write(h5_stats_,"gw_imfreq",gf_im_v);
         if (save_plaintext) savetxt("gw_imfreq.dat",gf_im_v);
@@ -743,9 +743,9 @@ void data_saver<MC>::save_glocal(std::vector<double> grid_real)
             std::complex<double> z = grid_real[i]; 
             dos_v(i,0) = std::real(z); 
             gf_re_v(i,0) = std::real(z); 
-            gf_re_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
-            gf_re_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum); 
-            dos_v(i,1) = std::bind(dos0_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.get_msize())(spectrum);
+            gf_re_v(i,1) = std::bind(gf_re_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.msize())(spectrum);
+            gf_re_v(i,2) = std::bind(gf_im_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.msize())(spectrum);
+            dos_v(i,1) = std::bind(dos0_f, std::placeholders::_1, z, p_["dos_offset"], lattice_.msize())(spectrum);
             };
         h5_write(h5_stats_,"dos",dos_v);
         h5_write(h5_stats_,"gw_re",gf_re_v);

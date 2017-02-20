@@ -29,7 +29,7 @@ TEST(config, test1)
     config3 = config2;
     config3 = configuration_t(lattice, 1.0, U, mu, mu+e_f);
 
-    Eigen::ArrayXi my_config(lattice.get_msize()); my_config.setZero();
+    Eigen::ArrayXi my_config(lattice.msize()); my_config.setZero();
     for (int x=0; x<L; x+=1)
         for (int y=0; y<L; y+=2) {
             my_config(lattice.pos_to_index({{x,y+x%2}}))=1;
@@ -56,7 +56,7 @@ TEST(config, ff_energy)
     lattice.fill(-1.0);
     configuration_t config(lattice, 1.0, U, mu, mu+e_f, W);
 
-    Eigen::ArrayXi my_config(lattice.get_msize()); my_config.setZero();
+    Eigen::ArrayXi my_config(lattice.msize()); my_config.setZero();
     for (int x=0; x<L; x+=1) {
             my_config(x) = x % 2;
         }

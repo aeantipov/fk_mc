@@ -22,7 +22,7 @@ void test_stiffness(double U, double beta, std::vector<int> f_config, double com
     lattice_t lattice(L);
     lattice.fill(t);
     configuration_t config(lattice, beta, U, mu, mu+e_f);
-    Eigen::ArrayXi my_config(lattice.get_msize()); 
+    Eigen::ArrayXi my_config(lattice.msize());
     std::copy(f_config.begin(), f_config.end(), &my_config[0]);
 
     config.f_config_ = my_config;

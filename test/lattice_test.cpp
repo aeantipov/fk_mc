@@ -13,7 +13,7 @@ hypercubic_lattice<2> l1(L);
 TEST(lattice, pos_to_index)
 {
 
-    for (int x=0; x<l1.get_msize(); x++) {
+    for (int x=0; x<l1.msize(); x++) {
         EXPECT_EQ(x, l1.pos_to_index(l1.index_to_pos(x)));
         std::cout << x << " -> " << l1.index_to_pos(x) << "->" << l1.pos_to_index(l1.index_to_pos(x)) << std::endl;
     };
@@ -31,7 +31,7 @@ TEST(lattice, bzpoints)
     t1.fill(-1.0,-0.5);
     std::cout << l1.hopping_m() << std::endl;
 
-    for (size_t i=0; i<t1.get_msize(); i++) {
+    for (size_t i=0; i<t1.msize(); i++) {
         auto b = t1.get_bzpoint(i);
         FKDEBUG(b.ind_ << "->" << b << "<-" << t1.get_bzpoint(b.val_).ind_);
         ASSERT_EQ( t1.get_bzpoint(b.val_).ind_ , i);
@@ -48,7 +48,7 @@ TEST(lattice, bzpoints)
 
 TEST(lattice, fft)
 {
-    Eigen::ArrayXcd a1(l1.get_msize()); 
+    Eigen::ArrayXcd a1(l1.msize());
     a1.setZero();
     a1[3]=1.;
     a1[8]=1.;
@@ -63,9 +63,9 @@ TEST(lattice, fft)
 
 TEST(lattice, fft2)
 { 
-    Eigen::ArrayXi a1(l1.get_msize()); 
+    Eigen::ArrayXi a1(l1.msize());
     a1.setZero();
-    for (int i=0; i<l1.get_msize(); i++) { 
+    for (int i=0; i<l1.msize(); i++) {
         auto pos = l1.index_to_pos(i);
         int s = -((pos[0] + pos[1])%2 * 2 - 1);
         a1[i] = s;

@@ -78,19 +78,19 @@ measure_stiffness<lattice_t>::measure_stiffness(configuration_t& in, const latti
     cond_history_(cond_history),
     wgrid_(wgrid),
     offset_(offset),
-    Tm_(lattice_.get_msize(), lattice_.get_msize()), //matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize())),
-    Jm_(lattice_.get_msize(), lattice_.get_msize()) //matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize()))
-    //Tm_(matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize())),
-    //Jm_(matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize()))
+    Tm_(lattice_.msize(), lattice_.msize()), //matrix_type::Zero(lattice_.msize(), lattice_.msize())),
+    Jm_(lattice_.msize(), lattice_.msize()) //matrix_type::Zero(lattice_.msize(), lattice_.msize()))
+    //Tm_(matrix_type::Zero(lattice_.msize(), lattice_.msize())),
+    //Jm_(matrix_type::Zero(lattice_.msize(), lattice_.msize()))
 {
     cond_history_.resize(wgrid.size());
     auto dims = lattice_.dims();
     size_t Lx = dims[0];
     auto pos0(dims),pos_left(dims), pos_right(dims);
     std::vector<Eigen::Triplet<double>> T_triplets, J_triplets;
-    T_triplets.reserve(2*lattice_.get_msize());
-    J_triplets.reserve(2*lattice_.get_msize());
-    for (size_t i=0; i<lattice_.get_msize();i++) { 
+    T_triplets.reserve(2*lattice_.msize());
+    J_triplets.reserve(2*lattice_.msize());
+    for (size_t i=0; i<lattice_.msize();i++) {
         pos0 = lattice_.index_to_pos(i);
         pos_left = pos0; pos_right = pos0;
         pos_left[0] = ((pos0[0] - 1)+Lx)%Lx; // pos_left = |r-x>
@@ -137,7 +137,7 @@ void measure_stiffness<lattice_t>::accumulate(double sign)
     const auto& fermi = config_.ed_data().cached_fermi;
     int m_size = evals.size(); 
     double Volume = m_size;
-    assert(m_size == lattice_.get_msize());
+    assert(m_size == lattice_.msize());
 
     assert(dims.size() >= 2); // no stiffness in 
 

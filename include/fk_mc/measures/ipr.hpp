@@ -33,7 +33,7 @@ measure_ipr<lattice_t>::measure_ipr(configuration_t& in, const lattice_t& lattic
     lattice_(lattice),
     ipr_vals_(ipr_vals)
 {
-    ipr_vals_.resize(config_.lattice_.get_msize());
+    ipr_vals_.resize(config_.lattice_.volume());
 }
 
 template <typename lattice_t>

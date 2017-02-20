@@ -6,7 +6,7 @@ namespace fk {
 measure_spectrum::measure_spectrum(configuration_t& in, std::vector<double>& average_spectrum):
 config(in), _average_spectrum(average_spectrum) 
 {
-    _average_spectrum.resize(config.lattice_.get_msize(), 0.0); 
+    _average_spectrum.resize(config.lattice_.msize(), 0.0);
 };
 
 

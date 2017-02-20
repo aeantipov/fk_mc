@@ -5,8 +5,8 @@ namespace fk {
 template <size_t D>
 hypercubic_lattice<D>& fill_nearest_neighbors(hypercubic_lattice<D> &l, double t)
 {
-    for (size_t i=0; i<l.get_volume(); ++i) {
-        for (int o=0; o<l.get_norbs(); ++o) { 
+    for (size_t i=0; i< l.volume(); ++i) {
+        for (int o=0; o< l.norbs(); ++o) {
             auto current_pos = l.index_to_pos(i);
             for (size_t n=0; n<D; ++n) {
                 auto pos_l(current_pos), pos_r(current_pos);
@@ -23,11 +23,11 @@ hypercubic_lattice<D>& fill_nearest_neighbors(hypercubic_lattice<D> &l, double t
 template <size_t D>
 hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
     lattice_base(sparse_m(boost::math::pow<D>(lattice_size), boost::math::pow<D>(lattice_size))),
-    ft_pi_array_(get_msize())
+    ft_pi_array_(msize())
 {
-    hopping_m_.reserve(Eigen::ArrayXi::Constant(get_msize(),D*2));
+    hopping_m_.reserve(Eigen::ArrayXi::Constant(msize(),D*2));
     dims_.fill(lattice_size);
-    for (size_t i=0; i<get_msize(); i++) { 
+    for (size_t i=0; i< msize(); i++) {
         auto pos = index_to_pos(i); 
         int v = 1;
         for (int p : pos) v*=((p%2)*2-1);

@@ -47,10 +47,10 @@ TEST(FastUpdateTest, weight) {
     lattice.fill(-1.0);
 
     std::cout << "Random seed : " << rnd_seed << std::endl;
-    std::cout << "Number of states = " << lattice.get_msize() << std::endl;
-    std::cout << "log(nstates) = " << int(std::log(lattice.get_msize())) << std::endl;
+    std::cout << "Number of states = " << lattice.msize() << std::endl;
+    std::cout << "log(nstates) = " << int(std::log(lattice.msize())) << std::endl;
 
-    size_t cheb_size = std::min( int(std::log(lattice.get_msize())*cheb_prefactor), lattice.get_msize()/4);
+    size_t cheb_size = std::min( int(std::log(lattice.msize())*cheb_prefactor), lattice.msize()/4);
     cheb_size+=cheb_size%2;
     std::cout << "Number of Chebyshev polynomials = " << cheb_size << std::endl;
     size_t ngrid_points = cheb_size*2;// std::max(size_t(200), cheb_size);

@@ -13,7 +13,7 @@ bool config_params::operator== ( const config_params& rhs) const
 configuration_t::configuration_t(
     const lattice_base &lattice, double beta, double U, double mu_c, double mu_f, std::vector<double> W):
     lattice_(lattice),
-    f_config_(lattice_.get_msize()),
+    f_config_(lattice_.msize()),
     params_(config_params({beta, U, mu_c, mu_f, W})),
     hamilt_(lattice_.hopping_m().rows(), lattice_.hopping_m().cols())
 { 
@@ -41,18 +41,18 @@ configuration_t& configuration_t::operator=(const configuration_t& rhs)
 
 size_t configuration_t::get_nf() const
 {
-    return std::accumulate(f_config_.data(), f_config_.data()+lattice_.get_msize(), 0);
+    return std::accumulate(f_config_.data(), f_config_.data()+ lattice_.msize(), 0);
 }
 
 void configuration_t::randomize_f(random_generator &rnd, size_t nf){
-    std::uniform_int_distribution<> distr(0, lattice_.get_msize() - 1); 
-    if (!nf) nf = distr(rnd);//(lattice_.get_msize());
+    std::uniform_int_distribution<> distr(0, lattice_.msize() - 1);
+    if (!nf) nf = distr(rnd);//(lattice_.msize());
     f_config_.setZero();
     for (size_t i=0; i<nf; ++i) {  
-        //size_t ind = rnd(lattice_.get_msize());
-        size_t ind = distr(rnd); //rnd(lattice_.get_msize());
-        //while (f_config_(ind)==1) ind = rnd(lattice_.get_msize());
-        while (f_config_(ind)==1) ind = distr(rnd);//(lattice_.get_msize());
+        //size_t ind = rnd(lattice_.msize());
+        size_t ind = distr(rnd); //rnd(lattice_.msize());
+        //while (f_config_(ind)==1) ind = rnd(lattice_.msize());
+        while (f_config_(ind)==1) ind = distr(rnd);//(lattice_.msize());
         f_config_(ind) = 1; 
     };
 }
@@ -63,7 +63,7 @@ double configuration_t::calc_ff_energy() const
     // 1D - easy to add f-f interactions
     if (this->lattice_.ndim() != 1) return 0;
     double e = 0;
-    size_t V = lattice_.get_msize();
+    size_t V = lattice_.msize();
     for (int i = 0; i < V; ++i) {  
         if (!f_config_(i)) continue;
         for (int l = 0; l < params_.W.size(); ++l) { 
@@ -81,9 +81,9 @@ double configuration_t::calc_ff_energy() const
 const typename configuration_t::sparse_m& configuration_t::calc_hamiltonian()
 {
     reset_cache();
-    hamilt_.reserve(lattice_.hopping_m().nonZeros() + lattice_.get_msize());
+    hamilt_.reserve(lattice_.hopping_m().nonZeros() + lattice_.msize());
     hamilt_ = lattice_.hopping_m();
-    for (size_t i=0; i<lattice_.get_msize(); ++i) hamilt_.coeffRef(i,i)+= -params_.mu_c + params_.U*f_config_(i); // unoptimized
+    for (size_t i=0; i< lattice_.msize(); ++i) hamilt_.coeffRef(i,i)+= -params_.mu_c + params_.U*f_config_(i); // unoptimized
     return hamilt_;
 }
 
@@ -91,7 +91,7 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
 {
     if (int(cheb_data_.status) >= int(chebyshev_cache::logz)) return;
     sparse_m x = hamilt_; 
-    size_t msize = lattice_.get_msize();
+    size_t msize = lattice_.msize();
     double e_min = Eigen::ArpackGeneralizedSelfAdjointEigenSolver<sparse_m>(hamilt_,1,"SA",Eigen::EigenvaluesOnly).eigenvalues()[0];
     double e_max = Eigen::ArpackGeneralizedSelfAdjointEigenSolver<sparse_m>(hamilt_,1,"LA",Eigen::EigenvaluesOnly).eigenvalues()[0];
     double a = (e_max - e_min)/2.;
