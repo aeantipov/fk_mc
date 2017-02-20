@@ -23,6 +23,7 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 set (fk_mc_src
     mc_metropolis
+    lattice
     lattice/hypercubic
     configuration
     moves

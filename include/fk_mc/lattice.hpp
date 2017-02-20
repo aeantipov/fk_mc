@@ -6,10 +6,6 @@
 
 namespace fk {
 
-template <typename T> T myconj(T in);
-template <> std::complex<double> myconj<std::complex<melem_type>> (std::complex<melem_type> in) { return std::conj(in); }
-template <> double myconj<double> (double in) { return in; }
-
 /** A class to represent a lattice of a finite volume. 
  *  It defines and provides the tight-binding "hopping" matrix in real space.
  */
@@ -36,13 +32,7 @@ struct lattice_base {
 
     virtual size_t ndim() const = 0;
 
-    lattice_base& add_hopping(size_t l, size_t r, melem_type v, bool symmetrize = false) { 
-        hopping_m_.insert(l,r) = v;
-        if (symmetrize) { 
-            hopping_m_.insert(r,l) = myconj(v); 
-            }
-        return (*this);
-        }
+    lattice_base& add_hopping(size_t l, size_t r, melem_type v, bool symmetrize = false);
 
 protected:
     /// Hopping matrix

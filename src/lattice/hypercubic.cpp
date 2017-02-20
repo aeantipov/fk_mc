@@ -5,20 +5,20 @@ namespace fk {
 template <size_t D>
 hypercubic_lattice<D>& fill_nearest_neighbors(hypercubic_lattice<D> &l, double t)
 {
-    for (size_t i=0; i<l.get_m_size(); ++i) {
-        auto current_pos = l.index_to_pos(i);
-        for (size_t n=0; n<D; ++n) {
-            auto pos_l(current_pos), pos_r(current_pos);
-            pos_l[n]=(current_pos[n]>0?current_pos[n]-1:l.dims()[n]-1);
-            pos_r[n]=(current_pos[n]<l.dims()[n]-1?current_pos[n]+1:0);
-            l.add_hopping(i, l.pos_to_index(pos_l), -1.0*t);
-            l.add_hopping(i, l.pos_to_index(pos_r), -1.0*t);
+    for (size_t i=0; i<l.get_volume(); ++i) {
+        for (int o=0; o<l.get_norbs(); ++o) { 
+            auto current_pos = l.index_to_pos(i);
+            for (size_t n=0; n<D; ++n) {
+                auto pos_l(current_pos), pos_r(current_pos);
+                pos_l[n]=(current_pos[n]>0?current_pos[n]-1:l.dims()[n]-1);
+                pos_r[n]=(current_pos[n]<l.dims()[n]-1?current_pos[n]+1:0);
+                l.add_hopping(i, l.pos_to_index(pos_l), -1.0*t);
+                l.add_hopping(i, l.pos_to_index(pos_r), -1.0*t);
+            };
         }; 
     };
+    return l;
 }
-
-
-
 
 template <size_t D>
 hypercubic_lattice<D>::hypercubic_lattice(size_t lattice_size):
@@ -116,5 +116,9 @@ template struct hypercubic_lattice<1>;
 template struct hypercubic_lattice<2>;
 template struct hypercubic_lattice<3>;
 //template struct hypercubic_lattice<4>;
+
+template hypercubic_lattice<1>& fill_nearest_neighbors (hypercubic_lattice<1> &, double);
+template hypercubic_lattice<2>& fill_nearest_neighbors (hypercubic_lattice<2> &, double);
+template hypercubic_lattice<3>& fill_nearest_neighbors (hypercubic_lattice<3> &, double);
 
 } // end of namespace fk

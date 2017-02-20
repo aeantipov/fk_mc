@@ -60,7 +60,6 @@ public:
     hypercubic_lattice(size_t lattice_size);
     hypercubic_lattice(hypercubic_lattice const& rhs):lattice_base(rhs), dims_(rhs.dims_), ft_pi_array_(rhs.ft_pi_array_){} 
         
-    void fill(double t);
     std::array<int, D> const& dims() const { return dims_; }
 
 protected:

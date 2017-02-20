@@ -126,26 +126,8 @@ try{
     if (dry_run) exit(0);
 
     lattice_t lattice(p["L"].as<size_t>());
-    #ifdef LATTICE_triangular
-        MINFO2("tp                           : " << p["tp"]);
-        lattice.fill(double(p["t"]),double(p["tp"]));
-        p["Nf_start"] = int(L*L/2);
-    #elif LATTICE_chain
-        lattice.fill(t,eta_arg.getValue(),delta_arg.getValue());
-        p["Nf_start"] = int(L/2);
-    #elif LATTICE_cubic1d 
-        lattice.fill(p["t"]);
-        p["Nf_start"] = int(L/2);
-    #elif LATTICE_cubic2d 
-        lattice.fill(p["t"]);
-        p["Nf_start"] = int(L*L/2);
-    #elif LATTICE_cubic3d 
-        lattice.fill(p["t"]);
-        p["Nf_start"] = int(L*L*L/2);
-    #elif LATTICE_honeycomb 
-        lattice.fill(p["t"]);
-        p["Nf_start"] = int(L*L/2);
-    #endif
+    fill_nearest_neighbors(lattice, p["t"]);
+    p["Nf_start"] = int(lattice.get_volume()/2);
 
     if (!comm.rank()) std::cout << "All parameters: " << p << std::endl;
     
