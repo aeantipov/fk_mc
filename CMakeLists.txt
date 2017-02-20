@@ -25,6 +25,7 @@ set (fk_mc_src
     mc_metropolis
     lattice
     lattice/hypercubic
+    lattice/graph
     configuration
     moves
     moves_chebyshev
