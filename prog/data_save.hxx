@@ -346,7 +346,7 @@ void data_saver<MC>::save_fcorrel()
     // assuming x <-> y symmetry
     const auto& fhistory = observables_.focc_history;
     if (fhistory.size()==0) return;
-    const auto dims = lattice_.dims;
+    const auto dims = lattice_.dims();
 
     int nf_bin = estimate_bin(binning::accumulate_binning(fhistory[0].rbegin(), fhistory[0].rend(), max_bin_));
 
@@ -386,9 +386,9 @@ void data_saver<MC>::save_fcorrel()
         double fcorrel0_mean = std::get<binning::_MEAN>(fcorrel0_stats[nf_bin]);
         double fcorrel0_error = std::get<binning::_SQERROR>(fcorrel0_stats[nf_bin]);
 
-        gftools::container<double, 2> fcorrel_out(lattice_.dims[0] / 2 + 1, 5);
-        gftools::grid_object<std::complex<double>, gftools::enum_grid> fcorrel_r(gftools::enum_grid(0, lattice_.dims[0]));
-        for (int l = 0; l <= lattice_.dims[0] / 2; l++) { 
+        gftools::container<double, 2> fcorrel_out(lattice_.dims()[0] / 2 + 1, 5);
+        gftools::grid_object<std::complex<double>, gftools::enum_grid> fcorrel_r(gftools::enum_grid(0, lattice_.dims()[0]));
+        for (int l = 0; l <= lattice_.dims()[0] / 2; l++) { 
             auto fcorrel_stats = jackknife::jack(std::function<double(std::vector<double>)>(std::bind(fcorrel_f, std::placeholders::_1, l)),fhistory,nf_bin);
             save_bin_data(fcorrel_stats,ar_,h5_stats_,"fcorrel_" + std::to_string(l),save_plaintext);
             double fcorrel_mean = std::get<binning::_MEAN>(fcorrel_stats);
@@ -400,7 +400,7 @@ void data_saver<MC>::save_fcorrel()
             fcorrel_out[l][4] = std::sqrt(std::pow(fcorrel_error / fcorrel0_mean, 2) + std::pow(fcorrel_mean / (fcorrel0_mean * fcorrel0_mean) * fcorrel0_error, 2));
 
             fcorrel_r[l] = fcorrel_mean;
-            if (l>0) fcorrel_r[lattice_.dims[0] - l] = fcorrel_mean;
+            if (l>0) fcorrel_r[lattice_.dims()[0] - l] = fcorrel_mean;
             }
 
         h5_write(h5_stats_,"fcorrel",fcorrel_out);
@@ -408,7 +408,7 @@ void data_saver<MC>::save_fcorrel()
         if (save_plaintext) fcorrel_r.savetxt("fcorrel_r.dat");
 
         auto fcorrel_q_data = run_fft(fcorrel_r.data(), FFTW_FORWARD);
-        gftools::kmesh qgrid(lattice_.dims[0]);
+        gftools::kmesh qgrid(lattice_.dims()[0]);
         gftools::grid_object<std::complex<double>, gftools::kmesh> fcorrel_q (std::make_tuple(qgrid), fcorrel_q_data);
 
         save_grid_object(ar_, h5_stats_ + "/fcorrel_q",fcorrel_q, false);
@@ -667,7 +667,7 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
         
         // now gwr_re, gwr_im contain Gw(r1,r2)
         // let's now convert it to Gw(r1 - r2)
-        auto dims = lattice_.dims;
+        auto dims = lattice_.dims();
         dense_m gwr_im2 = dense_m::Zero(dims[0], dims[1]);
         dense_m gwr_re2 = dense_m::Zero(dims[0], dims[1]);
         for (int i=0; i<gwr_im.rows(); ++i) { 

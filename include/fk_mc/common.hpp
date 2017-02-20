@@ -3,9 +3,6 @@
 
 #include "definitions.hpp"
 
-//#include <triqs/arrays.hpp>
-//#include <triqs/arrays/algorithms.hpp>
-//#include <triqs/parameters/parameters.hpp>
 #include <complex>
 
 #include <tuple>
@@ -17,12 +14,14 @@
 
 namespace fk {
 
+// typedefs
 typedef std::mt19937 random_generator;
+typedef alps::params parameters_t;
+typedef std::complex<double> complex_t;
 
-//namespace tqa = triqs::arrays;
-
-//using triqs::arrays::prod;
-//using triqs::arrays::sum;
+// global constants
+static const complex_t I (0.0,1.0); 
+static const double PI = atan(1)*4.;
 
 // FKDEBUG messages with custom verbosity.
 // Adapted from http://efesx.com/2010/08/31/overloading-macros/
@@ -47,13 +46,7 @@ typedef std::mt19937 random_generator;
 
 #define FKDEBUG(...) macro_dispatcher(FKDEBUG, __VA_ARGS__)(__VA_ARGS__)
 
-
-/*
-#define INFO(MSG)             std::cout << std::boolalpha << MSG << std::endl;
-#define INFO2(MSG)            std::cout << "    " << std::boolalpha << MSG << std::endl;
-#define INFO_NONEWLINE(MSG)   std::cout << MSG << std::flush;
-*/
-//inline std::ostream& err_and_throw(std::string x, std::ostream& y) { y << x; throw std::logic_error(x); } 
+/// Macro for errors and their catching
 struct err_and_throw { 
     std::ostream& str_;
     template <typename T>
@@ -65,12 +58,7 @@ struct err_and_throw {
     };
 #define FKMC_ERROR err_and_throw(std::cerr)
 
-//typedef triqs::utility::parameters parameters_t;
-typedef alps::params parameters_t;
-typedef std::complex<double> complex_t;
-static const complex_t I (0.0,1.0); 
-static const double PI = atan(1)*4.;
-
+/// Print array
 template <size_t D>
 inline std::ostream& operator<< (std::ostream& in, std::array<int, D> arr){ 
     in << "{";  std::copy(arr.begin(), arr.end()-1, std::ostream_iterator<int>(in, ",")); in << *(arr.end()-1) << "}";

@@ -3,4 +3,6 @@
 
 #cmakedefine EIGEN_USE_MKL_ALL 
 
+typedef double melem_type; 
+
 #endif

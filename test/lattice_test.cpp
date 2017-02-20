@@ -3,7 +3,6 @@
 #include "fk_mc.hpp"
 
 #include "lattice/hypercubic.hpp"
-#include "lattice/triangular.hpp"
 
 
 using namespace fk;
@@ -28,7 +27,7 @@ TEST(lattice, hopping_m)
 
 TEST(lattice, bzpoints)
 {
-    triangular_lattice t1(L);
+    hypercubic_lattice<2> t1(L);
     t1.fill(-1.0,-0.5);
     std::cout << l1.hopping_m() << std::endl;
 

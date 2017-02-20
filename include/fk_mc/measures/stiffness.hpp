@@ -84,7 +84,7 @@ measure_stiffness<lattice_t>::measure_stiffness(configuration_t& in, const latti
     //Jm_(matrix_type::Zero(lattice_.get_msize(), lattice_.get_msize()))
 {
     cond_history_.resize(wgrid.size());
-    auto dims = lattice_.dims;
+    auto dims = lattice_.dims();
     size_t Lx = dims[0];
     auto pos0(dims),pos_left(dims), pos_right(dims);
     std::vector<Eigen::Triplet<double>> T_triplets, J_triplets;
@@ -133,7 +133,7 @@ void measure_stiffness<lattice_t>::accumulate(double sign)
 
     const auto& evecs = config_.ed_data().cached_evecs;
     const auto& evals = config_.ed_data().cached_spectrum;
-    const auto& dims = lattice_.dims;
+    const auto& dims = lattice_.dims();
     const auto& fermi = config_.ed_data().cached_fermi;
     int m_size = evals.size(); 
     double Volume = m_size;
