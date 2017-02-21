@@ -7,14 +7,14 @@
 
 namespace fk {
 
-class lattice_graph : public abstract_lattice {
+class graph_lattice : public abstract_lattice {
 protected:
     using abstract_lattice::hopping_m_;
     using abstract_lattice::norbs_;
 public:
     typedef std::vector<size_t> pos_t;
     virtual size_t ndims() { return ndims_ ;}
-    lattice_graph(sparse_m hopping, std::vector<pos_t> sites, int norbs = 1);// : base(hopping, norbs), sites_(sit)
+    graph_lattice(sparse_m hopping, std::vector<pos_t> sites, int norbs = 1);// : base(hopping, norbs), sites_(sit)
 protected:
     int ndims_;
     std::vector<pos_t> sites_;

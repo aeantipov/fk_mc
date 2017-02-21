@@ -2,7 +2,7 @@
 
 namespace fk { 
 
-lattice_graph::lattice_graph(sparse_m hopping, std::vector<pos_t> sites, int norbs):
+graph_lattice::graph_lattice(sparse_m hopping, std::vector<pos_t> sites, int norbs):
     abstract_lattice(hopping, norbs),
     sites_(sites)
 {
