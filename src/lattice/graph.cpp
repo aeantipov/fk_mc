@@ -3,7 +3,7 @@
 namespace fk { 
 
 template <typename T>
-std::ostream& pprint(std::ostream& out, T x, std::string split_s = " ") { for (auto x1 : x) out << x1 << split_s; out << std::endl;}
+std::ostream& pprint(std::ostream& out, T x, std::string split_s = " ") { for (auto x1 : x) out << x1 << split_s; out << std::endl; return out;}
 
 graph_lattice::graph_lattice(std::vector<pos_t> sites, int norbs):
     abstract_lattice(norbs),
@@ -28,6 +28,25 @@ void graph_lattice::define_mappings_()
         assert(pos.size() == ndim());
     }
 }
+
+std::vector<size_t> graph_lattice::neighbor_index(size_t index) const
+{
+    std::vector<size_t> out;
+    for (int d = 0; d < ndim(); ++d) { 
+        std::vector<size_t> t = neighbor_index(index, d); 
+        std::copy(t.begin(), t.end(), out.end());  
+        }
+    return out;
+}
+
+std::vector<size_t> graph_lattice::neighbor_index(size_t index, int d) const
+{
+    std::vector<size_t> out;
+    auto pos = sites_[index];
+    // FIXME
+    return out;
+}
+
 
 
 graph_lattice read_lattice_hdf5(alps::hdf5::archive& ar, std::string section)

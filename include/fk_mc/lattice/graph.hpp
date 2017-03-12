@@ -17,7 +17,8 @@ public:
     graph_lattice(std::vector<pos_t> sites, int norbs = 1);
     graph_lattice(sparse_m hopping, std::vector<pos_t> sites, int norbs = 1);
     virtual size_t ndim() const { return (sites_.size()==0)?0:sites_[0].size();}
-    virtual std::vector<size_t> neighbor_index(size_t index) const {}
+    virtual std::vector<size_t> neighbor_index(size_t index) const;
+    std::vector<size_t> neighbor_index(size_t index, int dir) const;
 protected:
     void define_mappings_();
     std::vector<pos_t> sites_;
