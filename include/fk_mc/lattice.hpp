@@ -22,17 +22,21 @@ struct abstract_lattice {
     /// get the hopping matrix
     const sparse_m& hopping_m() const { return hopping_m_; }
     /// construct from hopping matrix and the number of orbitals
-    abstract_lattice(sparse_m in, size_t norbitals);
+    abstract_lattice(size_t norbitals = 1):norbs_(norbitals){};
+    /// construct from hopping matrix and the number of orbitals
+    abstract_lattice(sparse_m in, size_t norbitals = 1);
     /// copy constructor 
     abstract_lattice(abstract_lattice const& rhs) : hopping_m_(rhs.hopping_m_), norbs_(rhs.norbs_){}
     /// disable moving
     abstract_lattice(abstract_lattice && rhs) = delete;
     /// The nearest neighbor indices to the given index.
     virtual std::vector<size_t> neighbor_index(size_t index) const = 0;
-
+    /// Virtual call to get the dimensionality of the lattice
     virtual size_t ndim() const = 0;
-
+    /// Add one hopping
     abstract_lattice& add_hopping(size_t l, size_t r, melem_type v, bool symmetrize = false);
+    /// Set the whole matrix of hoppings
+    abstract_lattice& set_hopping_m(sparse_m in);
 
 protected:
     /// Hopping matrix
@@ -41,9 +45,9 @@ protected:
     size_t norbs_; 
 };
 
-inline abstract_lattice::abstract_lattice(sparse_m in, size_t norbitals = 1):
-   hopping_m_(in),
-   norbs_(norbitals) 
+inline abstract_lattice::abstract_lattice(sparse_m in, size_t norbitals):
+    norbs_(norbitals),
+    hopping_m_(in)
 {
     if (hopping_m_.rows() != hopping_m_.cols() || hopping_m_.rows() == 0) FKMC_ERROR << "Failed to initialize lattice. ";
 }

@@ -10,6 +10,7 @@ binning_test
 jackknife_test
 ipr_test
 stiffness_test
+graph_lattice_test
 #polarized_test
 #mc_test01
 #saveload_test
