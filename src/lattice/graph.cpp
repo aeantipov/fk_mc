@@ -63,16 +63,15 @@ graph_lattice read_lattice_hdf5(alps::hdf5::archive& ar, std::string section)
 
     std::vector<graph_lattice::pos_t> sites;
     ar[section + "/coordinates"] >> sites;
-    for (auto x : sites) pprint(std::cout, x); 
 
-    std::vector<std::vector<melem_type>> m_in_data;
+    std::vector<std::vector<std::complex<double>>> m_in_data;
     ar[section + "/hopping"] >> m_in_data;
     typename graph_lattice::sparse_m hopping_m(m_size, m_size);
     for (auto v : m_in_data) { 
         int p1 = std::real(v[0]); 
         int p2 = std::real(v[1]);
         melem_type m = v[2]; 
-
+        //std::cout << p1 << " " << p2 << " : " << m << std::endl;
         hopping_m.coeffRef(p1, p2) = m;
     }   
 

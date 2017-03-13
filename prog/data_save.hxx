@@ -679,8 +679,8 @@ void data_saver<MC>::save_gwr(std::vector<std::complex<double>> wgrid, double im
                 int p0 = (dims[0] + pos_j[0] - pos_i[0]) % dims[0];
                 int p1 = (dims[1] + pos_j[1] - pos_i[1]) % dims[1];
 
-                gwr_im2(p0,p1) += gwr_im(i, j) / gwr_im.cols();
-                gwr_re2(p0,p1) += gwr_re(i, j) / gwr_im.cols();
+                gwr_im2(p0,p1) += gwr_im(i, j) / double(gwr_im.cols());
+                gwr_re2(p0,p1) += gwr_re(i, j) / double(gwr_im.cols());
                 }
             }
 

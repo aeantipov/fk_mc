@@ -18,6 +18,7 @@ option(AutoSetCXX11 "Auto set c++11 flags" ON)
 if (AutoSetCXX11)
     set_cxx11()
 endif (AutoSetCXX11)
+option(FKMC_COMPLEX_MATRIX_ELEMENTS "Use complex matrix elements" OFF)
 # Print build type
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
@@ -28,14 +29,16 @@ set (fk_mc_src
     lattice/graph
     configuration
     moves
-    moves_chebyshev
     measures/energy
     measures/spectrum
     measures/spectrum_history
     measures/focc_history
-    measures/eigenfunctions
     fk_mc
 )
+if (NOT FKMC_COMPLEX_MATRIX_ELEMENTS)
+    set (fk_mc_src ${fk_mc_src} moves_chebyshev measures/eigenfunctions
+    )
+endif(FKMC_COMPLEX_MATRIX_ELEMENTS)
 
 add_definitions("-Wno-deprecated-register -Wno-mismatched-new-delete")
 

@@ -3,6 +3,13 @@
 
 #cmakedefine EIGEN_USE_MKL_ALL 
 
-typedef double melem_type; 
+#cmakedefine FKMC_COMPLEX_MATRIX_ELEMENTS
+#ifdef FKMC_COMPLEX_MATRIX_ELEMENTS
+#warning complex matrix elements
+#include<complex>
+typedef std::complex<double> melem_type; 
+#else
+typedef double melem_type;
+#endif
 
 #endif

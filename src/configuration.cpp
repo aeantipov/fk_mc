@@ -90,6 +90,7 @@ const typename configuration_t::sparse_m& configuration_t::calc_hamiltonian()
     return hamilt_;
 }
 
+#ifndef FKMC_COMPLEX_MATRIX_ELEMENTS
 void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
 {
     if (int(cheb_data_.status) >= int(chebyshev_cache::logz)) return;
@@ -202,6 +203,7 @@ void configuration_t::calc_chebyshev( const chebyshev::chebyshev_eval& cheb)
     cheb_data_.x.swap(x);
     cheb_data_.status = chebyshev_cache::logz;
 }
+#endif
 
 void configuration_t::calc_ed(bool calc_evecs)
 {

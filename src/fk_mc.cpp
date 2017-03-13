@@ -1,12 +1,14 @@
 #include "fk_mc.hxx"
 
 #include "lattice/hypercubic.hpp"
+#include "lattice/graph.hpp"
 
 namespace fk {
 
 template class fk_mc<hypercubic_lattice<1>>; 
 template class fk_mc<hypercubic_lattice<2>>; 
 template class fk_mc<hypercubic_lattice<3>>; 
+template class fk_mc<graph_lattice>; 
 
 void observables_t::reserve(int n) 
 { 

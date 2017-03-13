@@ -21,7 +21,7 @@ void measure_eigenfunctions::collect_results(boost::mpi::communicator const &c)
 {
     int sum_Z;
     boost::mpi::reduce(c, _Z, sum_Z, std::plus<int>(), 0);
-    std::vector<double> buffer;
+    std::vector<melem_type> buffer;
     std::vector<dense_m> buffer2;
     size_t rows = eigenfunctions_[0].rows();
     size_t cols = eigenfunctions_[0].cols();

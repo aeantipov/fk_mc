@@ -12,17 +12,8 @@
 
 using namespace fk;
 
-#ifdef LATTICE_cubic1d
-    #include "lattice/hypercubic.hpp"
-    typedef hypercubic_lattice<1> lattice_t;
-#elif LATTICE_cubic2d
-    #include "lattice/hypercubic.hpp"
-    typedef hypercubic_lattice<2> lattice_t;
-#elif LATTICE_cubic3d
-    #include "lattice/hypercubic.hpp"
-    typedef hypercubic_lattice<3> lattice_t;
-#endif
-
+#include <lattice/graph.hpp>
+typedef graph_lattice lattice_t;
 
 size_t _myrank;
 
@@ -125,8 +116,11 @@ try{
 
     if (dry_run) exit(0);
 
-    lattice_t lattice(p["L"].as<size_t>());
-    fill_nearest_neighbors(lattice, p["t"]);
+    //lattice_t lattice(p["L"].as<size_t>());
+
+    alps::hdf5::archive ar(p["h5lattice"].as<std::string>(), "r");
+    lattice_t lattice = read_lattice_hdf5(ar, "lattice");
+    ar.close();
     p["Nf_start"] = int(lattice.volume()/2);
 
     if (!comm.rank()) std::cout << "All parameters: " << p << std::endl;
@@ -169,7 +163,7 @@ try{
             << std::endl;
 
         start = steady_clock::now();
-        save_all_data(mc,p,wgrid_conductivity);
+        //save_all_data(mc,p,wgrid_conductivity);
         end = steady_clock::now();
         std::cout << "Saving lasted : " 
             << duration_cast<hours>(end-start).count() << "h " 
@@ -215,6 +209,8 @@ alps::params cmdline_params(int argc, char *argv[]) {
     p.define<int>("cond_npoints", 150, "number of points to sample conductivity");
     // eigenfunctions storage
     p.define<bool>("save_eigenfunctions", false, "Store eigenfunctions?");
+
+    p.define<std::string>("h5lattice", "kwant_lattice.h5", "H5 for lattice");
 
     p.define<bool>("exit", false, "dry_run");
     p.define<size_t>("max_time",size_t(14*24*3600), "Maximum running time in seconds");

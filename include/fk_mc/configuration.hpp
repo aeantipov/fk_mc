@@ -22,7 +22,7 @@ struct ed_cache {
     enum status_eval {empty, spectrum, full};
     typedef typename abstract_lattice::sparse_m sparse_m;
     typedef Eigen::ArrayXd real_array_t;
-    typedef Eigen::MatrixXd dense_m;
+    typedef Eigen::Matrix<melem_type, Eigen::Dynamic, Eigen::Dynamic> dense_m;
     
     status_eval status;
     real_array_t cached_spectrum;
@@ -69,7 +69,9 @@ struct configuration_t {
     void reset_cache(){ed_data_.status =  ed_cache::empty; cheb_data_.status = chebyshev_cache::empty;}
 
     void calc_ed(bool calc_evecs = false);
+    #ifndef FKMC_COMPLEX_MATRIX_ELEMENTS
     void calc_chebyshev(const chebyshev::chebyshev_eval& cheb);
+    #endif
     double calc_ff_energy() const;
 
     const config_params& params() const {return params_;}

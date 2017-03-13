@@ -10,7 +10,10 @@
 #include "measures/fsusc0pi.hpp"
 #include "measures/ipr.hpp"
 #include "measures/stiffness.hpp"
+
+#ifndef FKMC_COMPLEX_MATRIX_ELEMENTS
 #include "measures/eigenfunctions.hpp"
+#endif
 
 //#include <triqs/utility/callbacks.hpp>
 
@@ -49,9 +52,11 @@ void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<dou
     double beta = p["beta"];
     config.calc_hamiltonian();
 
-    std::unique_ptr<chebyshev::chebyshev_eval> cheb_ptr;
+    bool cheb_move = false;
 
-    bool cheb_move = p["cheb_moves"];
+    #ifndef FKMC_COMPLEX_MATRIX_ELEMENTS
+    std::unique_ptr<chebyshev::chebyshev_eval> cheb_ptr;
+    cheb_move = p["cheb_moves"];
     if (cheb_move) {
         int cheb_size = int(std::log(lattice.msize()) * double(p["cheb_prefactor"]));
         cheb_size+=cheb_size%2;
@@ -59,7 +64,6 @@ void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<dou
         cheb_ptr.reset(new chebyshev::chebyshev_eval(cheb_size, ngrid_points));
     }
         
-
     if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) { 
         if (!cheb_move) this->add_move(move_flip(beta, config, this->rng()), "flip", p["mc_flip"]); 
                    else this->add_move(chebyshev::move_flip(beta, config, *cheb_ptr, this->rng()), "flip", p["mc_flip"]); 
@@ -72,26 +76,40 @@ void fk_mc<L>::initialize(lattice_type l, bool randomize_config, std::vector<dou
         if (!cheb_move) this->add_move(move_randomize(beta, config, this->rng()),  "reshuffle", p["mc_reshuffle"]);
                    else this->add_move(chebyshev::move_randomize(beta, config, *cheb_ptr, this->rng()), "reshuffle", p["mc_reshuffle"]);
         };
+    #else
+    if (double(p["mc_flip"])>std::numeric_limits<double>::epsilon()) { 
+            this->add_move(move_flip(beta, config, this->rng()), "flip", p["mc_flip"]); 
+        };
+    if (double(p["mc_add_remove"])>std::numeric_limits<double>::epsilon()) { 
+            this->add_move(move_addremove(beta, config, this->rng()), "add_remove", p["mc_add_remove"]);
+        };
+    if (double(p["mc_reshuffle"])>std::numeric_limits<double>::epsilon()) { 
+            this->add_move(move_randomize(beta, config, this->rng()),  "reshuffle", p["mc_reshuffle"]);
+        };
+    #endif
 
     size_t max_bins = p["nsweeps"];
     observables.reserve(max_bins);
 
     bool calc_spectrum = !cheb_move; 
-    this->add_measure(measure_nf0pi<lattice_type>(config, lattice, observables.nf0, observables.nfpi), "nf0pi");
+    //this->add_measure(measure_nf0pi<lattice_type>(config, lattice, observables.nf0, observables.nfpi), "nf0pi");
     if (p["measure_history"]) { if (!comm.rank()) std::cout << "Saving history" << std::endl; };
     if (p["measure_history"] && p["measure_ipr"]) {
         if (!comm.rank()) std::cout << "Measuring ipr" << std::endl;
         this->add_measure(measure_ipr<lattice_type>(config, lattice, observables.ipr_history),"ipr");
         }
-    if (p["measure_stiffness"]) {
+/*    if (p["measure_stiffness"]) {
         if (!comm.rank()) std::cout << "Measuring stiffness" << std::endl;
         this->add_measure(measure_stiffness<lattice_type>(config, lattice, observables.stiffness, observables.cond_history, wgrid_conductivity, p["cond_offset"]),"stiffness");
         };
+*/
 
+    #ifndef FKMC_COMPLEX_MATRIX_ELEMENTS
     if (p["measure_eigenfunctions"]) {
         if (!comm.rank()) std::cout << "Measuring eigenfunctions" << std::endl;
         this->add_measure(measure_eigenfunctions(config,observables.eigenfunctions_history), "eigenfunctions");
         };
+    #endif
 
     calc_spectrum = calc_spectrum || p["measure_ipr"];
 
