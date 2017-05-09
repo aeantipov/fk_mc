@@ -163,7 +163,7 @@ try{
             << std::endl;
 
         start = steady_clock::now();
-        //save_all_data(mc,p,wgrid_conductivity);
+        save_all_data(mc,p,wgrid_conductivity);
         end = steady_clock::now();
         std::cout << "Saving lasted : " 
             << duration_cast<hours>(end-start).count() << "h " 

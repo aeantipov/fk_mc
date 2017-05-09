@@ -60,13 +60,16 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
     // save f-electron susc and binder cumulant
     if (observables_.nf0.size() && observables_.nfpi.size()) { this->save_fstats(); }
     // f-electron correlation functions
+    #ifndef FKMC_COMPLEX_MATRIX_ELEMENTS
     if (p_["measure_history"]) { this->save_fcorrel(); }
+    #endif
 
     size_t dos_npts = p_["dos_npts"];
     double dos_width = p_["dos_width"];
     std::vector<double> grid_real(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real[i] = -dos_width+2.*dos_width*i/(1.*dos_npts);
     std::vector<std::complex<double>> grid_real2(dos_npts); for (size_t i=0; i<dos_npts; i++) grid_real2[i] = grid_real[i];
 
+    #ifndef FKMC_COMPLEX_MATRIX_ELEMENTS
     // G(w,k)
     if (p_["measure_eigenfunctions"]) { 
         // Save gw at zero
@@ -74,6 +77,7 @@ void data_saver<MC>::save_all(std::vector<double> wgrid_cond)
         // Save dos and typical dos
         save_gwr(grid_real2, p_["dos_offset"], true); 
     } 
+    #endif
     // Save glocal
     this->save_glocal(grid_real);
     // Inverse participation ratio
@@ -132,16 +136,18 @@ void data_saver<MC>::save_measurements()
         h5_write(h5_mc_data_,"cond_history", t_cond_history);
         };
 
+    #ifndef FKMC_COMPLEX_MATRIX_ELEMENTS
     if (bool(p_["measure_eigenfunctions"]) && bool(p_["save_eigenfunctions"])) {
         std::cout << "Eigenfunctions" << std::endl;
         const auto& eig_hist = observables_.eigenfunctions_history;
-        gftools::container<double, 3> t_eig_history(long(eig_hist.size()), eig_hist[0].rows(), eig_hist[0].cols() );
+        gftools::container<melem_type, 3> t_eig_history(long(eig_hist.size()), eig_hist[0].rows(), eig_hist[0].cols() );
         for (int i=0; i<eig_hist.size(); i++)
             for (int j=0; j< eig_hist[0].rows(); j++) 
                 for (int k=0; k< eig_hist[0].cols(); k++) 
                     t_eig_history[i][j][k] =  eig_hist[i](j,k);
         h5_write(h5_mc_data_,"eig_history", t_eig_history);
         }
+    #endif
 }
 
 //
