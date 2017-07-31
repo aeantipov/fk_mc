@@ -45,10 +45,10 @@ void measure_ipr<lattice_t>::accumulate(double sign)
     const auto& evals = config_.ed_data_.cached_spectrum;
 
     Eigen::VectorXd ipr(evals.size());
-    auto rphi2 = evecs.colwise().squaredNorm();
+    Eigen::VectorXd rphi2 = evecs.colwise().squaredNorm();
     for (size_t i=0; i<evals.size(); i++) {
         const auto &t = evecs.col(i);
-        auto rphi4_val = t.template lpNorm<4>();
+        double rphi4_val = t.template lpNorm<4>();
         ipr(i) = rphi4_val/rphi2(i);
     }
     for (size_t i=0; i<evals.size(); ++i) { ipr_vals_[i].push_back(ipr(i)); };
