@@ -40,27 +40,23 @@ if (NOT FKMC_COMPLEX_MATRIX_ELEMENTS)
     )
 endif(FKMC_COMPLEX_MATRIX_ELEMENTS)
 
-add_definitions("-Wno-deprecated-register -Wno-mismatched-new-delete")
+#add_definitions("-Wno-deprecated-register -Wno-mismatched-new-delete")
 
 include_directories(${CMAKE_SOURCE_DIR}/include/fk_mc ${CMAKE_BINARY_DIR}/include/fk_mc)
 add_this_package(${fk_mc_src})
 
 # Dependencies
-find_package (Arpack)
-message(STATUS "Arpack libraries: " ${ARPACK_LIBRARIES} )
-link_libraries(${ARPACK_LIBRARIES})
-
 add_alpscore()
 add_eigen3()
 add_gftools()
 add_boost(mpi)
 add_fftw3()
+find_package (Arpack)
+message(STATUS "Arpack libraries: " ${ARPACK_LIBRARIES} )
+target_link_libraries(${PROJECT_NAME} PUBLIC ${ARPACK_LIBRARIES})
 
 #configure compile definitions file
 configure_file(${CMAKE_SOURCE_DIR}/include/fk_mc/definitions.hpp.in ${CMAKE_BINARY_DIR}/include/fk_mc/definitions.hpp)
-
-# build fk mc library
-#add_subdirectory(solver)
 
 # build executable
 option(Execs "Enable executables" ON)
@@ -79,8 +75,6 @@ option(Testing "Enable testing" OFF)
 
 if (Benchmark OR Testing)
     include(EnableGtests) #defined in common/cmake
-    #include(UseGtest)
-    #add_subdirectory(${gtest_ROOT} ${PROJECT_BINARY_DIR}/gtest)
     include_directories(${gtest_INCLUDE_DIR})
 endif()
 
@@ -89,12 +83,10 @@ if (Benchmark)
     add_subdirectory(benchmark)
 endif (Benchmark)
 
-#build tests
 if (Testing)
     enable_testing()
     add_subdirectory(test)
 endif(Testing)
-
 
 ### Additional installation files
 configure_file("${CMAKE_SOURCE_DIR}/fk_mc.lmod.in" "${CMAKE_BINARY_DIR}/${FK_MC_VERSION}")
