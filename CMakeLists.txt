@@ -51,7 +51,7 @@ add_boost(mpi)
 add_fftw3()
 find_package (Arpack)
 message(STATUS "Arpack libraries: " ${ARPACK_LIBRARIES} )
-link_libraries(${ARPACK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${ARPACK_LIBRARIES})
 
 #configure compile definitions file
 configure_file(${CMAKE_SOURCE_DIR}/include/fk_mc/definitions.hpp.in ${CMAKE_BINARY_DIR}/include/fk_mc/definitions.hpp)
